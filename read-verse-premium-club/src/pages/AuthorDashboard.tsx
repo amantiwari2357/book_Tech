@@ -1,0 +1,584 @@
+import React, { useEffect, useState } from 'react';
+import { useAppSelector } from '@/store';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
+import { authFetch } from '@/lib/api';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
+import { useToast } from '@/components/ui/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea'; // Assuming you have a Textarea component
+
+const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c', '#83a6ed', '#8dd1e1'];
+
+const AuthorDashboard: React.FC = () => {
+  const { user } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const [books, setBooks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [form, setForm] = useState({
+    title: '',
+    author: user?.name || '',
+    description: '',
+    price: '',
+    coverImage: '',
+    category: '',
+    genre: '',
+    tags: '',
+    isPremium: false,
+  });
+  const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [stats, setStats] = useState<any>(null);
+  const [achievements, setAchievements] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    } else if ('role' in user && user.role === 'admin') {
+      navigate('/admin-dashboard');
+    } else if ('role' in user && user.role !== 'author') {
+      navigate('/customer-dashboard');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, navigate]);
+
+  const fetchBooks = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await authFetch('/books/my/books');
+      if (res.ok) {
+        const data = await res.json();
+        setBooks(data);
+      } else {
+        const errData = await res.json();
+        setError(errData.message || 'Failed to load books');
+        toast({
+          title: 'Error',
+          description: errData.message || 'Failed to load books',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      setError('Failed to load books');
+      toast({
+        title: 'Error',
+        description: 'Failed to load books',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.role === 'author') {
+      fetchBooks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, user?.role]);
+
+  useEffect(() => {
+    if (user) {
+      fetchStats();
+    }
+    // eslint-disable-next-line
+  }, [user]);
+
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch('/users/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data.readingStats);
+        setAchievements(data.achievements);
+      }
+    } catch {}
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    }));
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUploading(true);
+    setError('');
+
+    const bookData = {
+      ...form,
+      price: parseFloat(form.price) || 0,
+      tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+    };
+
+    try {
+      let res;
+      if (editingId) {
+        res = await authFetch(`/books/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(bookData),
+        });
+      } else {
+        res = await authFetch('/books', {
+          method: 'POST',
+          body: JSON.stringify(bookData),
+        });
+      }
+
+      if (res.ok) {
+        toast({
+          title: 'Success',
+          description: `Book ${editingId ? 'updated' : 'uploaded'} successfully!`,
+        });
+        setForm({
+          title: '',
+          author: user?.name || '',
+          description: '',
+          price: '',
+          coverImage: '',
+          category: '',
+          genre: '',
+          tags: '',
+          isPremium: false,
+        });
+        setEditingId(null);
+        fetchBooks();
+        setShowUploadModal(false); // Close modal on success
+      } else {
+        const data = await res.json();
+        setError(data.message || 'Operation failed');
+        toast({
+          title: 'Error',
+          description: data.message || 'Operation failed',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      setError(`Operation failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast({
+        title: 'Error',
+        description: `Operation failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleEdit = (book: any) => {
+    setEditingId(book._id);
+    setForm({
+      title: book.title,
+      author: book.author,
+      description: book.description,
+      price: book.price.toString(),
+      coverImage: book.coverImage,
+      category: book.category,
+      genre: book.genre,
+      tags: book.tags ? book.tags.join(', ') : '',
+      isPremium: book.isPremium || false,
+    });
+    // Scroll to form for better UX
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowUploadModal(true); // Open modal for editing
+  };
+
+  const handleDelete = async (bookId: string) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await authFetch(`/books/${bookId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast({
+          title: 'Success',
+          description: 'Book deleted successfully!',
+        });
+        fetchBooks();
+      } else {
+        const data = await res.json();
+        setError(data.message || 'Failed to delete book');
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to delete book',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      setError('Failed to delete book');
+      toast({
+        title: 'Error',
+        description: 'Failed to delete book',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Analytics for author
+  const statusCounts = ['pending', 'approved', 'rejected'].map((status) => ({
+    status,
+    count: books.filter((b) => b.status === status).length,
+  }));
+
+  const totalEarnings = books.reduce((sum, b) => sum + (b.earnings || 0), 0);
+  const totalSales = books.reduce((sum, b) => sum + (b.sales || 0), 0);
+
+  // Data for Sales by Book chart (Top 5)
+  const salesByBookData = books.map((book) => ({
+    title: book.title,
+    sales: book.sales || 0,
+  })).sort((a, b) => b.sales - a.sales).slice(0, 5);
+
+  // Data for Category distribution pie chart
+  const categoryCounts = books.reduce((acc, book) => {
+    acc[book.category] = (acc[book.category] || 0) + 1;
+    return acc;
+  }, {});
+  const categoryData = Object.keys(categoryCounts).map((category) => ({
+    name: category,
+    value: categoryCounts[category],
+  }));
+
+  return (
+    <div className="container mx-auto px-4 py-8 md:py-16">
+      <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center">Author Dashboard</h1>
+      <p className="mb-8 text-lg text-muted-foreground text-center">
+        Welcome, {user?.name}! Here you can manage and upload your books.
+      </p>
+      {user && stats && (
+        <section className="mb-8">
+          <div className="flex flex-wrap gap-8 items-center">
+            <div className="bg-muted rounded-lg p-4 min-w-[160px] text-center">
+              <div className="text-2xl font-bold text-primary">{stats.booksRead}</div>
+              <div className="text-muted-foreground">Books Read</div>
+            </div>
+            <div className="bg-muted rounded-lg p-4 min-w-[160px] text-center">
+              <div className="text-2xl font-bold text-primary">{stats.pagesRead}</div>
+              <div className="text-muted-foreground">Pages Read</div>
+            </div>
+            <div className="bg-muted rounded-lg p-4 min-w-[160px] text-center">
+              <div className="text-2xl font-bold text-primary">{stats.streak}</div>
+              <div className="text-muted-foreground">Day Streak</div>
+            </div>
+            <div className="bg-muted rounded-lg p-4 min-w-[160px] text-center">
+              <div className="text-lg font-semibold text-accent mb-2">Achievements</div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {achievements.length === 0 && <span className="text-muted-foreground text-sm">No badges yet</span>}
+                {achievements.includes('first-book') && <span className="bg-green-500 text-white px-2 py-1 rounded text-xs">First Book</span>}
+                {achievements.includes('10-day-streak') && <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs">10 Day Streak</span>}
+                {achievements.includes('1000-pages') && <span className="bg-yellow-500 text-white px-2 py-1 rounded text-xs">1000 Pages</span>}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+      <div className="flex justify-center mb-8">
+        <Button size="lg" onClick={() => setShowUploadModal(true)}>
+          Upload Book
+        </Button>
+      </div>
+
+      {/* --- Key Metrics Section --- */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <Card className="p-6 flex flex-col items-center justify-center text-center shadow-lg">
+          <h3 className="font-semibold text-xl mb-2 text-gray-700">Total Earnings</h3>
+          <div className="text-5xl font-extrabold text-green-600">
+            ${totalEarnings.toFixed(2)}
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">Revenue from all your books</p>
+        </Card>
+
+        <Card className="p-6 flex flex-col items-center justify-center text-center shadow-lg">
+          <h3 className="font-semibold text-xl mb-2 text-gray-700">Total Sales</h3>
+          <div className="text-5xl font-extrabold text-blue-600">
+            {totalSales}
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">Units sold across all titles</p>
+        </Card>
+
+        <Card className="p-6 flex flex-col items-center justify-center text-center shadow-lg">
+          <h3 className="font-semibold text-xl mb-2 text-gray-700">Total Books</h3>
+          <div className="text-5xl font-extrabold text-purple-600">
+            {books.length}
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">Your current book count</p>
+        </Card>
+      </div>
+
+      {/* --- Analytics Charts Section --- */}
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Your Book Analytics</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        <Card className="p-4 shadow-lg">
+          <h3 className="font-semibold text-lg mb-4 text-gray-800">Books by Status</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={statusCounts} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+              <XAxis dataKey="status" />
+              <YAxis allowDecimals={false} />
+              <RechartsTooltip cursor={{ fill: 'transparent' }} />
+              <Bar dataKey="count" fill="#8884d8" name="Number of Books" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {salesByBookData.length > 0 && (
+          <Card className="p-4 shadow-lg">
+            <h3 className="font-semibold text-lg mb-4 text-gray-800">Top 5 Books by Sales</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={salesByBookData} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+                <YAxis dataKey="title" type="category" width={100} />
+                <XAxis type="number" allowDecimals={false} />
+                <RechartsTooltip cursor={{ fill: 'transparent' }} />
+                <Bar dataKey="sales" fill="#82ca9d" name="Sales" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        )}
+
+        {categoryData.length > 0 && (
+          <Card className="p-4 shadow-lg">
+            <h3 className="font-semibold text-lg mb-4 text-gray-800">Books by Category</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </Card>
+        )}
+      </div>
+
+      {/* --- Your Books Table --- */}
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Your Published Books</h2>
+      {loading ? (
+        <p className="text-center text-lg text-muted-foreground">Loading books...</p>
+      ) : error ? (
+        <p className="text-red-500 text-center text-lg">{error}</p>
+      ) : (
+        <div className="overflow-x-auto rounded-md border shadow-md">
+          <table className="min-w-full text-sm">
+            <thead className="bg-muted">
+              <tr>
+                <th className="p-4 text-left font-semibold text-gray-700">Title</th>
+                <th className="p-4 text-left font-semibold text-gray-700">Category</th>
+                <th className="p-4 text-left font-semibold text-gray-700">Status</th>
+                <th className="p-4 text-left font-semibold text-gray-700">Sales</th>
+                <th className="p-4 text-left font-semibold text-gray-700">Earnings</th>
+                <th className="p-4 text-left font-semibold text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {books.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-6 text-center text-muted-foreground text-lg">
+                    You haven't uploaded any books yet. Start by using the form above!
+                  </td>
+                </tr>
+              ) : (
+                books.map((book) => (
+                  <tr key={book._id} className="border-t hover:bg-muted/50">
+                    <td className="p-4 font-medium text-gray-900">{book.title}</td>
+                    <td className="p-4 text-gray-700">{book.category || 'N/A'}</td>
+                    <td className="p-4 capitalize">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold
+                          ${book.status === 'approved' ? 'bg-green-100 text-green-800' : ''}
+                          ${book.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}
+                          ${book.status === 'rejected' ? 'bg-red-100 text-red-800' : ''}
+                        `}
+                      >
+                        {book.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-gray-700">{book.sales || 0}</td>
+                    <td className="p-4 text-gray-700">${(book.earnings || 0).toFixed(2)}</td>
+                    <td className="p-4 space-x-3">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(book)} className="text-sm px-4 py-2">
+                        Edit
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm" className="text-sm px-4 py-2">
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete your book
+                              "<span className="font-semibold">{book.title}</span>" from our servers.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(book._id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <AlertDialog open={showUploadModal} onOpenChange={setShowUploadModal}>
+        <AlertDialogContent className="max-w-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{editingId ? 'Edit Existing Book' : 'Upload a New Book'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Fill out the form below to {editingId ? 'update your book' : 'upload a new book'}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <form
+            onSubmit={handleFormSubmit}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <div className="col-span-1 md:col-span-2">
+              <Label htmlFor="title" className="text-base">Book Title</Label>
+              <Input id="title" name="title" value={form.title} onChange={handleChange} required className="mt-1 p-2 border rounded-md w-full" />
+            </div>
+
+            <div>
+              <Label htmlFor="author" className="text-base">Author Name</Label>
+              <Input id="author" name="author" value={form.author} onChange={handleChange} required disabled={!!user?.name} className="mt-1 p-2 border rounded-md w-full bg-gray-100" />
+            </div>
+
+            <div>
+              <Label htmlFor="price" className="text-base">Price ($)</Label>
+              <Input id="price" name="price" type="number" value={form.price} onChange={handleChange} required min="0" step="0.01" className="mt-1 p-2 border rounded-md w-full" />
+            </div>
+
+            <div className="col-span-1 md:col-span-2">
+              <Label htmlFor="description" className="text-base">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows={5}
+                className="mt-1 p-2 border rounded-md w-full resize-y"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="coverImage" className="text-base">Cover Image URL</Label>
+              <Input id="coverImage" name="coverImage" value={form.coverImage} onChange={handleChange} className="mt-1 p-2 border rounded-md w-full" />
+            </div>
+
+            <div>
+              <Label htmlFor="category" className="text-base">Category</Label>
+              <Input id="category" name="category" value={form.category} onChange={handleChange} className="mt-1 p-2 border rounded-md w-full" />
+            </div>
+
+            <div>
+              <Label htmlFor="genre" className="text-base">Genre</Label>
+              <Input id="genre" name="genre" value={form.genre} onChange={handleChange} className="mt-1 p-2 border rounded-md w-full" />
+            </div>
+
+            <div>
+              <Label htmlFor="tags" className="text-base">Tags (comma separated)</Label>
+              <Input id="tags" name="tags" value={form.tags} onChange={handleChange} placeholder="e.g., fiction, adventure, fantasy" className="mt-1 p-2 border rounded-md w-full" />
+            </div>
+
+            <div className="col-span-1 md:col-span-2 flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isPremium"
+                name="isPremium"
+                checked={form.isPremium}
+                onChange={handleChange}
+                className="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary-500"
+              />
+              <Label htmlFor="isPremium" className="text-base">Mark as Premium Book</Label>
+            </div>
+
+            {error && <p className="text-red-500 text-sm mt-2 col-span-1 md:col-span-2">{error}</p>}
+
+            <div className="col-span-1 md:col-span-2 flex gap-4 mt-4">
+              <Button type="submit" disabled={uploading} className="w-full md:w-auto px-6 py-3 text-lg font-semibold">
+                {uploading ? (editingId ? 'Saving Changes...' : 'Uploading Book...') : editingId ? 'Update Book' : 'Upload New Book'}
+              </Button>
+              <AlertDialogCancel asChild>
+                <Button type="button" variant="outline" className="w-full md:w-auto px-6 py-3 text-lg font-semibold" onClick={() => {
+                  setEditingId(null);
+                  setForm({
+                    title: '',
+                    author: user?.name || '',
+                    description: '',
+                    price: '',
+                    coverImage: '',
+                    category: '',
+                    genre: '',
+                    tags: '',
+                    isPremium: false,
+                  });
+                }}>
+                  Cancel
+                </Button>
+              </AlertDialogCancel>
+            </div>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default AuthorDashboard;
