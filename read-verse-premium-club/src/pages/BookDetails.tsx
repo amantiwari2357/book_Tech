@@ -8,12 +8,20 @@ import { useAppSelector, useAppDispatch } from '@/store';
 import { addToCartAsync } from '@/store/slices/cartSlice';
 import { authFetch } from '@/lib/api';
 
+type Review = {
+  _id?: string;
+  user?: { _id?: string; name?: string };
+  rating: number;
+  comment: string;
+  date?: string;
+};
+
 const BookDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const { books, loading, error } = useAppSelector((state) => state.books);
   const { user } = useAppSelector((state) => state.auth);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState('');
   const [rating, setRating] = useState(0);
@@ -21,7 +29,7 @@ const BookDetails: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<{ _id?: string }[]>([]);
 
   const book = books.find(b => b.id === id);
 
@@ -34,7 +42,7 @@ const BookDetails: React.FC = () => {
         const data = await res.json();
         setReviews(data);
         if (user) {
-          setHasReviewed(data.some((r: any) => r.user?._id === user.id));
+          setHasReviewed(data.some((r: Review) => r.user?._id === user.id));
         }
       } catch (err) {
         setReviewError('Failed to load reviews');
@@ -53,7 +61,7 @@ const BookDetails: React.FC = () => {
           const res = await authFetch('/cart/orders');
           const data = await res.json();
           setOrders(data);
-          setHasPurchased(data.some((b: any) => b._id === id));
+          setHasPurchased(data.some((b: { _id?: string }) => b._id === id));
         } catch {
           setHasPurchased(false);
         }

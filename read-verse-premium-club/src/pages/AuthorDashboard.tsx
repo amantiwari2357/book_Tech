@@ -49,15 +49,13 @@ type Book = {
   status?: string;
   sales?: number;
   earnings?: number;
-  pagesRead?: number;
-  streak?: number;
-  booksRead?: number;
-  readingStats?: {
-    booksRead?: number;
-    pagesRead?: number;
-    streak?: number;
-  };
-  achievements?: string[];
+};
+
+type ReadingStats = {
+  booksRead: number;
+  pagesRead: number;
+  streak: number;
+  // add other fields as needed
 };
 
 const AuthorDashboard: React.FC = () => {
@@ -83,7 +81,7 @@ const AuthorDashboard: React.FC = () => {
   const { toast } = useToast();
   const [showUploadModal, setShowUploadModal] = useState(false);
   // If stats structure is unknown, use unknown instead of any
-  const [stats, setStats] = useState<unknown>(null);
+  const [stats, setStats] = useState<ReadingStats | null>(null);
   const [achievements, setAchievements] = useState<string[]>([]);
 
   useEffect(() => {
@@ -148,7 +146,9 @@ const AuthorDashboard: React.FC = () => {
         setStats(data.readingStats);
         setAchievements(data.achievements);
       }
-    } catch {}
+    } catch (err) {
+      // Optionally log or set an error state
+    }
   };
 
   const handleChange = (
@@ -316,7 +316,7 @@ const AuthorDashboard: React.FC = () => {
         <section className="mb-8">
           <div className="flex flex-wrap gap-8 items-center">
             <div className="bg-muted rounded-lg p-4 min-w-[160px] text-center">
-              <div className="text-2xl font-bold text-primary">{stats.booksRead}</div>
+              <div className="text-2xl font-bold text-primary">{stats?.booksRead}</div>
               <div className="text-muted-foreground">Books Read</div>
             </div>
             <div className="bg-muted rounded-lg p-4 min-w-[160px] text-center">
