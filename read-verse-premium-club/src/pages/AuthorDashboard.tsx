@@ -34,10 +34,36 @@ import { Textarea } from '@/components/ui/textarea'; // Assuming you have a Text
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c', '#83a6ed', '#8dd1e1'];
 
+type Book = {
+  _id?: string;
+  title: string;
+  author: string;
+  description: string;
+  price: number;
+  coverImage: string;
+  category: string;
+  genre: string;
+  tags: string[];
+  isPremium: boolean;
+  readingType: string;
+  status?: string;
+  sales?: number;
+  earnings?: number;
+  pagesRead?: number;
+  streak?: number;
+  booksRead?: number;
+  readingStats?: {
+    booksRead?: number;
+    pagesRead?: number;
+    streak?: number;
+  };
+  achievements?: string[];
+};
+
 const AuthorDashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
-  const [books, setBooks] = useState<any[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
@@ -50,12 +76,14 @@ const AuthorDashboard: React.FC = () => {
     genre: '',
     tags: '',
     isPremium: false,
+    readingType: '', // <-- Added
   });
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  // If stats structure is unknown, use unknown instead of any
+  const [stats, setStats] = useState<unknown>(null);
   const [achievements, setAchievements] = useState<string[]>([]);
 
   useEffect(() => {
@@ -86,7 +114,7 @@ const AuthorDashboard: React.FC = () => {
           variant: 'destructive',
         });
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Failed to load books');
       toast({
         title: 'Error',
@@ -142,6 +170,7 @@ const AuthorDashboard: React.FC = () => {
       ...form,
       price: parseFloat(form.price) || 0,
       tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+      readingType: form.readingType, // <-- Ensure this is present
     };
 
     try {
@@ -173,6 +202,7 @@ const AuthorDashboard: React.FC = () => {
           genre: '',
           tags: '',
           isPremium: false,
+          readingType: '', // <-- Reset here too
         });
         setEditingId(null);
         fetchBooks();
@@ -186,7 +216,7 @@ const AuthorDashboard: React.FC = () => {
           variant: 'destructive',
         });
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError(`Operation failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
       toast({
         title: 'Error',
@@ -198,7 +228,7 @@ const AuthorDashboard: React.FC = () => {
     }
   };
 
-  const handleEdit = (book: any) => {
+  const handleEdit = (book: Book) => {
     setEditingId(book._id);
     setForm({
       title: book.title,
@@ -210,6 +240,7 @@ const AuthorDashboard: React.FC = () => {
       genre: book.genre,
       tags: book.tags ? book.tags.join(', ') : '',
       isPremium: book.isPremium || false,
+      readingType: book.readingType || '', // Initialize readingType
     });
     // Scroll to form for better UX
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -238,7 +269,7 @@ const AuthorDashboard: React.FC = () => {
           variant: 'destructive',
         });
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Failed to delete book');
       toast({
         title: 'Error',
@@ -537,6 +568,34 @@ const AuthorDashboard: React.FC = () => {
               <Input id="tags" name="tags" value={form.tags} onChange={handleChange} placeholder="e.g., fiction, adventure, fantasy" className="mt-1 p-2 border rounded-md w-full" />
             </div>
 
+            <div className="col-span-1 md:col-span-2">
+              <Label className="text-base">Reading Type <span className="text-red-500">*</span></Label>
+              <div className="flex gap-8 mt-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="readingType"
+                    value="soft"
+                    checked={form.readingType === 'soft'}
+                    onChange={handleChange}
+                    required
+                  />
+                  Only Soft Copy (Read Online)
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="readingType"
+                    value="hard"
+                    checked={form.readingType === 'hard'}
+                    onChange={handleChange}
+                    required
+                  />
+                  Wants to Offer Hard Copy (Delivery Available)
+                </label>
+              </div>
+            </div>
+
             <div className="col-span-1 md:col-span-2 flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -568,6 +627,7 @@ const AuthorDashboard: React.FC = () => {
                     genre: '',
                     tags: '',
                     isPremium: false,
+                    readingType: '', // <-- Reset here too
                   });
                 }}>
                   Cancel

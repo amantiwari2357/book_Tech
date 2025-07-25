@@ -2,6 +2,7 @@ const express = require('express');
 const Book = require('../models/Book');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 const router = express.Router();
 
@@ -29,6 +30,10 @@ router.get('/my/books', auth, async (req, res) => {
 
 // Create book (set authorRef, status pending)
 router.post('/', auth, async (req, res) => {
+  const { readingType } = req.body;
+  if (!readingType || !['soft', 'hard'].includes(readingType)) {
+    return res.status(400).json({ message: 'readingType (soft or hard) is required' });
+  }
   const book = new Book({ ...req.body, authorRef: req.user.id, status: 'pending' });
   await book.save();
   res.status(201).json(book);
@@ -58,8 +63,33 @@ router.get('/admin/pending', auth, async (req, res) => {
 // Admin: Approve book
 router.post('/admin/approve/:id', auth, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
-  const book = await Book.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
+  const { displayType, distributionType } = req.body;
+  if (!displayType || !['hero', 'view-all'].includes(displayType)) {
+    return res.status(400).json({ message: 'displayType (hero or view-all) is required' });
+  }
+  if (!distributionType || !['soft', 'hard'].includes(distributionType)) {
+    return res.status(400).json({ message: 'distributionType (soft or hard) is required' });
+  }
+  const book = await Book.findByIdAndUpdate(
+    req.params.id,
+    { status: 'approved', displayType, distributionType },
+    { new: true }
+  );
   if (!book) return res.status(404).json({ message: 'Book not found' });
+
+  // Send notification to author
+  let displayText = displayType === 'hero' ? 'Hero Section' : 'View All Section';
+  let distText = distributionType === 'soft'
+    ? 'You selected to offer the book as a Soft Copy only.'
+    : 'You selected to offer the book as a Hard Copy (delivery available).';
+  const message = `Your book '${book.title}' has been approved and will appear in the ${displayText}.\n${distText}`;
+  await Notification.create({
+    recipient: book.authorRef,
+    sender: req.user.id,
+    message,
+    type: 'info',
+  });
+
   res.json(book);
 });
 

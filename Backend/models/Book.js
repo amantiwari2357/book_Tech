@@ -19,7 +19,13 @@ const bookSchema = new mongoose.Schema({
   isPremium: { type: Boolean, default: false },
   rating: { type: Number, default: 0 },
   totalReviews: { type: Number, default: 0 },
-  authorRef: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  // 'soft' = only online, 'hard' = hardcopy available
+  readingType: { type: String, enum: ['soft', 'hard'], required: true },
+  // Where to display after approval: 'hero' or 'view-all'
+  displayType: { type: String, enum: ['hero', 'view-all'] },
+  // Distribution after approval: 'soft' = read only, 'hard' = order enabled
+  distributionType: { type: String, enum: ['soft', 'hard'] },
+  authorRef: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   reviews: [reviewSchema],
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   sales: { type: Number, default: 0 },

@@ -23,11 +23,56 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Link } from 'react-router-dom';
+import AdminBookApprovals from './AdminBookApprovals';
+
+type User = {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  // add other fields as needed
+};
+
+type Book = {
+  _id: string;
+  title: string;
+  author: string;
+  price?: number | string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  isPremium?: boolean;
+  // add other fields as needed
+};
+
+type Analytics = {
+  userCounts?: Record<string, number>;
+  bookCategoryCounts?: Record<string, number>;
+  bookOrderCounts?: Record<string, number>;
+  userGrowth?: Record<string, number>;
+  salesByMonth?: Record<string, number>;
+  revenueByMonth?: Record<string, number>;
+  topAuthors?: Array<{ author: string; sales: number }>;
+  totalUsers?: number;
+  totalBooks?: number;
+  totalRevenue?: number;
+  activeUsers?: number;
+  // add other fields as needed
+};
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#8dd1e1', '#a4de6c', '#d0ed57'];
 
+type SummaryCardProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  trend?: number;
+  trendDir?: 'up' | 'down';
+  className?: string;
+};
+
 // Inline SummaryCard component for dashboard metrics
-const SummaryCard = ({ icon, label, value, trend, trendDir, className = '' }: any) => (
+const SummaryCard = ({ icon, label, value, trend, trendDir, className = '' }: SummaryCardProps) => (
   <div className={`bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-md p-6 flex items-center gap-4 ${className}`}>
     <div className="bg-primary/10 rounded-full p-3">
       {icon}
@@ -49,12 +94,12 @@ const SummaryCard = ({ icon, label, value, trend, trendDir, className = '' }: an
 const AdminDashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
-  const [users, setUsers] = useState<any[]>([]);
-  const [books, setBooks] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [editUser, setEditUser] = useState<any | null>(null);
-  const [editBook, setEditBook] = useState<any | null>(null);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editBook, setEditBook] = useState<Book | null>(null);
   const [editUserForm, setEditUserForm] = useState({ name: '', email: '', role: 'customer' });
   const [editBookForm, setEditBookForm] = useState({ title: '', author: '', price: '', description: '', category: '', tags: '', isPremium: false });
   const [saving, setSaving] = useState(false);
@@ -64,7 +109,7 @@ const AdminDashboard: React.FC = () => {
   const [bookSearch, setBookSearch] = useState('');
   const [bookCategoryFilter, setBookCategoryFilter] = useState('');
   // Analytics state
-  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState('');
 
@@ -154,7 +199,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Edit User
-  const openEditUser = (u: any) => {
+  const openEditUser = (u: User) => {
     setEditUser(u);
     setEditUserForm({ name: u.name || '', email: u.email || '', role: u.role || 'customer' });
   };
@@ -183,7 +228,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Edit Book
-  const openEditBook = (b: any) => {
+  const openEditBook = (b: Book) => {
     setEditBook(b);
     setEditBookForm({
       title: b.title || '',
@@ -241,7 +286,7 @@ const AdminDashboard: React.FC = () => {
   const bookTotalPages = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE) || 1;
 
   // Helper: Convert array of objects to CSV
-  function toCSV(data: any[], columns: string[]) {
+  function toCSV<T extends Record<string, unknown>>(data: T[], columns: string[]) {
     const header = columns.join(',');
     const rows = data.map(row => columns.map(col => JSON.stringify(row[col] ?? '')).join(','));
     return [header, ...rows].join('\n');
@@ -632,6 +677,10 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             )}
+            {/* Admin Book Approvals */}
+            <div className="bg-white rounded-xl shadow p-6 mb-8">
+              <AdminBookApprovals />
+            </div>
           </div>
         </div>
       </div>

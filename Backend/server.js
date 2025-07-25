@@ -12,6 +12,7 @@
   const adminRoutes = require('./routes/admin');
   const usersRoutes = require('./routes/users');
   const notificationsRoutes = require('./routes/notifications');
+  const ordersRoutes = require('./routes/orders');
 
   const app = express();
   app.use(cors());
@@ -26,6 +27,7 @@
   app.use('/api/admin', adminRoutes);
   app.use('/api/users', usersRoutes);
   app.use('/api/notifications', notificationsRoutes);
+  app.use('/api/orders', ordersRoutes);
 
   const PORT = process.env.PORT || 5000;
 

@@ -21,6 +21,7 @@ const Upload: React.FC = () => {
     category: '',
     tags: '',
     isPremium: false,
+    readingType: '', // <-- Added
   });
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
@@ -30,6 +31,10 @@ const Upload: React.FC = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    if (!formData.readingType) {
+      setError('Reading type (soft or hard) is required');
+      return;
+    }
     try {
       const newBook = {
         title: formData.title,
@@ -42,6 +47,7 @@ const Upload: React.FC = () => {
         isPremium: formData.isPremium,
         rating: 0,
         totalReviews: 0,
+        readingType: formData.readingType, // <-- Added
       };
       const res = await authFetch('/books', {
         method: 'POST',
@@ -59,6 +65,7 @@ const Upload: React.FC = () => {
           category: '',
           tags: '',
           isPremium: false,
+          readingType: '', // <-- Reset
         });
       } else {
         setError(data.message || 'Upload failed');
@@ -237,6 +244,45 @@ const Upload: React.FC = () => {
                   )}
                 </Label>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Reading Type */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpenIcon className="h-5 w-5" />
+                Reading Type
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-8 items-center">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="readingType"
+                    value="soft"
+                    checked={formData.readingType === 'soft'}
+                    onChange={e => setFormData({ ...formData, readingType: e.target.value })}
+                    required
+                  />
+                  Only Soft Copy (Read Online)
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="readingType"
+                    value="hard"
+                    checked={formData.readingType === 'hard'}
+                    onChange={e => setFormData({ ...formData, readingType: e.target.value })}
+                    required
+                  />
+                  Wants to Offer Hard Copy (Delivery Available)
+                </label>
+              </div>
+              {error && !formData.readingType && (
+                <div className="text-red-500 text-sm mt-2">Reading type (soft or hard) is required</div>
+              )}
             </CardContent>
           </Card>
 
