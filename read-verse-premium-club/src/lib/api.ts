@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://localhost:5000/api';
+export const API_BASE_URL = 'https://book-tech.onrender.com/api';
 
 export function getToken() {
   return localStorage.getItem('token');
