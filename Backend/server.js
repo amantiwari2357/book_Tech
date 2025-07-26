@@ -16,7 +16,12 @@
 
   const app = express();
   app.use(cors({
-    origin: ['http://localhost:8080', 'http://127.0.0.1:8080'],
+    origin: [
+      'http://localhost:8080', 
+      'http://127.0.0.1:8080',
+      'https://book-tech.vercel.app',
+      'https://book-tech-frontend.vercel.app'
+    ],
     credentials: true,
   }));
   app.use(express.json());
