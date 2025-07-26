@@ -9,8 +9,39 @@ const PricingSection: React.FC = () => {
   const { availablePlans, currentPlan, loading, error } = useAppSelector((state) => state.subscription);
 
   useEffect(() => {
+    console.log('PricingSection: Fetching plans...');
     dispatch(fetchPlans());
   }, [dispatch]);
+
+  // Fallback plans if API fails
+  const fallbackPlans: SubscriptionPlan[] = [
+    {
+      id: 'basic',
+      name: 'Basic',
+      price: 9.99,
+      features: ['Access to 1000+ books', 'Standard support', 'Basic reading features'],
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      price: 19.99,
+      features: ['Access to all books', 'Priority support', 'Advanced reading features', 'Offline reading'],
+      isPopular: true,
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      price: 39.99,
+      features: ['Everything in Premium', 'Team collaboration', 'Admin dashboard', 'Custom integrations'],
+    },
+  ];
+
+  const plansToShow = availablePlans.length > 0 ? availablePlans : fallbackPlans;
+
+  console.log('PricingSection: availablePlans:', availablePlans);
+  console.log('PricingSection: plansToShow:', plansToShow);
+  console.log('PricingSection: loading:', loading);
+  console.log('PricingSection: error:', error);
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
@@ -52,9 +83,12 @@ const PricingSection: React.FC = () => {
           </p>
         </div>
         {loading && <p className="text-center text-lg">Loading plans...</p>}
-        {error && <p className="text-center text-red-500">{error}</p>}
+        {error && <p className="text-center text-red-500">Error: {error}</p>}
+        {!loading && availablePlans.length === 0 && (
+          <p className="text-center text-yellow-600 mb-4">Using default plans (API not available)</p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {availablePlans.map((plan) => (
+          {plansToShow.map((plan) => (
             <PricingCard
               key={plan.id}
               plan={plan}

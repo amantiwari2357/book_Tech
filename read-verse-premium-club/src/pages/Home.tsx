@@ -44,11 +44,6 @@ function getBecauseYouRead(user, books) {
   return books.filter(b => b.id !== topBook.id && (b.category === topBook.category || b.genre === topBook.genre)).slice(0, 3);
 }
 
-// Helper: Recently viewed (mock: last 3 books)
-function getRecentlyViewed(books) {
-  return books.slice(-3);
-}
-
 const Home: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -75,7 +70,6 @@ const Home: React.FC = () => {
   const booksInProgress = isAuthenticated ? getBooksInProgress(user, books) : [];
   const trendingInCategory = isAuthenticated ? getTrendingInCategory(favoriteCategory, books) : [];
   const becauseYouRead = isAuthenticated ? getBecauseYouRead(user, books) : [];
-  const recentlyViewed = isAuthenticated ? getRecentlyViewed(books) : [];
 
   // Handler for Start Reading button
   const handleStartReading = () => {
@@ -234,14 +228,6 @@ const Home: React.FC = () => {
             <h2 className="text-3xl font-serif font-bold mb-8">Because You Read...</h2>
             <p className="text-muted-foreground mb-4">You might also like these books.</p>
             <BookGrid books={becauseYouRead} />
-          </div>
-        </section>
-      )}
-      {isAuthenticated && recentlyViewed.length > 0 && (
-        <section className="py-16 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-serif font-bold mb-8">Recently Viewed</h2>
-            <BookGrid books={recentlyViewed} />
           </div>
         </section>
       )}

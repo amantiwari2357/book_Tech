@@ -138,9 +138,12 @@ const availablePlans = [
 // Get all subscription plans
 router.get('/plans', async (req, res) => {
   try {
+    console.log('GET /plans: Fetching plans from database...');
     const plans = await Plan.find();
+    console.log('GET /plans: Found plans:', plans);
     res.json(plans);
   } catch (err) {
+    console.error('GET /plans: Error fetching plans:', err);
     res.status(500).json({ message: 'Failed to fetch plans' });
   }
 });
