@@ -395,6 +395,22 @@ const AdminDashboard: React.FC = () => {
               <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
               <SidebarMenu>
                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Book Approvals">
+                    <Link to="/admin-book-approvals">
+                      <BookOpenIcon className="w-5 h-5" />
+                      <span>Book Approvals</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Plan Management">
+                    <Link to="/admin-plan-management">
+                      <Cog6ToothIcon className="w-5 h-5" />
+                      <span>Plan Management</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild tooltip="Export Data">
                     <button onClick={() => handleExport('analytics')}>
                       <ChartBarIcon className="w-5 h-5" />

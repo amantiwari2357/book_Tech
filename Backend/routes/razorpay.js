@@ -14,14 +14,30 @@ router.post('/webhook', express.json({ type: 'application/json' }), async (req, 
 
     if (event === 'payment_link.paid') {
       const paymentLinkId = payload.payment_link.entity.id;
-      await Order.findOneAndUpdate(
-        { paymentLinkId },
-        { 
-          paymentStatus: 'paid',
-          updatedAt: Date.now()
+      // Check if this payment link is for a subscription (by description)
+      const description = payload.payment_link.entity.description || '';
+      if (description.startsWith('Subscription payment for plan:')) {
+        // Find the user by email
+        const email = payload.payment_link.entity.customer.email;
+        const planName = description.replace('Subscription payment for plan:', '').trim().toLowerCase();
+        const User = require('../models/User');
+        const user = await User.findOne({ email });
+        if (user) {
+          user.subscription = planName;
+          await user.save();
+          console.log('User subscription updated to', planName, 'for', email);
         }
-      );
-      console.log('Payment marked as paid for paymentLinkId:', paymentLinkId);
+      } else {
+        // Book order payment
+        await Order.findOneAndUpdate(
+          { paymentLinkId },
+          { 
+            paymentStatus: 'paid',
+            updatedAt: Date.now()
+          }
+        );
+        console.log('Payment marked as paid for paymentLinkId:', paymentLinkId);
+      }
     } else if (event === 'payment_link.failed') {
       const paymentLinkId = payload.payment_link.entity.id;
       await Order.findOneAndUpdate(

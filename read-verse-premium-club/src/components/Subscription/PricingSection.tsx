@@ -1,14 +1,45 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PricingCard from './PricingCard';
-import { useAppSelector } from '@/store';
-import { SubscriptionPlan } from '@/store/slices/subscriptionSlice';
+import { useAppSelector, useAppDispatch } from '@/store';
+import { SubscriptionPlan, fetchPlans } from '@/store/slices/subscriptionSlice';
+import { authFetch } from '@/lib/api';
 
 const PricingSection: React.FC = () => {
-  const { availablePlans, currentPlan } = useAppSelector((state) => state.subscription);
+  const dispatch = useAppDispatch();
+  const { availablePlans, currentPlan, loading, error } = useAppSelector((state) => state.subscription);
 
-  const handleSubscribe = (plan: SubscriptionPlan) => {
-    // This will be implemented with Stripe integration
-    console.log('Subscribe to plan:', plan);
+  useEffect(() => {
+    dispatch(fetchPlans());
+  }, [dispatch]);
+
+  const handleSubscribe = async (plan: SubscriptionPlan) => {
+    try {
+      const res = await authFetch('/checkout/create-subscription-link', {
+        method: 'POST',
+        body: JSON.stringify({
+          planId: plan.id,
+          planName: plan.name,
+          planPrice: plan.price,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.paymentLink) {
+          window.location.href = data.paymentLink;
+        } else {
+          alert('Failed to create payment link');
+        }
+      } else {
+        let errorMsg = 'Subscription failed';
+        try {
+          const errorData = await res.json();
+          if (errorData && errorData.message) errorMsg = errorData.message;
+        } catch {}
+        alert(errorMsg);
+      }
+    } catch (error) {
+      alert('Subscription failed. Please try again.');
+    }
   };
 
   return (
@@ -20,7 +51,8 @@ const PricingSection: React.FC = () => {
             Unlock unlimited access to our premium library with flexible subscription options
           </p>
         </div>
-        
+        {loading && <p className="text-center text-lg">Loading plans...</p>}
+        {error && <p className="text-center text-red-500">{error}</p>}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {availablePlans.map((plan) => (
             <PricingCard
@@ -31,7 +63,6 @@ const PricingSection: React.FC = () => {
             />
           ))}
         </div>
-        
         <div className="text-center mt-8">
           <p className="text-muted-foreground">
             All plans include a 7-day free trial. Cancel anytime.

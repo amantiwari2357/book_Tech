@@ -29,6 +29,8 @@ import { useEffect } from 'react';
 import { useAppDispatch } from '@/store';
 import { setUser } from '@/store/slices/authSlice';
 import { getToken, authFetch } from '@/lib/api';
+import AdminPlanManagement from '@/pages/AdminPlanManagement';
+import AdminBookApprovals from './pages/AdminBookApprovals';
 
 const queryClient = new QueryClient();
 
@@ -71,9 +73,11 @@ const AppContent = () => {
               <Route path="/upload" element={<Upload />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/admin-book-approvals" element={<AdminBookApprovals />} />
+              <Route path="/admin-plan-management" element={<AdminPlanManagement />} />
               <Route path="/author-dashboard" element={<AuthorDashboard />} />
               <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
                               <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/notifications" element={<Notifications />} />
