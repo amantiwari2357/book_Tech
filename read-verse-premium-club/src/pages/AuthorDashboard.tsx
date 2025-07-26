@@ -31,6 +31,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea'; // Assuming you have a Textarea component
+import BookGrid from '@/components/Books/BookGrid';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c', '#83a6ed', '#8dd1e1'];
 
@@ -58,10 +59,31 @@ type ReadingStats = {
   // add other fields as needed
 };
 
+// Helper: Get user's favorite category (most orders or most books)
+function getFavoriteCategory(user: any, books: any[]) {
+  if (!user || !user.orders || !books.length) return null;
+  const catCount: Record<string, number> = {};
+  user.orders.forEach((o: any) => {
+    const book = books.find((b) => b._id === (typeof o.book === 'object' ? o.book._id : o.book));
+    if (book && book.category) catCount[book.category] = (catCount[book.category] || 0) + 1;
+  });
+  const sorted = Object.entries(catCount).sort((a, b) => (b[1] as number) - (a[1] as number));
+  return sorted.length ? sorted[0][0] : null;
+}
+// Helper: Get trending/new releases in favorite category
+function getTrendingInCategory(category: string, books: any[]) {
+  if (!category) return [];
+  return books.filter((b) => b.category === category).slice(0, 3);
+}
+// Helper: Recommended books: top 3 by rating
+function getRecommendedBooks(books: any[]) {
+  return [...books].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 3);
+}
+
 const AuthorDashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const { books, featuredBooks } = useAppSelector((state) => state.books);
   const navigate = useNavigate();
-  const [books, setBooks] = useState<Book[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -103,7 +125,7 @@ const AuthorDashboard: React.FC = () => {
       const res = await authFetch('/books/my/books');
       if (res.ok) {
         const data = await res.json();
-        setBooks(data);
+        // setBooks(data); // This line was removed as per the new_code, as books are now from Redux
       } else {
         const errData = await res.json();
         setError(errData.message || 'Failed to load books');
@@ -355,6 +377,11 @@ const AuthorDashboard: React.FC = () => {
     value: categoryCounts[category],
   }));
 
+  const isPaidMember = user?.subscription === 'premium' || user?.subscription === 'enterprise';
+  const favoriteCategory = getFavoriteCategory(user, books);
+  const trendingInCategory = getTrendingInCategory(favoriteCategory, books);
+  const recommendedBooks = getRecommendedBooks(books);
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">
       <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center">Author Dashboard</h1>
@@ -387,6 +414,19 @@ const AuthorDashboard: React.FC = () => {
             </div>
           </div>
         </section>
+      )}
+      {/* Show Recommended and Featured Books for paid authors */}
+      {isPaidMember && (
+        <>
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold mb-4">Recommended Books</h2>
+            <BookGrid books={recommendedBooks} />
+          </section>
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold mb-4">Featured Books</h2>
+            <BookGrid books={featuredBooks} />
+          </section>
+        </>
       )}
       <div className="flex justify-center mb-8">
         <Button size="lg" onClick={() => setShowUploadModal(true)}>

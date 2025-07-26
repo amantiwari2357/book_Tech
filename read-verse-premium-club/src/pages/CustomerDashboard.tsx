@@ -4,9 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { authFetch } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import BookGrid from '@/components/Books/BookGrid';
+
+// Helper: Recently viewed (mock: last 3 books)
+function getRecentlyViewed(books: any[]) {
+  return books.slice(-3);
+}
 
 const CustomerDashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const { books } = useAppSelector((state) => state.books);
   const navigate = useNavigate();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,10 +80,19 @@ const CustomerDashboard: React.FC = () => {
     setSelectedOrder(null);
   };
 
+  const recentlyViewed = getRecentlyViewed(books);
+
   return (
     <div className="container mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold mb-4">Customer Dashboard</h1>
       <p className="mb-8">Welcome, {user?.name}! Track your orders and reading progress.</p>
+      {/* Recently Viewed Section */}
+      {recentlyViewed.length > 0 && (
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Recently Viewed</h2>
+          <BookGrid books={recentlyViewed} />
+        </section>
+      )}
       {user && stats && (
         <section className="mb-8">
           <div className="flex flex-wrap gap-8 items-center">
