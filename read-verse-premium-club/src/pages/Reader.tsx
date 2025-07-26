@@ -22,6 +22,7 @@ const Reader: React.FC = () => {
 
   return (
     <EBookReader
+      bookId={book.id}
       title={book.title}
       author={book.author}
       isPremium={book.isPremium}

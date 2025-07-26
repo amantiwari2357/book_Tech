@@ -127,8 +127,12 @@ const CartSidebar: React.FC = () => {
                     alert('Failed to create payment link');
                   }
                 } else {
-                  const errorData = await res.json();
-                  alert(errorData.message || 'Checkout failed');
+                  let errorMsg = 'Checkout failed';
+                  try {
+                    const errorData = await res.json();
+                    if (errorData && errorData.message) errorMsg = errorData.message;
+                  } catch {}
+                  alert(errorMsg);
                 }
               } catch (error) {
                 console.error('Checkout failed:', error);
