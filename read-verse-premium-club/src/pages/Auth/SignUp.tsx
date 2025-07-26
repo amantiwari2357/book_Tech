@@ -9,7 +9,7 @@ import { useAppDispatch } from '@/store';
 import { setUser } from '@/store/slices/authSlice';
 import { setToken, authFetch } from '@/lib/api';
 
-const Signup: React.FC = () => {
+const SignUp: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [name, setName] = useState('');
@@ -149,4 +149,4 @@ const Signup: React.FC = () => {
   );
 };
 
-export default Signup;
+export default SignUp;
