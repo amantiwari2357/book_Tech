@@ -442,7 +442,7 @@ const AdminDashboard: React.FC = () => {
           <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-12">
             <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 tracking-tight">Admin Dashboard</h1>
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-10">
               <SummaryCard icon={<UsersIcon className="w-7 h-7 text-primary" />} label="Total Users" value={analytics?.totalUsers ?? '--'} />
               <SummaryCard icon={<BookOpenIcon className="w-7 h-7 text-primary" />} label="Total Books" value={analytics?.totalBooks ?? '--'} />
               <SummaryCard icon={<CurrencyDollarIcon className="w-7 h-7 text-primary" />} label="Revenue" value={analytics?.totalRevenue ?? '--'} />

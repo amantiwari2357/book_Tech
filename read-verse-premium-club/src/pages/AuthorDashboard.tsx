@@ -390,7 +390,7 @@ const AuthorDashboard: React.FC = () => {
       </p>
       {user && stats && (
         <section className="mb-8">
-          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 items-center">
             <div className="bg-muted rounded-lg p-4 min-w-[160px] text-center">
               <div className="text-2xl font-bold text-primary">{stats?.booksRead}</div>
               <div className="text-muted-foreground">Books Read</div>
