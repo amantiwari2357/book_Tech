@@ -16,7 +16,7 @@ import Reader from "./pages/Reader";
 import Upload from "./pages/Upload";
 import NotFound from "./pages/NotFound";
 import Login from './pages/Auth/Login';
-import Signup from './pages/Auth/Signup';
+import SignUp from './pages/Auth/SignUp';
 import AuthorDashboard from './pages/AuthorDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -45,7 +45,7 @@ const App = () => (
                 <Route path="/reader/:id" element={<Reader />} />
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+                <Route path="/signup" element={<SignUp />} />
                 <Route path="/author-dashboard" element={<AuthorDashboard />} />
                 <Route path="/customer-dashboard" element={<CustomerDashboard />} />
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
