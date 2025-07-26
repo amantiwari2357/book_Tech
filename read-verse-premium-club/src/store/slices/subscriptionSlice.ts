@@ -70,5 +70,4 @@ const subscriptionSlice = createSlice({
 });
 
 export const { setCurrentPlan, setSubscriptionEnd, setLoading, setError } = subscriptionSlice.actions;
-export { fetchPlans };
 export default subscriptionSlice.reducer;
