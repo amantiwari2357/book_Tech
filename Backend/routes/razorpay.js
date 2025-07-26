@@ -41,9 +41,16 @@ router.post('/webhook', express.json({ type: 'application/json' }), async (req, 
   }
 });
 
+// Test endpoint
+router.get('/test', (req, res) => {
+  res.json({ message: 'Razorpay route is working' });
+});
+
 // Manual payment status update (for testing)
 router.post('/update-payment-status', async (req, res) => {
   try {
+    console.log('Update payment status called with body:', req.body);
+    
     const { paymentLinkId, status } = req.body;
     
     if (!paymentLinkId || !status) {

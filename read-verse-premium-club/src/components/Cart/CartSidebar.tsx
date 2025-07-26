@@ -77,7 +77,7 @@ const CartSidebar: React.FC = () => {
                       by {book.author}
                     </p>
                     <span className="font-semibold text-primary">
-                      ${typeof book.price === 'number' ? book.price.toFixed(2) : '0.00'}
+                    ₹{typeof book.price === 'number' ? book.price.toFixed(2) : '0.00'}
                     </span>
                   </div>
                   <Button

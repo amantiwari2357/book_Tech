@@ -690,6 +690,24 @@ const AuthorDashboard: React.FC = () => {
       {/* Orders Section */}
       <div className="mt-12">
         <h2 className="text-2xl font-bold mb-6">Orders for Your Books</h2>
+        <button
+          onClick={async () => {
+            try {
+              const res = await authFetch('/razorpay/test');
+              if (res.ok) {
+                const data = await res.json();
+                console.log('Test response:', data);
+                toast({ title: 'Success', description: 'Route is working!', });
+              }
+            } catch (err) {
+              console.error('Test failed:', err);
+              toast({ title: 'Error', description: 'Route test failed', variant: 'destructive', });
+            }
+          }}
+          className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Test Razorpay Route
+        </button>
         {orders.length === 0 ? (
           <p className="text-gray-500">No orders yet.</p>
         ) : (
@@ -760,6 +778,7 @@ const AuthorDashboard: React.FC = () => {
                           <button
                             onClick={async () => {
                               try {
+                                console.log('Attempting to update payment status for:', order.paymentLinkId);
                                 const res = await authFetch('/razorpay/update-payment-status', {
                                   method: 'POST',
                                   body: JSON.stringify({
@@ -767,11 +786,19 @@ const AuthorDashboard: React.FC = () => {
                                     status: 'paid'
                                   }),
                                 });
+                                console.log('Response status:', res.status);
                                 if (res.ok) {
+                                  const data = await res.json();
+                                  console.log('Success response:', data);
                                   fetchOrders();
                                   toast({ title: 'Success', description: 'Payment status updated!', });
+                                } else {
+                                  const errorData = await res.json().catch(() => ({}));
+                                  console.error('Error response:', errorData);
+                                  toast({ title: 'Error', description: errorData.message || 'Failed to update payment status', variant: 'destructive', });
                                 }
                               } catch (err) {
+                                console.error('Exception:', err);
                                 toast({ title: 'Error', description: 'Failed to update payment status', variant: 'destructive', });
                               }
                             }}
