@@ -24,6 +24,7 @@ import ForgotPassword from './pages/Auth/ForgotPassword';
 import ResetPassword from './pages/Auth/ResetPassword';
 import Notifications from './pages/Notifications';
 import EditProfile from './pages/EditProfile';
+import PaymentSuccess from './pages/PaymentSuccess';
 import { useEffect } from 'react';
 import { useAppDispatch } from '@/store';
 import { setUser } from '@/store/slices/authSlice';
@@ -74,9 +75,10 @@ const AppContent = () => {
               <Route path="/customer-dashboard" element={<CustomerDashboard />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/edit-profile" element={<EditProfile />} />
+                              <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/edit-profile" element={<EditProfile />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

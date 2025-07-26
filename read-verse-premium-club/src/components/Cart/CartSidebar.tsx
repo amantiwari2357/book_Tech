@@ -105,15 +105,30 @@ const CartSidebar: React.FC = () => {
             className="w-full" 
             variant="hero"
             onClick={async () => {
+              if (items.length === 0) {
+                alert('Your cart is empty!');
+                return;
+              }
+              
+              // For now, process first item in cart
+              const firstItem = items[0];
               try {
-                const res = await authFetch('/checkout', {
+                const res = await authFetch('/checkout/create-payment-link', {
                   method: 'POST',
+                  body: JSON.stringify({ bookId: firstItem.id }),
                 });
+                
                 if (res.ok) {
-                  // Clear cart and show success message
-                  dispatch(clearCart());
-                  dispatch(toggleCart());
-                  alert('Checkout successful! Your order has been placed.');
+                  const data = await res.json();
+                  if (data.paymentLink) {
+                    // Redirect to Razorpay payment page
+                    window.location.href = data.paymentLink;
+                  } else {
+                    alert('Failed to create payment link');
+                  }
+                } else {
+                  const errorData = await res.json();
+                  alert(errorData.message || 'Checkout failed');
                 }
               } catch (error) {
                 console.error('Checkout failed:', error);

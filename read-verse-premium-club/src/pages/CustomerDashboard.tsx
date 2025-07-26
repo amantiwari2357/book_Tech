@@ -26,9 +26,13 @@ const CustomerDashboard: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await authFetch('/cart/orders');
-      const data = await res.json();
-      setOrders(data);
+      const res = await authFetch('/orders/my-orders');
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
+      } else {
+        setError('Failed to load order history');
+      }
     } catch (err) {
       setError('Failed to load order history');
     } finally {
@@ -72,7 +76,7 @@ const CustomerDashboard: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold mb-4">Customer Dashboard</h1>
-      <p className="mb-8">Welcome, {user?.name}! Browse and purchase your favorite books.</p>
+      <p className="mb-8">Welcome, {user?.name}! Track your orders and reading progress.</p>
       {user && stats && (
         <section className="mb-8">
           <div className="flex flex-wrap gap-8 items-center">
@@ -107,11 +111,25 @@ const CustomerDashboard: React.FC = () => {
             {orders.map((order) => (
               <Card key={order._id} className="p-4 flex flex-col cursor-pointer" onClick={() => handleOrderClick(order)}>
                 <div className="font-bold text-lg mb-2">{order.book?.title}</div>
-                <div className="text-sm text-muted-foreground mb-2">{order.book?.category}</div>
-                <div className="mb-2">{order.book?.description}</div>
-                <div className="mb-2">Price: ${order.book?.price}</div>
-                <div className="mb-2">Tags: {order.book?.tags?.join(', ')}</div>
-                <div className="text-xs text-muted-foreground mt-2">Purchased: {order.date ? new Date(order.date).toLocaleDateString() : ''}</div>
+                <div className="text-sm text-muted-foreground mb-2">by {order.book?.author}</div>
+                <div className="mb-2">Amount: ₹{order.amount}</div>
+                <div className="mb-2">Order Date: {new Date(order.createdAt).toLocaleDateString()}</div>
+                <div className="flex gap-2 mb-2">
+                  <div className={`px-2 py-1 rounded text-xs font-medium ${
+                    order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' :
+                    order.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    Payment: {order.paymentStatus}
+                  </div>
+                  <div className={`px-2 py-1 rounded text-xs font-medium ${
+                    order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
+                    order.orderStatus === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    Order: {order.orderStatus}
+                  </div>
+                </div>
               </Card>
             ))}
           </div>

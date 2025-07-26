@@ -62,6 +62,7 @@ const AuthorDashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
   const [books, setBooks] = useState<Book[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
@@ -127,6 +128,7 @@ const AuthorDashboard: React.FC = () => {
   useEffect(() => {
     if (user?.role === 'author') {
       fetchBooks();
+      fetchOrders();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, user?.role]);
@@ -148,6 +150,40 @@ const AuthorDashboard: React.FC = () => {
       }
     } catch (err) {
       // Optionally log or set an error state
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const res = await authFetch('/orders/author-orders');
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    try {
+      const res = await authFetch(`/orders/update-status/${orderId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ orderStatus: status }),
+      });
+      if (res.ok) {
+        fetchOrders(); // Refresh orders
+        toast({
+          title: 'Success',
+          description: 'Order status updated successfully!',
+        });
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update order status',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -637,6 +673,83 @@ const AuthorDashboard: React.FC = () => {
           </form>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Orders Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold mb-6">Orders for Your Books</h2>
+        {orders.length === 0 ? (
+          <p className="text-gray-500">No orders yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 p-3 text-left">Book</th>
+                  <th className="border border-gray-300 p-3 text-left">Customer</th>
+                  <th className="border border-gray-300 p-3 text-left">Amount</th>
+                  <th className="border border-gray-300 p-3 text-left">Payment Status</th>
+                  <th className="border border-gray-300 p-3 text-left">Order Status</th>
+                  <th className="border border-gray-300 p-3 text-left">Date</th>
+                  <th className="border border-gray-300 p-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order) => (
+                  <tr key={order._id} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 p-3">
+                      <div>
+                        <div className="font-semibold">{order.book?.title}</div>
+                        <div className="text-sm text-gray-600">by {order.book?.author}</div>
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      <div>
+                        <div className="font-semibold">{order.customer?.name}</div>
+                        <div className="text-sm text-gray-600">{order.customer?.email}</div>
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 p-3">₹{order.amount}</td>
+                    <td className="border border-gray-300 p-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' :
+                        order.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {order.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
+                        order.orderStatus === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {order.orderStatus}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      {order.paymentStatus === 'paid' && (
+                        <select
+                          value={order.orderStatus}
+                          onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                          className="px-2 py-1 border rounded text-sm"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                        </select>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
