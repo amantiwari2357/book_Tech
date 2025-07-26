@@ -546,7 +546,7 @@ const AuthorDashboard: React.FC = () => {
                 </tr>
               ) : (
                 books.map((book) => (
-                  <tr key={book._id || book.id} className="border-t hover:bg-muted/50">
+                  <tr key={book.id} className="border-t hover:bg-muted/50">
                     <td className="p-2 sm:p-4 font-medium text-gray-900">{book.title}</td>
                     <td className="p-2 sm:p-4 text-gray-700">{book.category || 'N/A'}</td>
                     <td className="p-2 sm:p-4 capitalize">
@@ -563,7 +563,7 @@ const AuthorDashboard: React.FC = () => {
                     <td className="p-2 sm:p-4 text-gray-700">{book.sales || 0}</td>
                     <td className="p-2 sm:p-4 text-gray-700">${(book.earnings || 0).toFixed(2)}</td>
                     <td className="p-2 sm:p-4 space-x-3">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(book)} className="text-sm px-4 py-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(book as unknown as Book)} className="text-sm px-4 py-2">
                         Edit
                       </Button>
                       <AlertDialog>
@@ -582,7 +582,7 @@ const AuthorDashboard: React.FC = () => {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(book._id || book.id)}>
+                            <AlertDialogAction onClick={() => handleDelete(book.id)}>
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -620,7 +620,7 @@ const AuthorDashboard: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="price" className="text-base">Price ($)</Label>
+              <Label htmlFor="price" className="text-base">Price (₹)</Label>
               <Input id="price" name="price" type="number" value={form.price} onChange={handleChange} required min="0" step="0.01" className="mt-1 p-2 border rounded-md w-full" />
             </div>
 
