@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { authFetch } from '@/lib/api';
 
 interface Book {
   _id: string;
@@ -17,13 +17,24 @@ const AdminBookApprovals: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    axios.get('/api/books/admin/pending', { withCredentials: true })
-      .then(res => {
-        if (Array.isArray(res.data)) setPendingBooks(res.data);
-        else if (Array.isArray((res.data as { books?: unknown }).books)) setPendingBooks((res.data as { books: Book[] }).books);
-        else setPendingBooks([]);
+    console.log('Fetching pending books...');
+    authFetch('/books/admin/pending')
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          console.log('Pending books response:', data);
+          if (Array.isArray(data)) setPendingBooks(data);
+          else if (Array.isArray((data as { books?: unknown }).books)) setPendingBooks((data as { books: Book[] }).books);
+          else setPendingBooks([]);
+        } else {
+          console.error('Failed to fetch pending books:', res.status);
+          setPendingBooks([]);
+        }
       })
-      .catch(() => setPendingBooks([]));
+      .catch((error) => {
+        console.error('Error fetching pending books:', error);
+        setPendingBooks([]);
+      });
   }, []);
 
   const filteredBooks = Array.isArray(pendingBooks)
@@ -47,22 +58,33 @@ const AdminBookApprovals: React.FC = () => {
       return;
     }
     try {
-      await axios.post(
-        `/api/books/admin/approve/${selectedBook?._id}`,
-        form,
-        { withCredentials: true }
-      );
-      setPendingBooks(pendingBooks.filter(b => b._id !== selectedBook?._id));
-      setModalOpen(false);
-      setError('');
+      const res = await authFetch(`/books/admin/approve/${selectedBook?._id}`, {
+        method: 'POST',
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setPendingBooks(pendingBooks.filter(b => b._id !== selectedBook?._id));
+        setModalOpen(false);
+        setError('');
+      } else {
+        setError('Approval failed.');
+      }
     } catch (err) {
       setError('Approval failed.');
     }
   };
 
   const handleReject = async (bookId: string) => {
-    await axios.post(`/api/books/admin/reject/${bookId}`, {}, { withCredentials: true });
-    setPendingBooks(pendingBooks.filter(b => b._id !== bookId));
+    try {
+      const res = await authFetch(`/books/admin/reject/${bookId}`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        setPendingBooks(pendingBooks.filter(b => b._id !== bookId));
+      }
+    } catch (err) {
+      console.error('Rejection failed:', err);
+    }
   };
 
   return (
