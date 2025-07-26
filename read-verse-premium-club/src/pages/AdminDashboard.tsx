@@ -439,30 +439,30 @@ const AdminDashboard: React.FC = () => {
         </Sidebar>
         {/* Main Content */}
         <div className="flex-1">
-          <div className="container mx-auto px-4 py-12">
-            <h1 className="text-3xl font-bold mb-8 tracking-tight">Admin Dashboard</h1>
+          <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-12">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 tracking-tight">Admin Dashboard</h1>
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-10">
               <SummaryCard icon={<UsersIcon className="w-7 h-7 text-primary" />} label="Total Users" value={analytics?.totalUsers ?? '--'} />
               <SummaryCard icon={<BookOpenIcon className="w-7 h-7 text-primary" />} label="Total Books" value={analytics?.totalBooks ?? '--'} />
               <SummaryCard icon={<CurrencyDollarIcon className="w-7 h-7 text-primary" />} label="Revenue" value={analytics?.totalRevenue ?? '--'} />
               <SummaryCard icon={<StarIcon className="w-7 h-7 text-primary" />} label="Active Users" value={analytics?.activeUsers ?? '--'} />
             </div>
             {/* Analytics Section */}
-            <div className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4 flex items-center gap-4">
+            <div className="mb-8 sm:mb-12">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                 Analytics
                 <Button size="sm" variant="outline" onClick={() => handleExport('analytics')}>Export Analytics CSV</Button>
               </h2>
               {analyticsLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="h-56 bg-muted rounded-xl animate-pulse" />
+                    <div key={i} className="h-40 sm:h-56 bg-muted rounded-xl animate-pulse" />
                   ))}
                 </div>
               ) : analyticsError ? <p className="text-red-500">{analyticsError}</p> : analytics && (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* ... existing analytics cards/charts ... */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+                  {/* ... analytics cards/charts ... */}
                   {/* (keep your chart code here, but wrap each in a card with shadow/rounded bg) */}
                   <div className="bg-white rounded-xl shadow p-4 col-span-1">
                     <h3 className="font-semibold mb-2">User Growth</h3>
@@ -526,17 +526,17 @@ const AdminDashboard: React.FC = () => {
             </div>
             {/* Users & Books Management */}
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
                 {[...Array(2)].map((_, i) => (
-                  <div key={i} className="h-96 bg-muted rounded-xl animate-pulse" />
+                  <div key={i} className="h-64 sm:h-96 bg-muted rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : error ? <p className="text-red-500">{error}</p> : (
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
                 {/* Users List */}
-                <div className="bg-white rounded-xl shadow p-6">
-                  <h2 className="text-xl font-semibold mb-4">Users</h2>
-                  <div className="flex gap-2 mb-4">
+                <div className="bg-white rounded-xl shadow p-4 sm:p-6">
+                  <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Users</h2>
+                  <div className="flex flex-col sm:flex-row gap-2 mb-3 sm:mb-4">
                     <input className="p-2 border rounded w-full" placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)} />
                     <select className="p-2 border rounded" value={userRoleFilter} onChange={e => setUserRoleFilter(e.target.value)}>
                       <option value="">All Roles</option>
@@ -561,7 +561,7 @@ const AdminDashboard: React.FC = () => {
                     </Card>
                   ))}
                   {userTotalPages > 1 && (
-                    <Pagination className="mt-4">
+                    <Pagination className="mt-3 sm:mt-4">
                       <PaginationContent>
                         <PaginationItem>
                           <PaginationPrevious onClick={() => setUserPage((p) => Math.max(1, p - 1))} />
@@ -579,9 +579,9 @@ const AdminDashboard: React.FC = () => {
                   )}
                 </div>
                 {/* Books List */}
-                <div className="bg-white rounded-xl shadow p-6">
-                  <h2 className="text-xl font-semibold mb-4">Books</h2>
-                  <div className="flex gap-2 mb-4">
+                <div className="bg-white rounded-xl shadow p-4 sm:p-6">
+                  <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Books</h2>
+                  <div className="flex flex-col sm:flex-row gap-2 mb-3 sm:mb-4">
                     <input className="p-2 border rounded w-full" placeholder="Search books..." value={bookSearch} onChange={e => setBookSearch(e.target.value)} />
                     <select className="p-2 border rounded" value={bookCategoryFilter} onChange={e => setBookCategoryFilter(e.target.value)}>
                       <option value="">All Categories</option>
@@ -604,7 +604,7 @@ const AdminDashboard: React.FC = () => {
                     </Card>
                   ))}
                   {bookTotalPages > 1 && (
-                    <Pagination className="mt-4">
+                    <Pagination className="mt-3 sm:mt-4">
                       <PaginationContent>
                         <PaginationItem>
                           <PaginationPrevious onClick={() => setBookPage((p) => Math.max(1, p - 1))} />

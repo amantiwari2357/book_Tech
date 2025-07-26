@@ -390,7 +390,7 @@ const AuthorDashboard: React.FC = () => {
       </p>
       {user && stats && (
         <section className="mb-8">
-          <div className="flex flex-wrap gap-8 items-center">
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 items-center">
             <div className="bg-muted rounded-lg p-4 min-w-[160px] text-center">
               <div className="text-2xl font-bold text-primary">{stats?.booksRead}</div>
               <div className="text-muted-foreground">Books Read</div>
@@ -418,24 +418,24 @@ const AuthorDashboard: React.FC = () => {
       {/* Show Recommended and Featured Books for paid authors */}
       {isPaidMember && (
         <>
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-4">Recommended Books</h2>
+          <section className="mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Recommended Books</h2>
             <BookGrid books={recommendedBooks} />
           </section>
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-4">Featured Books</h2>
+          <section className="mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Featured Books</h2>
             <BookGrid books={featuredBooks} />
           </section>
         </>
       )}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-6 sm:mb-8">
         <Button size="lg" onClick={() => setShowUploadModal(true)}>
           Upload Book
         </Button>
       </div>
 
       {/* --- Key Metrics Section --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
         <Card className="p-6 flex flex-col items-center justify-center text-center shadow-lg">
           <h3 className="font-semibold text-xl mb-2 text-gray-700">Total Earnings</h3>
           <div className="text-5xl font-extrabold text-green-600">
@@ -462,8 +462,8 @@ const AuthorDashboard: React.FC = () => {
       </div>
 
       {/* --- Analytics Charts Section --- */}
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Your Book Analytics</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center">Your Book Analytics</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
         <Card className="p-4 shadow-lg">
           <h3 className="font-semibold text-lg mb-4 text-gray-800">Books by Status</h3>
           <ResponsiveContainer width="100%" height={250}>
@@ -519,22 +519,22 @@ const AuthorDashboard: React.FC = () => {
       </div>
 
       {/* --- Your Books Table --- */}
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Your Published Books</h2>
+      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center">Your Published Books</h2>
       {loading ? (
         <p className="text-center text-lg text-muted-foreground">Loading books...</p>
       ) : error ? (
         <p className="text-red-500 text-center text-lg">{error}</p>
       ) : (
         <div className="overflow-x-auto rounded-md border shadow-md">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-xs sm:text-sm">
             <thead className="bg-muted">
               <tr>
-                <th className="p-4 text-left font-semibold text-gray-700">Title</th>
-                <th className="p-4 text-left font-semibold text-gray-700">Category</th>
-                <th className="p-4 text-left font-semibold text-gray-700">Status</th>
-                <th className="p-4 text-left font-semibold text-gray-700">Sales</th>
-                <th className="p-4 text-left font-semibold text-gray-700">Earnings</th>
-                <th className="p-4 text-left font-semibold text-gray-700">Actions</th>
+                <th className="p-2 sm:p-4 text-left font-semibold text-gray-700">Title</th>
+                <th className="p-2 sm:p-4 text-left font-semibold text-gray-700">Category</th>
+                <th className="p-2 sm:p-4 text-left font-semibold text-gray-700">Status</th>
+                <th className="p-2 sm:p-4 text-left font-semibold text-gray-700">Sales</th>
+                <th className="p-2 sm:p-4 text-left font-semibold text-gray-700">Earnings</th>
+                <th className="p-2 sm:p-4 text-left font-semibold text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -546,10 +546,10 @@ const AuthorDashboard: React.FC = () => {
                 </tr>
               ) : (
                 books.map((book) => (
-                  <tr key={book._id} className="border-t hover:bg-muted/50">
-                    <td className="p-4 font-medium text-gray-900">{book.title}</td>
-                    <td className="p-4 text-gray-700">{book.category || 'N/A'}</td>
-                    <td className="p-4 capitalize">
+                  <tr key={book._id || book.id} className="border-t hover:bg-muted/50">
+                    <td className="p-2 sm:p-4 font-medium text-gray-900">{book.title}</td>
+                    <td className="p-2 sm:p-4 text-gray-700">{book.category || 'N/A'}</td>
+                    <td className="p-2 sm:p-4 capitalize">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold
                           ${book.status === 'approved' ? 'bg-green-100 text-green-800' : ''}
@@ -560,9 +560,9 @@ const AuthorDashboard: React.FC = () => {
                         {book.status}
                       </span>
                     </td>
-                    <td className="p-4 text-gray-700">{book.sales || 0}</td>
-                    <td className="p-4 text-gray-700">${(book.earnings || 0).toFixed(2)}</td>
-                    <td className="p-4 space-x-3">
+                    <td className="p-2 sm:p-4 text-gray-700">{book.sales || 0}</td>
+                    <td className="p-2 sm:p-4 text-gray-700">${(book.earnings || 0).toFixed(2)}</td>
+                    <td className="p-2 sm:p-4 space-x-3">
                       <Button variant="outline" size="sm" onClick={() => handleEdit(book)} className="text-sm px-4 py-2">
                         Edit
                       </Button>
@@ -582,7 +582,7 @@ const AuthorDashboard: React.FC = () => {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(book._id)}>
+                            <AlertDialogAction onClick={() => handleDelete(book._id || book.id)}>
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>

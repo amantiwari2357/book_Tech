@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ShoppingCartIcon, UserIcon, BookOpenIcon, MagnifyingGlassIcon, BellIcon } from '@heroicons/react/24/outline';
+import { ShoppingCartIcon, UserIcon, BookOpenIcon, MagnifyingGlassIcon, BellIcon, MenuIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { toggleCart } from '@/store/slices/cartSlice';
 import { setSearchTerm } from '@/store/slices/booksSlice';
@@ -23,6 +23,7 @@ const Header: React.FC = () => {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const [avatarLoaded, setAvatarLoaded] = useState(true);
   const [avatarError, setAvatarError] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -93,7 +94,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
@@ -101,8 +102,17 @@ const Header: React.FC = () => {
             <span className="text-2xl font-serif font-bold text-primary">BookTech</span>
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-md mx-8 relative">
+          {/* Hamburger for mobile */}
+          <button
+            className="sm:hidden p-2 ml-2 rounded focus:outline-none hover:bg-accent"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-label="Open menu"
+          >
+            {mobileMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
+          </button>
+
+          {/* Search Bar (hidden on xs, shown on sm+) */}
+          <div className="hidden sm:flex flex-1 max-w-md mx-8 relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
@@ -113,8 +123,8 @@ const Header: React.FC = () => {
             />
           </div>
 
-          {/* Navigation */}
-          <nav className="flex items-center gap-4">
+          {/* Desktop Navigation */}
+          <nav className="hidden sm:flex items-center gap-4">
             <Link to="/browse" className="text-foreground hover:text-primary transition-colors">
               Browse
             </Link>
@@ -255,6 +265,49 @@ const Header: React.FC = () => {
             )}
           </nav>
         </div>
+
+        {/* Mobile Menu Drawer */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden fixed inset-0 z-50 bg-black/40" onClick={() => setMobileMenuOpen(false)}>
+            <div className="absolute top-0 left-0 w-4/5 max-w-xs h-full bg-background shadow-lg p-6 flex flex-col gap-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xl font-bold font-serif text-primary">Menu</span>
+                <button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+              <div className="flex flex-col gap-4">
+                <Link to="/browse" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Browse</Link>
+                <Link to="/subscriptions" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Plans</Link>
+                <button
+                  className="flex items-center gap-2 text-lg"
+                  onClick={() => { dispatch(toggleCart()); setMobileMenuOpen(false); }}
+                >
+                  <ShoppingCartIcon className="h-5 w-5" /> Cart
+                  {totalItems > 0 && (
+                    <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-accent text-accent-foreground">{totalItems}</Badge>
+                  )}
+                </button>
+                {/* Authenticated User Dropdowns (mobile) */}
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/edit-profile" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Edit Profile</Link>
+                    <Link to="/notifications" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Notifications</Link>
+                    {user?.role === 'author' && <Link to="/author-dashboard" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Author Dashboard</Link>}
+                    {user?.role === 'customer' && <Link to="/customer-dashboard" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Customer Dashboard</Link>}
+                    {user?.role === 'admin' && <Link to="/admin-dashboard" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Admin Dashboard</Link>}
+                    <button onClick={handleLogout} className="text-left text-lg w-full mt-2">Logout</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+                    <Link to="/signup" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
