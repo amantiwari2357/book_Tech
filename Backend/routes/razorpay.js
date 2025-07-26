@@ -5,6 +5,8 @@ const router = express.Router();
 // Razorpay webhook handler
 router.post('/webhook', express.json({ type: 'application/json' }), async (req, res) => {
   try {
+    console.log('Webhook received - Full body:', JSON.stringify(req.body, null, 2));
+    
     const event = req.body.event;
     const payload = req.body.payload;
 
@@ -36,6 +38,36 @@ router.post('/webhook', express.json({ type: 'application/json' }), async (req, 
   } catch (error) {
     console.error('Webhook error:', error);
     res.status(500).json({ status: 'error' });
+  }
+});
+
+// Manual payment status update (for testing)
+router.post('/update-payment-status', async (req, res) => {
+  try {
+    const { paymentLinkId, status } = req.body;
+    
+    if (!paymentLinkId || !status) {
+      return res.status(400).json({ message: 'paymentLinkId and status are required' });
+    }
+
+    const order = await Order.findOneAndUpdate(
+      { paymentLinkId },
+      { 
+        paymentStatus: status,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    console.log(`Payment status updated to ${status} for paymentLinkId:`, paymentLinkId);
+    res.json({ message: 'Payment status updated successfully', order });
+  } catch (error) {
+    console.error('Manual payment status update error:', error);
+    res.status(500).json({ message: 'Failed to update payment status' });
   }
 });
 

@@ -757,6 +757,28 @@ const AuthorDashboard: React.FC = () => {
                       {order.paymentStatus !== 'paid' && (
                         <div className="text-xs text-gray-500 mt-1">
                           Wait for payment
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await authFetch('/razorpay/update-payment-status', {
+                                  method: 'POST',
+                                  body: JSON.stringify({
+                                    paymentLinkId: order.paymentLinkId,
+                                    status: 'paid'
+                                  }),
+                                });
+                                if (res.ok) {
+                                  fetchOrders();
+                                  toast({ title: 'Success', description: 'Payment status updated!', });
+                                }
+                              } catch (err) {
+                                toast({ title: 'Error', description: 'Failed to update payment status', variant: 'destructive', });
+                              }
+                            }}
+                            className="ml-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Mark as Paid
+                          </button>
                         </div>
                       )}
                     </td>
