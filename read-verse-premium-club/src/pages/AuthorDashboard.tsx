@@ -744,16 +744,20 @@ const AuthorDashboard: React.FC = () => {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="border border-gray-300 p-3">
-                      {order.paymentStatus === 'paid' && (
-                        <select
-                          value={order.orderStatus}
-                          onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                          className="px-2 py-1 border rounded text-sm"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                        </select>
+                      <select
+                        value={order.orderStatus}
+                        onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                        className="px-2 py-1 border rounded text-sm"
+                        disabled={order.paymentStatus !== 'paid'}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                      </select>
+                      {order.paymentStatus !== 'paid' && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Wait for payment
+                        </div>
                       )}
                     </td>
                   </tr>
