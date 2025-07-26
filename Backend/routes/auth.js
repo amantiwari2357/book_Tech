@@ -29,4 +29,11 @@ router.post('/signin', async (req, res) => {
   res.json({ token, user: { id: user._id, name: user.name, email: user.email, subscription: user.subscription, role: user.role } });
 });
 
+// Get current user
+router.get('/me', auth, async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+  res.json({ id: user._id, name: user.name, email: user.email, subscription: user.subscription, role: user.role });
+});
+
 module.exports = router; 

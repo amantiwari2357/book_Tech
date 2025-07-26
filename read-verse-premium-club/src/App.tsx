@@ -24,44 +24,75 @@ import ForgotPassword from './pages/Auth/ForgotPassword';
 import ResetPassword from './pages/Auth/ResetPassword';
 import Notifications from './pages/Notifications';
 import EditProfile from './pages/EditProfile';
+import { useEffect } from 'react';
+import { useAppDispatch } from '@/store';
+import { setUser } from '@/store/slices/authSlice';
+import { getToken, authFetch } from '@/lib/api';
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const token = getToken();
+      if (token) {
+        try {
+          const res = await authFetch('/auth/me');
+          if (res.ok) {
+            const user = await res.json();
+            dispatch(setUser(user));
+          }
+        } catch (error) {
+          console.error('Failed to restore session:', error);
+        }
+      }
+    };
+
+    initializeAuth();
+  }, [dispatch]);
+
+  return (
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <div className="min-h-screen bg-background text-foreground font-sans">
+          <Header />
+          <main>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/browse" element={<Browse />} />
+              <Route path="/book/:id" element={<BookDetails />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/reader/:id" element={<Reader />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/author-dashboard" element={<AuthorDashboard />} />
+              <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/edit-profile" element={<EditProfile />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Footer />
+          <CartSidebar />
+        </div>
+      </BrowserRouter>
+    </TooltipProvider>
+  );
+};
 
 const App = () => (
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="min-h-screen bg-background text-foreground font-sans">
-            <Header />
-            <main>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/book/:id" element={<BookDetails />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/reader/:id" element={<Reader />} />
-                <Route path="/upload" element={<Upload />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/author-dashboard" element={<AuthorDashboard />} />
-                <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/edit-profile" element={<EditProfile />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <Footer />
-            <CartSidebar />
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AppContent />
     </QueryClientProvider>
   </Provider>
 );

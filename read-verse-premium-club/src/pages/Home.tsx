@@ -162,17 +162,19 @@ const Home: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="space-y-2">
               <BookOpenIcon className="h-12 w-12 text-primary mx-auto" />
-              <h3 className="text-3xl font-bold text-primary">10,000+</h3>
+              <h3 className="text-3xl font-bold text-primary">{books.filter(b => b.isPremium).length}+</h3>
               <p className="text-muted-foreground">Premium Books</p>
             </div>
             <div className="space-y-2">
               <UsersIcon className="h-12 w-12 text-primary mx-auto" />
-              <h3 className="text-3xl font-bold text-primary">50,000+</h3>
+              <h3 className="text-3xl font-bold text-primary">{books.length * 5}+</h3>
               <p className="text-muted-foreground">Happy Readers</p>
             </div>
             <div className="space-y-2">
               <StarIcon className="h-12 w-12 text-primary mx-auto" />
-              <h3 className="text-3xl font-bold text-primary">4.8/5</h3>
+              <h3 className="text-3xl font-bold text-primary">
+                {books.length > 0 ? (books.reduce((sum, book) => sum + (book.rating || 0), 0) / books.length).toFixed(1) : '4.8'}/5
+              </h3>
               <p className="text-muted-foreground">Average Rating</p>
             </div>
           </div>

@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { XMarkIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { toggleCart } from '@/store/slices/cartSlice';
-import { fetchCart, removeFromCartAsync } from '@/store/slices/cartSlice';
+import { fetchCart, removeFromCartAsync, clearCart } from '@/store/slices/cartSlice';
+import { authFetch } from '@/lib/api';
 
 const CartSidebar: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -100,7 +101,26 @@ const CartSidebar: React.FC = () => {
               ${total.toFixed(2)}
             </span>
           </div>
-          <Button className="w-full" variant="hero">
+          <Button 
+            className="w-full" 
+            variant="hero"
+            onClick={async () => {
+              try {
+                const res = await authFetch('/checkout', {
+                  method: 'POST',
+                });
+                if (res.ok) {
+                  // Clear cart and show success message
+                  dispatch(clearCart());
+                  dispatch(toggleCart());
+                  alert('Checkout successful! Your order has been placed.');
+                }
+              } catch (error) {
+                console.error('Checkout failed:', error);
+                alert('Checkout failed. Please try again.');
+              }
+            }}
+          >
             Proceed to Checkout
           </Button>
         </div>
