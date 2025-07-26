@@ -24,8 +24,8 @@ router.post('/create-payment-link', auth, async (req, res) => {
       return res.status(404).json({ message: 'Book not found' });
     }
 
-    if (!book.price || book.price <= 0) {
-      return res.status(400).json({ message: 'Invalid book price' });
+    if (!book.price || book.price < 1) {
+      return res.status(400).json({ message: 'Book price must be at least ₹1.00 (100 paise) for payment.' });
     }
 
     const paymentLink = await razorpay.paymentLink.create({

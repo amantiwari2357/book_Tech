@@ -202,9 +202,22 @@ const AuthorDashboard: React.FC = () => {
     setUploading(true);
     setError('');
 
+    // Frontend validation for minimum price
+    const priceValue = parseFloat(form.price) || 0;
+    if (priceValue < 1) {
+      setError('Book price must be at least ₹1.00 (100 paise) for payment.');
+      toast({
+        title: 'Error',
+        description: 'Book price must be at least ₹1.00 (100 paise) for payment.',
+        variant: 'destructive',
+      });
+      setUploading(false);
+      return;
+    }
+
     const bookData = {
       ...form,
-      price: parseFloat(form.price) || 0,
+      price: priceValue,
       tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
       readingType: form.readingType, // <-- Ensure this is present
     };
