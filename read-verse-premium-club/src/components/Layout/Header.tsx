@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ShoppingCartIcon, UserIcon, BookOpenIcon, MagnifyingGlassIcon, BellIcon, MenuIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ShoppingCartIcon, UserIcon, BookOpenIcon, MagnifyingGlassIcon, BellIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { toggleCart } from '@/store/slices/cartSlice';
 import { setSearchTerm } from '@/store/slices/booksSlice';
@@ -108,7 +108,7 @@ const Header: React.FC = () => {
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label="Open menu"
           >
-            {mobileMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
+            {mobileMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
           </button>
 
           {/* Search Bar (hidden on xs, shown on sm+) */}
