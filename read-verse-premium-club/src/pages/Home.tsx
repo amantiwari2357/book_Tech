@@ -94,8 +94,8 @@ const Home: React.FC = () => {
   // Determine user subscription status
   const isPremium = user?.subscription === 'premium' || user?.subscription === 'enterprise';
 
-  // Recommended books: top 3 by rating or by category
-  const recommendedBooks = isAuthenticated
+  // Legacy recommended books logic (keeping for fallback)
+  const legacyRecommendedBooks = isAuthenticated
     ? [...books].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 3)
     : [];
 
