@@ -32,6 +32,9 @@ import { getToken, authFetch } from '@/lib/api';
 import AdminPlanManagement from '@/pages/AdminPlanManagement';
 import AdminBookApprovals from './pages/AdminBookApprovals';
 import AdminBookManagement from './pages/AdminBookManagement';
+import BookDesign from './pages/BookDesign';
+import BookDesignReader from './pages/BookDesignReader';
+import AdminBookDesignApprovals from './pages/AdminBookDesignApprovals';
 
 const queryClient = new QueryClient();
 
@@ -78,6 +81,9 @@ const AppContent = () => {
               <Route path="/admin-book-approvals" element={<AdminBookApprovals />} />
               <Route path="/admin-book-management" element={<AdminBookManagement />} />
               <Route path="/admin-plan-management" element={<AdminPlanManagement />} />
+              <Route path="/book-design" element={<BookDesign />} />
+              <Route path="/book-design-reader/:id" element={<BookDesignReader />} />
+              <Route path="/admin-book-design-approvals" element={<AdminBookDesignApprovals />} />
               <Route path="/author-dashboard" element={<AuthorDashboard />} />
               <Route path="/customer-dashboard" element={<CustomerDashboard />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />

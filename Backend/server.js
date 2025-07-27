@@ -14,6 +14,7 @@
   const notificationsRoutes = require('./routes/notifications');
   const ordersRoutes = require('./routes/orders');
   const razorpayRoutes = require('./routes/razorpay');
+  const bookDesignRoutes = require('./routes/bookDesign');
 
   const app = express();
   app.use(cors({
@@ -38,6 +39,7 @@
   app.use('/api/notifications', notificationsRoutes);
   app.use('/api/orders', ordersRoutes);
   app.use('/api/razorpay', razorpayRoutes);
+  app.use('/api/book-designs', bookDesignRoutes);
 
   const PORT = process.env.PORT || 5000;
 

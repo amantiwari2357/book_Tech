@@ -12,7 +12,7 @@ const AdminBookApprovals: React.FC = () => {
   const [pendingBooks, setPendingBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ displayType: '', distributionType: '' });
+  const [form, setForm] = useState({ displayType: '', distributionType: '', isRecommended: false });
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
 
@@ -46,7 +46,7 @@ const AdminBookApprovals: React.FC = () => {
 
   const openApproveModal = (book: Book) => {
     setSelectedBook(book);
-    setForm({ displayType: '', distributionType: '' });
+    setForm({ displayType: '', distributionType: '', isRecommended: false });
     setModalOpen(true);
     setError('');
   };
@@ -135,6 +135,18 @@ const AdminBookApprovals: React.FC = () => {
                 </label>
                 <label>
                   <input type="radio" name="distributionType" value="soft" checked={form.distributionType === 'soft'} onChange={e => setForm({ ...form, distributionType: e.target.value })} required /> No (Soft Copy Only)
+                </label>
+              </div>
+              <div>
+                <label className="font-semibold block mb-2">Additional Options:</label>
+                <label className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    checked={form.isRecommended} 
+                    onChange={e => setForm({ ...form, isRecommended: e.target.checked })} 
+                    className="mr-2"
+                  /> 
+                  Mark as Recommended (will appear in "Recommended for You" section)
                 </label>
               </div>
               {error && <div className="text-red-500 text-sm">{error}</div>}

@@ -428,9 +428,12 @@ const AuthorDashboard: React.FC = () => {
           </section>
         </>
       )}
-      <div className="flex justify-center mb-6 sm:mb-8">
+      <div className="flex justify-center gap-4 mb-6 sm:mb-8">
         <Button size="lg" onClick={() => setShowUploadModal(true)}>
           Upload Book
+        </Button>
+        <Button size="lg" variant="outline" onClick={() => navigate('/book-design')}>
+          Design Book
         </Button>
       </div>
 

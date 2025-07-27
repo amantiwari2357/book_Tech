@@ -63,16 +63,28 @@ router.get('/admin/pending', auth, async (req, res) => {
 // Admin: Approve book
 router.post('/admin/approve/:id', auth, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
-  const { displayType, distributionType } = req.body;
+  const { displayType, distributionType, isRecommended } = req.body;
   if (!displayType || !['hero', 'view-all'].includes(displayType)) {
     return res.status(400).json({ message: 'displayType (hero or view-all) is required' });
   }
   if (!distributionType || !['soft', 'hard'].includes(distributionType)) {
     return res.status(400).json({ message: 'distributionType (soft or hard) is required' });
   }
+  
+  const updateData = { 
+    status: 'approved', 
+    displayType, 
+    distributionType 
+  };
+  
+  // Add isRecommended if provided
+  if (isRecommended !== undefined) {
+    updateData.isRecommended = isRecommended;
+  }
+  
   const book = await Book.findByIdAndUpdate(
     req.params.id,
-    { status: 'approved', displayType, distributionType },
+    updateData,
     { new: true }
   );
   if (!book) return res.status(404).json({ message: 'Book not found' });
@@ -82,7 +94,8 @@ router.post('/admin/approve/:id', auth, async (req, res) => {
   let distText = distributionType === 'soft'
     ? 'You selected to offer the book as a Soft Copy only.'
     : 'You selected to offer the book as a Hard Copy (delivery available).';
-  const message = `Your book '${book.title}' has been approved and will appear in the ${displayText}.\n${distText}`;
+  let recommendedText = isRecommended ? '\nYour book has also been marked as recommended and will appear in the "Recommended for You" section.' : '';
+  const message = `Your book '${book.title}' has been approved and will appear in the ${displayText}.\n${distText}${recommendedText}`;
   await Notification.create({
     recipient: book.authorRef,
     sender: req.user.id,
