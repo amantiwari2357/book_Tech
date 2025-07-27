@@ -12,14 +12,39 @@ router.get('/', async (req, res) => {
   res.json(books);
 });
 
-// Get book by ID (only if approved or author/admin)
-router.get('/:id', auth, async (req, res) => {
+// Get book by ID (public for approved books, auth required for others)
+router.get('/:id', async (req, res) => {
   const book = await Book.findById(req.params.id);
   if (!book) return res.status(404).json({ message: 'Book not found' });
-  if (book.status !== 'approved' && req.user.role !== 'admin' && (!book.authorRef || book.authorRef.toString() !== req.user.id)) {
-    return res.status(403).json({ message: 'Not authorized' });
+  
+  // If book is approved, allow public access
+  if (book.status === 'approved') {
+    return res.json(book);
   }
-  res.json(book);
+  
+  // For non-approved books, require authentication
+  if (!req.headers.authorization) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+  
+  // Verify token and check permissions
+  try {
+    const token = req.headers.authorization.replace('Bearer ', '');
+    const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    
+    if (user.role !== 'admin' && (!book.authorRef || book.authorRef.toString() !== user.id)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    res.json(book);
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
 });
 
 // Get books by current author (all statuses)

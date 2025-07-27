@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get book design by ID
+// Get book design by ID (public for approved designs)
 router.get('/:id', async (req, res) => {
   try {
     const bookDesign = await BookDesign.findById(req.params.id)
@@ -26,7 +26,35 @@ router.get('/:id', async (req, res) => {
     if (!bookDesign) {
       return res.status(404).json({ message: 'Book design not found' });
     }
-    res.json(bookDesign);
+    
+    // If design is approved, allow public access
+    if (bookDesign.status === 'approved') {
+      return res.json(bookDesign);
+    }
+    
+    // For non-approved designs, require authentication
+    if (!req.headers.authorization) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Verify token and check permissions
+    try {
+      const token = req.headers.authorization.replace('Bearer ', '');
+      const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id);
+      
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
+      if (user.role !== 'admin' && (!bookDesign.authorRef || bookDesign.authorRef.toString() !== user.id)) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
+      
+      res.json(bookDesign);
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Error fetching book design' });
   }
