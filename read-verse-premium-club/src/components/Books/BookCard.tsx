@@ -8,6 +8,7 @@ import { BookOpenIcon } from '@heroicons/react/24/outline';
 import { Book } from '@/store/slices/booksSlice';
 import { useAppDispatch } from '@/store';
 import { addToCartAsync } from '@/store/slices/cartSlice';
+import { useNavigate } from 'react-router-dom';
 
 interface BookCardProps {
   book: Book;
@@ -16,6 +17,7 @@ interface BookCardProps {
 
 const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -26,6 +28,11 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
 
   const handleViewDetails = () => {
     onViewDetails?.(book);
+  };
+
+  const handleReadBook = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/reader/${book.id}`);
   };
 
   const renderStars = (rating: number) => {
@@ -141,6 +148,9 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
           ${book.price.toFixed(2)}
         </div>
         <div className="flex space-x-2">
+          <Button variant="outline" size="sm" onClick={handleReadBook}>
+            <BookOpenIcon className="h-4 w-4" />
+          </Button>
           <Button variant="outline" size="sm" onClick={handleViewDetails}>
             <EyeIcon className="h-4 w-4" />
           </Button>

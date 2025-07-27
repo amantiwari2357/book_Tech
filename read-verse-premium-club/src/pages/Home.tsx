@@ -52,6 +52,7 @@ const Home: React.FC = () => {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const [recommendedBooks, setRecommendedBooks] = useState([]);
   const [featuredBooksFromAPI, setFeaturedBooksFromAPI] = useState([]);
+  const [bookDesigns, setBookDesigns] = useState([]);
 
   useEffect(() => {
     dispatch(fetchBooks());
@@ -87,8 +88,21 @@ const Home: React.FC = () => {
       }
     };
 
+    const fetchBookDesigns = async () => {
+      try {
+        const res = await authFetch('/book-designs');
+        if (res.ok) {
+          const data = await res.json();
+          setBookDesigns(data);
+        }
+      } catch (error) {
+        console.error('Error fetching book designs:', error);
+      }
+    };
+
     fetchRecommendedBooks();
     fetchFeaturedBooks();
+    fetchBookDesigns();
   }, []);
 
   // Determine user subscription status
@@ -243,6 +257,65 @@ const Home: React.FC = () => {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-serif font-bold mb-8">Featured Books</h2>
             <BookGrid books={featuredBooksFromAPI} />
+          </div>
+        </section>
+      )}
+
+      {/* Book Designs */}
+      {bookDesigns.length > 0 && (
+        <section className="py-16 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-serif font-bold mb-8">Custom Book Designs</h2>
+            <p className="text-muted-foreground mb-4">Read beautifully designed books with custom formatting.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bookDesigns.slice(0, 6).map((design) => (
+                <div key={design._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                    {design.coverImageUrl ? (
+                      <img
+                        src={design.coverImageUrl}
+                        alt={design.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpenIcon className="h-12 w-12 text-gray-400" />
+                      </div>
+                    )}
+                    {design.isPremium && (
+                      <Badge className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg">
+                        Premium
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">{design.title}</h3>
+                    <p className="text-gray-600 text-sm mb-2">by {design.author}</p>
+                    <p className="text-sm text-gray-500 mb-3 line-clamp-2">{design.description}</p>
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {design.tags.slice(0, 2).map((tag, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="text-lg font-bold text-primary">
+                        {design.isFree ? 'Free' : `$${design.price}`}
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={() => navigate(`/reader/${design._id}`)}
+                        className="flex items-center gap-1"
+                      >
+                        <BookOpenIcon className="h-4 w-4" />
+                        Read
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
