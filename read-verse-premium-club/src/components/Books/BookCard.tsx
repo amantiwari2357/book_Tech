@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StarIcon, ShoppingCartIcon, EyeIcon } from '@heroicons/react/24/solid';
 import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon } from '@heroicons/react/24/outline';
 import { Book } from '@/store/slices/booksSlice';
 import { useAppDispatch } from '@/store';
 import { addToCartAsync } from '@/store/slices/cartSlice';
@@ -15,6 +16,8 @@ interface BookCardProps {
 
 const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
   const dispatch = useAppDispatch();
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -49,17 +52,59 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
   return (
     <Card className="group cursor-pointer overflow-hidden bg-gradient-book hover:shadow-book transition-all duration-300 hover:-translate-y-1">
       <div className="relative" onClick={handleViewDetails}>
-        <div className="aspect-[3/4] bg-muted relative overflow-hidden">
+        <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden rounded-t-lg">
+          {/* Loading State */}
+          {imageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+              <div className="w-8 h-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+            </div>
+          )}
+          
+          {/* Image */}
           <img
             src={book.coverImage}
             alt={book.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover transition-all duration-300 ${
+              imageLoading ? 'opacity-0' : 'opacity-100 group-hover:scale-105'
+            }`}
+            onLoad={() => {
+              setImageLoading(false);
+              setImageError(false);
+            }}
+            onError={() => {
+              setImageError(true);
+              setImageLoading(false);
+            }}
+            style={{
+              objectPosition: 'center',
+              minHeight: '200px',
+              maxHeight: '300px'
+            }}
           />
+          
+          {/* Error State */}
+          {imageError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+              <div className="text-center">
+                <BookOpenIcon className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                <p className="text-xs text-gray-500 font-medium">No Cover Image</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Premium Badge */}
           {book.isPremium && (
-            <Badge className="absolute top-2 right-2 bg-gradient-premium text-foreground border-0">
+            <Badge className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg z-10">
               Premium
             </Badge>
           )}
+          
+          {/* Hover Overlay */}
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <EyeIcon className="w-8 h-8 text-white drop-shadow-lg" />
+            </div>
+          </div>
         </div>
       </div>
       

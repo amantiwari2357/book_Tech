@@ -403,6 +403,14 @@ const AdminDashboard: React.FC = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Book Management">
+                    <Link to="/admin-book-management">
+                      <BookOpenIcon className="w-5 h-5" />
+                      <span>Book Management</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild tooltip="Plan Management">
                     <Link to="/admin-plan-management">
                       <Cog6ToothIcon className="w-5 h-5" />

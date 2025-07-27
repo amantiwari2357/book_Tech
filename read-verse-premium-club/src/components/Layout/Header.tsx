@@ -268,42 +268,146 @@ const Header: React.FC = () => {
 
         {/* Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="sm:hidden fixed inset-0 z-50 bg-black/40" onClick={() => setMobileMenuOpen(false)}>
-            <div className="absolute top-0 left-0 w-4/5 max-w-xs h-full bg-background shadow-lg p-6 flex flex-col gap-6" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xl font-bold font-serif text-primary">Menu</span>
-                <button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
-                  <XMarkIcon className="h-6 w-6" />
+          <div className="sm:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
+            <div className="absolute top-0 left-0 w-4/5 max-w-xs h-full bg-white shadow-2xl border-r border-gray-200 flex flex-col" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <span className="text-xl font-bold text-gray-900">Menu</span>
+                <button 
+                  onClick={() => setMobileMenuOpen(false)} 
+                  aria-label="Close menu"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6 text-gray-600" />
                 </button>
               </div>
-              <div className="flex flex-col gap-4">
-                <Link to="/browse" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Browse</Link>
-                <Link to="/subscriptions" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Plans</Link>
-                <button
-                  className="flex items-center gap-2 text-lg"
-                  onClick={() => { dispatch(toggleCart()); setMobileMenuOpen(false); }}
-                >
-                  <ShoppingCartIcon className="h-5 w-5" /> Cart
-                  {totalItems > 0 && (
-                    <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-accent text-accent-foreground">{totalItems}</Badge>
+              
+              {/* Menu Items */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <div className="space-y-2">
+                  {/* Main Navigation */}
+                  <div className="mb-6">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Navigation</h3>
+                    <div className="space-y-1">
+                      <Link 
+                        to="/browse" 
+                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BookOpenIcon className="h-5 w-5 mr-3" />
+                        Browse Books
+                      </Link>
+                      <Link 
+                        to="/subscriptions" 
+                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <UserIcon className="h-5 w-5 mr-3" />
+                        Plans
+                      </Link>
+                      <button
+                        className="flex items-center w-full px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => { dispatch(toggleCart()); setMobileMenuOpen(false); }}
+                      >
+                        <ShoppingCartIcon className="h-5 w-5 mr-3" />
+                        Cart
+                        {totalItems > 0 && (
+                          <Badge className="ml-auto h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-blue-500 text-white">{totalItems}</Badge>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* User Section */}
+                  {isAuthenticated ? (
+                    <div className="mb-6">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Account</h3>
+                      <div className="space-y-1">
+                        <Link 
+                          to="/edit-profile" 
+                          className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <UserIcon className="h-5 w-5 mr-3" />
+                          Edit Profile
+                        </Link>
+                        <Link 
+                          to="/notifications" 
+                          className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <BellIcon className="h-5 w-5 mr-3" />
+                          Notifications
+                        </Link>
+                        {user?.role === 'author' && (
+                          <Link 
+                            to="/author-dashboard" 
+                            className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <BookOpenIcon className="h-5 w-5 mr-3" />
+                            Author Dashboard
+                          </Link>
+                        )}
+                        {user?.role === 'customer' && (
+                          <Link 
+                            to="/customer-dashboard" 
+                            className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <UserIcon className="h-5 w-5 mr-3" />
+                            Customer Dashboard
+                          </Link>
+                        )}
+                        {user?.role === 'admin' && (
+                          <Link 
+                            to="/admin-dashboard" 
+                            className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <UserIcon className="h-5 w-5 mr-3" />
+                            Admin Dashboard
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-6">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Account</h3>
+                      <div className="space-y-1">
+                        <Link 
+                          to="/login" 
+                          className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <UserIcon className="h-5 w-5 mr-3" />
+                          Sign In
+                        </Link>
+                        <Link 
+                          to="/signup" 
+                          className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <UserIcon className="h-5 w-5 mr-3" />
+                          Sign Up
+                        </Link>
+                      </div>
+                    </div>
                   )}
-                </button>
-                {/* Authenticated User Dropdowns (mobile) */}
-                {isAuthenticated ? (
-                  <>
-                    <Link to="/edit-profile" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Edit Profile</Link>
-                    <Link to="/notifications" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Notifications</Link>
-                    {user?.role === 'author' && <Link to="/author-dashboard" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Author Dashboard</Link>}
-                    {user?.role === 'customer' && <Link to="/customer-dashboard" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Customer Dashboard</Link>}
-                    {user?.role === 'admin' && <Link to="/admin-dashboard" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Admin Dashboard</Link>}
-                    <button onClick={handleLogout} className="text-left text-lg w-full mt-2">Logout</button>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/login" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                    <Link to="/signup" className="text-lg" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
-                  </>
-                )}
+
+                  {/* Logout Section */}
+                  {isAuthenticated && (
+                    <div className="border-t border-gray-200 pt-4">
+                      <button 
+                        onClick={handleLogout} 
+                        className="flex items-center w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <UserIcon className="h-5 w-5 mr-3" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

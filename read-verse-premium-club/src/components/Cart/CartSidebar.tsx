@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { XMarkIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ShoppingBagIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { toggleCart } from '@/store/slices/cartSlice';
 import { fetchCart, removeFromCartAsync, clearCart } from '@/store/slices/cartSlice';
@@ -10,6 +10,8 @@ import { authFetch } from '@/lib/api';
 const CartSidebar: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items, isOpen, total, loading, error } = useAppSelector((state) => state.cart);
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
+  const [imageLoading, setImageLoading] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -64,11 +66,45 @@ const CartSidebar: React.FC = () => {
                   key={book.id}
                   className="flex items-center space-x-3 p-3 bg-card rounded-lg border"
                 >
-                  <img
-                    src={book.coverImage}
-                    alt={book.title}
-                    className="w-16 h-20 object-cover rounded"
-                  />
+                  <div className="relative w-16 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded overflow-hidden">
+                    {/* Loading State */}
+                    {imageLoading[book.id] && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+                        <div className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    
+                    {/* Image */}
+                    <img
+                      src={book.coverImage}
+                      alt={book.title}
+                      className={`w-full h-full object-cover transition-all duration-300 ${
+                        imageLoading[book.id] ? 'opacity-0' : 'opacity-100'
+                      }`}
+                      onLoad={() => {
+                        setImageLoading(prev => ({ ...prev, [book.id]: false }));
+                        setImageErrors(prev => ({ ...prev, [book.id]: false }));
+                      }}
+                      onError={() => {
+                        setImageErrors(prev => ({ ...prev, [book.id]: true }));
+                        setImageLoading(prev => ({ ...prev, [book.id]: false }));
+                      }}
+                      style={{
+                        objectPosition: 'center',
+                        minHeight: '80px'
+                      }}
+                    />
+                    
+                    {/* Error State */}
+                    {imageErrors[book.id] && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                        <div className="text-center">
+                          <BookOpenIcon className="w-6 h-6 mx-auto text-gray-400 mb-1" />
+                          <p className="text-xs text-gray-500">No Image</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm line-clamp-2">
                       {book.title}

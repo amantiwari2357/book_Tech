@@ -101,6 +101,48 @@ router.post('/admin/reject/:id', auth, async (req, res) => {
   res.json(book);
 });
 
+// Admin: Toggle recommended status
+router.post('/admin/toggle-recommended/:id', auth, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+  const book = await Book.findById(req.params.id);
+  if (!book) return res.status(404).json({ message: 'Book not found' });
+  
+  book.isRecommended = !book.isRecommended;
+  await book.save();
+  
+  res.json({ 
+    message: `Book ${book.isRecommended ? 'added to' : 'removed from'} recommended section`,
+    isRecommended: book.isRecommended 
+  });
+});
+
+// Admin: Toggle featured status
+router.post('/admin/toggle-featured/:id', auth, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+  const book = await Book.findById(req.params.id);
+  if (!book) return res.status(404).json({ message: 'Book not found' });
+  
+  book.isFeatured = !book.isFeatured;
+  await book.save();
+  
+  res.json({ 
+    message: `Book ${book.isFeatured ? 'added to' : 'removed from'} featured section`,
+    isFeatured: book.isFeatured 
+  });
+});
+
+// Get recommended books
+router.get('/recommended/list', async (req, res) => {
+  const books = await Book.find({ status: 'approved', isRecommended: true }).sort({ createdAt: -1 });
+  res.json(books);
+});
+
+// Get featured books
+router.get('/featured/list', async (req, res) => {
+  const books = await Book.find({ status: 'approved', isFeatured: true }).sort({ createdAt: -1 });
+  res.json(books);
+});
+
 // Add a review to a book
 router.post('/:id/reviews', auth, async (req, res) => {
   const { rating, comment } = req.body;

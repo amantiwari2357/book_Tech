@@ -28,6 +28,8 @@ const BookDetails: React.FC = () => {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [orders, setOrders] = useState<{ _id?: string }[]>([]);
 
@@ -142,7 +144,48 @@ const BookDetails: React.FC = () => {
       </div>
       <div className="grid md:grid-cols-2 gap-8">
         <div>
-          <img src={book.coverImage} alt={book.title} className="w-full max-w-xs rounded shadow mb-6" />
+          <div className="relative mb-6">
+            <div className="aspect-[3/4] max-w-xs mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg overflow-hidden">
+              {/* Loading State */}
+              {imageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+                  <div className="w-8 h-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+                </div>
+              )}
+              
+              {/* Image */}
+              <img 
+                src={book.coverImage} 
+                alt={book.title} 
+                className={`w-full h-full object-cover transition-all duration-300 ${
+                  imageLoading ? 'opacity-0' : 'opacity-100'
+                }`}
+                onLoad={() => {
+                  setImageLoading(false);
+                  setImageError(false);
+                }}
+                onError={() => {
+                  setImageError(true);
+                  setImageLoading(false);
+                }}
+                style={{
+                  objectPosition: 'center',
+                  minHeight: '300px',
+                  maxHeight: '400px'
+                }}
+              />
+              
+              {/* Error State */}
+              {imageError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                  <div className="text-center">
+                    <BookOpenIcon className="w-16 h-16 mx-auto text-gray-400 mb-3" />
+                    <p className="text-sm text-gray-500 font-medium">No Cover Image</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="mb-4">
             <h1 className="text-3xl font-bold mb-2">{book.title}</h1>
             <div className="text-muted-foreground mb-2">by {book.author}</div>

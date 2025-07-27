@@ -28,6 +28,8 @@ const bookSchema = new mongoose.Schema({
   authorRef: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   reviews: [reviewSchema],
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  isRecommended: { type: Boolean, default: false },
+  isFeatured: { type: Boolean, default: false },
   sales: { type: Number, default: 0 },
   earnings: { type: Number, default: 0 },
 });

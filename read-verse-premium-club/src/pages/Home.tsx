@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import BookGrid from '@/components/Books/BookGrid';
@@ -7,6 +7,7 @@ import { ArrowRightIcon, BookOpenIcon, StarIcon, UsersIcon } from '@heroicons/re
 import { useAppSelector, useAppDispatch } from '@/store';
 import { setFeaturedBooks, fetchBooks } from '@/store/slices/booksSlice';
 import { useNavigate } from 'react-router-dom';
+import { authFetch } from '@/lib/api';
 
 // Helper: Get user's favorite category (most orders or most books)
 function getFavoriteCategory(user, books) {
@@ -49,6 +50,8 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const { books, featuredBooks, loading, error } = useAppSelector((state) => state.books);
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const [recommendedBooks, setRecommendedBooks] = useState([]);
+  const [featuredBooksFromAPI, setFeaturedBooksFromAPI] = useState([]);
 
   useEffect(() => {
     dispatch(fetchBooks());
@@ -57,6 +60,36 @@ const Home: React.FC = () => {
   useEffect(() => {
     dispatch(setFeaturedBooks(books.slice(0, 3)));
   }, [books, dispatch]);
+
+  // Fetch recommended and featured books from API
+  useEffect(() => {
+    const fetchRecommendedBooks = async () => {
+      try {
+        const res = await authFetch('/books/recommended/list');
+        if (res.ok) {
+          const data = await res.json();
+          setRecommendedBooks(data);
+        }
+      } catch (error) {
+        console.error('Error fetching recommended books:', error);
+      }
+    };
+
+    const fetchFeaturedBooks = async () => {
+      try {
+        const res = await authFetch('/books/featured/list');
+        if (res.ok) {
+          const data = await res.json();
+          setFeaturedBooksFromAPI(data);
+        }
+      } catch (error) {
+        console.error('Error fetching featured books:', error);
+      }
+    };
+
+    fetchRecommendedBooks();
+    fetchFeaturedBooks();
+  }, []);
 
   // Determine user subscription status
   const isPremium = user?.subscription === 'premium' || user?.subscription === 'enterprise';
@@ -195,11 +228,21 @@ const Home: React.FC = () => {
       </section>
 
       {/* Recommended for You */}
-      {isAuthenticated && recommendedBooks.length > 0 && (
+      {recommendedBooks.length > 0 && (
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-serif font-bold mb-8">Recommended for You</h2>
             <BookGrid books={recommendedBooks} />
+          </div>
+        </section>
+      )}
+
+      {/* Featured Books */}
+      {featuredBooksFromAPI.length > 0 && (
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-serif font-bold mb-8">Featured Books</h2>
+            <BookGrid books={featuredBooksFromAPI} />
           </div>
         </section>
       )}
