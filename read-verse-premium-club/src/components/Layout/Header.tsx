@@ -165,7 +165,7 @@ const Header: React.FC = () => {
   const totalItems = items.length;
 
   return (
-    <header className="sticky top-0 header-z-index bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+    <header className="sticky top-0 header-z-index mobile-header bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -183,26 +183,26 @@ const Header: React.FC = () => {
                 placeholder="Search books, authors..."
                 value={searchTerm}
                 onChange={(e) => dispatch(setSearchTerm(e.target.value))}
-                className="pl-8 pr-3 h-9 text-sm"
+                className="pl-8 pr-3 h-9 text-sm mobile-search-bar"
                 onFocus={() => {
                   if (searchResults.length > 0) setShowSearchResults(true);
                 }}
               />
               {searchLoading && (
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  <div className="mobile-loading-spinner rounded-full h-4 w-4 border-b-2 border-primary"></div>
                 </div>
               )}
             </div>
             
             {/* Mobile Search Results Dropdown */}
             {showSearchResults && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-1 mobile-search-results rounded-lg z-50 max-h-64 overflow-y-auto">
                 {searchResults.map((result) => (
                   <Link
                     key={result._id || result.id}
                     to={`/book/${result._id || result.id}`}
-                    className="flex items-center p-3 hover:bg-gray-50 border-b last:border-b-0"
+                    className="flex items-center p-3 mobile-search-result-item hover:bg-gray-50 border-b last:border-b-0"
                     onClick={() => {
                       setShowSearchResults(false);
                       dispatch(setSearchTerm(''));
@@ -245,7 +245,7 @@ const Header: React.FC = () => {
 
           {/* Hamburger for mobile */}
           <button
-            className="sm:hidden p-2 ml-2 rounded focus:outline-none hover:bg-accent flex-shrink-0"
+            className="sm:hidden p-2 ml-2 rounded focus:outline-none hover:bg-accent flex-shrink-0 mobile-button"
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label="Open menu"
           >
@@ -500,13 +500,13 @@ const Header: React.FC = () => {
 
                 {/* Navigation */}
                 <div className="mb-6">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mobile-text-gradient">
                     Navigation
                   </h3>
                   <div className="space-y-1">
                     <Link
                       to="/browse"
-                      className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <BookOpenIcon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -514,14 +514,14 @@ const Header: React.FC = () => {
                     </Link>
                     <Link
                       to="/subscriptions"
-                      className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
                       Plans
                     </Link>
                     <button
-                      className="flex items-center w-full px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center w-full px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                       onClick={() => {
                         dispatch(toggleCart());
                         setMobileMenuOpen(false);
@@ -541,12 +541,12 @@ const Header: React.FC = () => {
                 {/* Notifications for Mobile */}
                 {isAuthenticated && (
                   <div className="mb-6">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mobile-text-gradient">
                       Notifications
                     </h3>
                     <div className="space-y-1">
                       <button
-                        className="flex items-center w-full px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="flex items-center w-full px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                         onClick={() => {
                           setShowNotifDropdown(!showNotifDropdown);
                           setMobileMenuOpen(false);
@@ -567,13 +567,13 @@ const Header: React.FC = () => {
                 {/* Auth Section */}
                 {isAuthenticated ? (
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mobile-text-gradient">
                       Account
                     </h3>
                     <div className="space-y-1">
                       <Link
                         to="/edit-profile"
-                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -581,7 +581,7 @@ const Header: React.FC = () => {
                       </Link>
                       <Link
                         to="/notifications"
-                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <BellIcon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -590,7 +590,7 @@ const Header: React.FC = () => {
                       {user?.role === 'author' && (
                         <Link
                           to="/author-dashboard"
-                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <BookOpenIcon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -600,7 +600,7 @@ const Header: React.FC = () => {
                       {user?.role === 'customer' && (
                         <Link
                           to="/customer-dashboard"
-                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -610,7 +610,7 @@ const Header: React.FC = () => {
                       {user?.role === 'admin' && (
                         <Link
                           to="/admin-dashboard"
-                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -624,7 +624,7 @@ const Header: React.FC = () => {
                           handleLogout();
                           setMobileMenuOpen(false);
                         }}
-                        className="flex items-center w-full px-3 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="flex items-center w-full px-3 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors mobile-menu-item"
                       >
                         <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
                         Logout
@@ -633,13 +633,13 @@ const Header: React.FC = () => {
                   </div>
                 ) : (
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mobile-text-gradient">
                       Account
                     </h3>
                     <div className="space-y-1">
                       <Link
                         to="/login"
-                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -647,7 +647,7 @@ const Header: React.FC = () => {
                       </Link>
                       <Link
                         to="/signup"
-                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mobile-menu-item"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />

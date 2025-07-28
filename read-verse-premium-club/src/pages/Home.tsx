@@ -140,7 +140,7 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-hero text-primary-foreground py-20 overflow-hidden">
+      <section className="relative bg-gradient-hero text-primary-foreground py-16 sm:py-20 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/api/placeholder/1920/1080')] bg-cover bg-center opacity-10" />
         <div className="relative container mx-auto px-4 text-center">
           {isAuthenticated && (
@@ -148,12 +148,12 @@ const Home: React.FC = () => {
               Welcome back, <span className="text-accent">{user?.name}</span>!
             </div>
           )}
-          <h1 className="text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight">
             Your Digital
             <br />
             <span className="text-accent">Library</span> Awaits
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
+          <p className="text-lg sm:text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
             Discover thousands of premium books, enjoy seamless reading experiences, 
             and unlock knowledge with our advanced digital platform.
           </p>
@@ -161,7 +161,7 @@ const Home: React.FC = () => {
             <Button
               variant={isPremium ? 'default' : 'premium'}
               size="lg"
-              className="text-lg px-8 py-4 relative"
+              className="text-lg px-8 py-4 relative mobile-button"
               onClick={handleStartReading}
             >
               {isAuthenticated
@@ -180,7 +180,7 @@ const Home: React.FC = () => {
             <Button
               variant="outline"
               size="lg"
-              className="text-lg px-8 py-4 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary relative"
+              className="text-lg px-8 py-4 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary relative mobile-glass"
               onClick={handleBrowseLibrary}
               title={!isAuthenticated ? 'Sign up for more features!' : !isPremium ? 'Upgrade for premium content' : 'Browse all books'}
             >
@@ -198,22 +198,22 @@ const Home: React.FC = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-12 sm:py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="space-y-2">
-              <BookOpenIcon className="h-12 w-12 text-primary mx-auto" />
-              <h3 className="text-3xl font-bold text-primary">{books.filter(b => b.isPremium).length}+</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-center">
+            <div className="space-y-2 mobile-card p-6 rounded-lg">
+              <BookOpenIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
+              <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.filter(b => b.isPremium).length}+</h3>
               <p className="text-muted-foreground">Premium Books</p>
             </div>
-            <div className="space-y-2">
-              <UsersIcon className="h-12 w-12 text-primary mx-auto" />
-              <h3 className="text-3xl font-bold text-primary">{books.length * 5}+</h3>
+            <div className="space-y-2 mobile-card p-6 rounded-lg">
+              <UsersIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
+              <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.length * 5}+</h3>
               <p className="text-muted-foreground">Happy Readers</p>
             </div>
-            <div className="space-y-2">
-              <StarIcon className="h-12 w-12 text-primary mx-auto" />
-              <h3 className="text-3xl font-bold text-primary">
+            <div className="space-y-2 mobile-card p-6 rounded-lg">
+              <StarIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
+              <h3 className="text-2xl sm:text-3xl font-bold text-primary">
                 {books.length > 0 ? (books.reduce((sum, book) => sum + (book.rating || 0), 0) / books.length).toFixed(1) : '4.8'}/5
               </h3>
               <p className="text-muted-foreground">Average Rating</p>
@@ -223,14 +223,14 @@ const Home: React.FC = () => {
       </section>
 
       {/* Featured Books */}
-      <section className="py-16">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h2 className="text-3xl font-serif font-bold mb-2">Featured Books</h2>
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-2 mobile-text-gradient">Featured Books</h2>
               <p className="text-muted-foreground">Discover our most popular and trending titles</p>
             </div>
-            <Button variant="outline">
+            <Button variant="outline" className="mobile-button">
               View All
               <ArrowRightIcon className="h-4 w-4 ml-2" />
             </Button>
@@ -243,9 +243,9 @@ const Home: React.FC = () => {
 
       {/* Recommended for You */}
       {recommendedBooks.length > 0 && (
-        <section className="py-16 bg-muted/30">
+        <section className="py-12 sm:py-16 bg-muted/30">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-serif font-bold mb-8">Recommended for You</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Recommended for You</h2>
             <BookGrid books={recommendedBooks} />
           </div>
         </section>
@@ -253,9 +253,9 @@ const Home: React.FC = () => {
 
       {/* Featured Books */}
       {featuredBooksFromAPI.length > 0 && (
-        <section className="py-16">
+        <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-serif font-bold mb-8">Featured Books</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Featured Books</h2>
             <BookGrid books={featuredBooksFromAPI} />
           </div>
         </section>
@@ -263,13 +263,13 @@ const Home: React.FC = () => {
 
       {/* Book Designs */}
       {bookDesigns.length > 0 && (
-        <section className="py-16 bg-muted/30">
+        <section className="py-12 sm:py-16 bg-muted/30">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-serif font-bold mb-8">Custom Book Designs</h2>
-            <p className="text-muted-foreground mb-4">Read beautifully designed books with custom formatting.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Custom Book Designs</h2>
+            <p className="text-muted-foreground mb-6">Read beautifully designed books with custom formatting.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {bookDesigns.slice(0, 6).map((design) => (
-                <div key={design._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div key={design._id} className="mobile-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                     {design.coverImageUrl ? (
                       <img
@@ -306,7 +306,7 @@ const Home: React.FC = () => {
                       <Button 
                         size="sm" 
                         onClick={() => navigate(`/reader/${design._id}`)}
-                        className="flex items-center gap-1"
+                        className="flex items-center gap-1 mobile-button"
                       >
                         <BookOpenIcon className="h-4 w-4" />
                         Read
@@ -321,27 +321,27 @@ const Home: React.FC = () => {
       )}
 
       {isAuthenticated && booksInProgress.length > 0 && (
-        <section className="py-16">
+        <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-serif font-bold mb-8">Continue Reading</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Continue Reading</h2>
             <p className="text-muted-foreground mb-4">Pick up where you left off.</p>
             <BookGrid books={booksInProgress} />
           </div>
         </section>
       )}
       {isAuthenticated && favoriteCategory && trendingInCategory.length > 0 && (
-        <section className="py-16 bg-muted/30">
+        <section className="py-12 sm:py-16 bg-muted/30">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-serif font-bold mb-8">Trending in {favoriteCategory}</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Trending in {favoriteCategory}</h2>
             <p className="text-muted-foreground mb-4">Popular and new releases in your favorite category.</p>
             <BookGrid books={trendingInCategory} />
           </div>
         </section>
       )}
       {isAuthenticated && becauseYouRead.length > 0 && (
-        <section className="py-16">
+        <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-serif font-bold mb-8">Because You Read...</h2>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Because You Read...</h2>
             <p className="text-muted-foreground mb-4">You might also like these books.</p>
             <BookGrid books={becauseYouRead} />
           </div>
@@ -349,38 +349,38 @@ const Home: React.FC = () => {
       )}
 
       {/* Features Section */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-12 sm:py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-serif font-bold mb-4">Why Choose BookTech?</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 mobile-text-gradient">Why Choose BookTech?</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
               Experience the future of digital reading with our innovative platform
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="text-center space-y-4">
-              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                <BookOpenIcon className="h-8 w-8 text-primary" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="text-center space-y-4 mobile-card p-6 rounded-lg">
+              <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <BookOpenIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold">Advanced Reader</h3>
+              <h3 className="text-lg sm:text-xl font-semibold">Advanced Reader</h3>
               <p className="text-muted-foreground">
                 Enjoy customizable reading experience with adjustable fonts, themes, and bookmarks
               </p>
             </div>
-            <div className="text-center space-y-4">
-              <div className="bg-accent/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                <StarIcon className="h-8 w-8 text-accent" />
+            <div className="text-center space-y-4 mobile-card p-6 rounded-lg">
+              <div className="bg-accent/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <StarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
               </div>
-              <h3 className="text-xl font-semibold">Premium Content</h3>
+              <h3 className="text-lg sm:text-xl font-semibold">Premium Content</h3>
               <p className="text-muted-foreground">
                 Access exclusive books and latest releases from top authors worldwide
               </p>
             </div>
-            <div className="text-center space-y-4">
-              <div className="bg-secondary/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                <UsersIcon className="h-8 w-8 text-primary" />
+            <div className="text-center space-y-4 mobile-card p-6 rounded-lg">
+              <div className="bg-secondary/50 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <UsersIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold">Community</h3>
+              <h3 className="text-lg sm:text-xl font-semibold">Community</h3>
               <p className="text-muted-foreground">
                 Join thousands of readers, share reviews, and discover new favorites
               </p>
@@ -393,13 +393,13 @@ const Home: React.FC = () => {
       <PricingSection />
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-hero text-primary-foreground">
+      <section className="py-12 sm:py-16 bg-gradient-hero text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-serif font-bold mb-4">Ready to Start Reading?</h2>
-          <p className="text-xl mb-8 opacity-90">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4">Ready to Start Reading?</h2>
+          <p className="text-lg sm:text-xl mb-8 opacity-90">
             Join thousands of readers and unlock unlimited access to premium content
           </p>
-          <Button variant="premium" size="lg" className="text-lg px-8 py-4">
+          <Button variant="premium" size="lg" className="text-lg px-8 py-4 mobile-button">
             Get Started Today
             <ArrowRightIcon className="h-5 w-5 ml-2" />
           </Button>
