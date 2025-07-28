@@ -43,12 +43,19 @@
 
   const PORT = process.env.PORT || 5000;
 
-  mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-    .then(() => {
-      console.log('MongoDB connected');
-      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  // Check if MONGODB_URI is set
+  if (!process.env.MONGODB_URI) {
+    console.log('⚠️  MONGODB_URI not set. Server will start without database connection.');
+    console.log('📝 Please create a .env file with MONGODB_URI for full functionality.');
+    app.listen(PORT, () => console.log(`Server running on port ${PORT} (without database)`));
+  } else {
+    mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     })
-    .catch((err) => console.error('MongoDB connection error:', err)); 
+      .then(() => {
+        console.log('MongoDB connected');
+        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+      })
+      .catch((err) => console.error('MongoDB connection error:', err));
+  } 
