@@ -355,4 +355,119 @@ All colors MUST be HSL.
     transform: translateY(-4px);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   }
+
+  /* Scroll-triggered animations for mobile */
+  .scroll-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .scroll-animate.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Staggered animations for cards */
+  .scroll-animate-stagger {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .scroll-animate-stagger.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .scroll-animate-stagger:nth-child(1) { transition-delay: 0.1s; }
+  .scroll-animate-stagger:nth-child(2) { transition-delay: 0.2s; }
+  .scroll-animate-stagger:nth-child(3) { transition-delay: 0.3s; }
+  .scroll-animate-stagger:nth-child(4) { transition-delay: 0.4s; }
+  .scroll-animate-stagger:nth-child(5) { transition-delay: 0.5s; }
+  .scroll-animate-stagger:nth-child(6) { transition-delay: 0.6s; }
+
+  /* Slide in animations */
+  .slide-in-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .slide-in-left.animate-in {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .slide-in-right {
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .slide-in-right.animate-in {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Scale animations */
+  .scale-in {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .scale-in.animate-in {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Fade in with bounce */
+  .fade-in-bounce {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .fade-in-bounce.animate-in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* Rotate in animations */
+  .rotate-in {
+    opacity: 0;
+    transform: rotate(-10deg) scale(0.8);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .rotate-in.animate-in {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+
+  /* Mobile-specific scroll animations */
+  @media (max-width: 768px) {
+    .mobile-scroll-animate {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mobile-scroll-animate.animate-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .mobile-card-animate {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mobile-card-animate.animate-in {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
 }

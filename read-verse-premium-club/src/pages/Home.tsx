@@ -8,6 +8,7 @@ import { useAppSelector, useAppDispatch } from '@/store';
 import { setFeaturedBooks, fetchBooks } from '@/store/slices/booksSlice';
 import { useNavigate } from 'react-router-dom';
 import { authFetch } from '@/lib/api';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 // Helper: Get user's favorite category (most orders or most books)
 function getFavoriteCategory(user, books) {
@@ -53,6 +54,15 @@ const Home: React.FC = () => {
   const [recommendedBooks, setRecommendedBooks] = useState([]);
   const [featuredBooksFromAPI, setFeaturedBooksFromAPI] = useState([]);
   const [bookDesigns, setBookDesigns] = useState([]);
+
+  // Scroll animation hooks
+  const { elementRef: heroRef, isVisible: heroVisible } = useScrollAnimation();
+  const { elementRef: statsRef, isVisible: statsVisible } = useScrollAnimation();
+  const { elementRef: featuredRef, isVisible: featuredVisible } = useScrollAnimation();
+  const { elementRef: recommendedRef, isVisible: recommendedVisible } = useScrollAnimation();
+  const { elementRef: bookDesignsRef, isVisible: bookDesignsVisible } = useScrollAnimation();
+  const { elementRef: featuresRef, isVisible: featuresVisible } = useScrollAnimation();
+  const { elementRef: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   useEffect(() => {
     dispatch(fetchBooks());
@@ -140,7 +150,7 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-hero text-primary-foreground py-16 sm:py-20 overflow-hidden">
+      <section ref={heroRef} className={`relative bg-gradient-hero text-primary-foreground py-16 sm:py-20 overflow-hidden ${heroVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
         <div className="absolute inset-0 bg-[url('/api/placeholder/1920/1080')] bg-cover bg-center opacity-10" />
         <div className="relative container mx-auto px-4 text-center">
           {isAuthenticated && (
@@ -198,20 +208,20 @@ const Home: React.FC = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 sm:py-16 bg-muted/30">
+      <section ref={statsRef} className={`py-12 sm:py-16 bg-muted/30 ${statsVisible ? 'scroll-animate animate-in' : 'scroll-animate'}`}>
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-center">
-            <div className="space-y-2 mobile-card p-6 rounded-lg">
+            <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
               <BookOpenIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
               <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.filter(b => b.isPremium).length}+</h3>
               <p className="text-muted-foreground">Premium Books</p>
             </div>
-            <div className="space-y-2 mobile-card p-6 rounded-lg">
+            <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
               <UsersIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
               <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.length * 5}+</h3>
               <p className="text-muted-foreground">Happy Readers</p>
             </div>
-            <div className="space-y-2 mobile-card p-6 rounded-lg">
+            <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
               <StarIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
               <h3 className="text-2xl sm:text-3xl font-bold text-primary">
                 {books.length > 0 ? (books.reduce((sum, book) => sum + (book.rating || 0), 0) / books.length).toFixed(1) : '4.8'}/5
@@ -223,7 +233,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Featured Books */}
-      <section className="py-12 sm:py-16">
+      <section ref={featuredRef} className={`py-12 sm:py-16 ${featuredVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`}>
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
@@ -243,7 +253,7 @@ const Home: React.FC = () => {
 
       {/* Recommended for You */}
       {recommendedBooks.length > 0 && (
-        <section className="py-12 sm:py-16 bg-muted/30">
+        <section ref={recommendedRef} className={`py-12 sm:py-16 bg-muted/30 ${recommendedVisible ? 'slide-in-right animate-in' : 'slide-in-right'}`}>
           <div className="container mx-auto px-4">
             <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Recommended for You</h2>
             <BookGrid books={recommendedBooks} />
@@ -263,13 +273,13 @@ const Home: React.FC = () => {
 
       {/* Book Designs */}
       {bookDesigns.length > 0 && (
-        <section className="py-12 sm:py-16 bg-muted/30">
+        <section ref={bookDesignsRef} className={`py-12 sm:py-16 bg-muted/30 ${bookDesignsVisible ? 'scale-in animate-in' : 'scale-in'}`}>
           <div className="container mx-auto px-4">
             <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Custom Book Designs</h2>
             <p className="text-muted-foreground mb-6">Read beautifully designed books with custom formatting.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {bookDesigns.slice(0, 6).map((design) => (
-                <div key={design._id} className="mobile-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              {bookDesigns.slice(0, 6).map((design, index) => (
+                <div key={design._id} className={`mobile-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${bookDesignsVisible ? 'mobile-card-animate animate-in' : 'mobile-card-animate'}`} style={{ transitionDelay: `${index * 0.1}s` }}>
                   <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                     {design.coverImageUrl ? (
                       <img
@@ -349,7 +359,7 @@ const Home: React.FC = () => {
       )}
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 bg-muted/30">
+      <section ref={featuresRef} className={`py-12 sm:py-16 bg-muted/30 ${featuresVisible ? 'rotate-in animate-in' : 'rotate-in'}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 mobile-text-gradient">Why Choose BookTech?</h2>
@@ -358,7 +368,7 @@ const Home: React.FC = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className="text-center space-y-4 mobile-card p-6 rounded-lg">
+            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
               <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
                 <BookOpenIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
               </div>
@@ -367,7 +377,7 @@ const Home: React.FC = () => {
                 Enjoy customizable reading experience with adjustable fonts, themes, and bookmarks
               </p>
             </div>
-            <div className="text-center space-y-4 mobile-card p-6 rounded-lg">
+            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
               <div className="bg-accent/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
                 <StarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
               </div>
@@ -376,7 +386,7 @@ const Home: React.FC = () => {
                 Access exclusive books and latest releases from top authors worldwide
               </p>
             </div>
-            <div className="text-center space-y-4 mobile-card p-6 rounded-lg">
+            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
               <div className="bg-secondary/50 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
                 <UsersIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
               </div>
@@ -393,7 +403,7 @@ const Home: React.FC = () => {
       <PricingSection />
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 bg-gradient-hero text-primary-foreground">
+      <section ref={ctaRef} className={`py-12 sm:py-16 bg-gradient-hero text-primary-foreground ${ctaVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4">Ready to Start Reading?</h2>
           <p className="text-lg sm:text-xl mb-8 opacity-90">
