@@ -69,17 +69,20 @@ const Reader: React.FC = () => {
   const fetchBookContent = async () => {
     try {
       setLoading(true);
+      setError('');
       
       // First try to fetch as a book design
-      let res = await fetch(`/api/book-designs/${id}`);
+      let res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/book-designs/${id}`);
       
       if (res.ok) {
         const data = await res.json();
+        console.log('Book design data:', data);
+        
         if (data.status === 'approved') {
           setBookContent(data);
           // Calculate total pages based on content length
           const wordsPerPage = 250;
-          const words = data.content.split(' ').length;
+          const words = data.content?.split(' ').length || 0;
           setTotalPages(Math.ceil(words / wordsPerPage));
           
           // Increment read count (only if authenticated)
@@ -92,15 +95,17 @@ const Reader: React.FC = () => {
           }
           return;
         } else {
-          setError('This book is not yet approved for reading.');
+          setError('This book design is not yet approved for reading.');
           return;
         }
       }
 
       // If not a book design, try as a regular book
-      res = await fetch(`/api/books/${id}`);
+      res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/books/${id}`);
       if (res.ok) {
         const data = await res.json();
+        console.log('Regular book data:', data);
+        
         if (data.status === 'approved') {
           // For regular books, we'll show the description as content
           // since they don't have full content
@@ -199,50 +204,44 @@ const Reader: React.FC = () => {
     );
   }
 
+  // Rest of the component remains the same...
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeftIcon className="h-4 w-4" />
+      <div className="border-b bg-white">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate(-1)}>
+              <ArrowLeftIcon className="h-5 w-5 mr-2" />
               Back
             </Button>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLike}
-                className="flex items-center gap-1"
-              >
-                {isLiked ? (
-                  <HeartIconSolid className="h-4 w-4 text-red-500" />
-                ) : (
-                  <HeartIcon className="h-4 w-4" />
-                )}
-              </Button>
+            <div>
+              <h1 className="text-xl font-bold">{bookContent.title}</h1>
+              <p className="text-sm text-gray-600">by {bookContent.author}</p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleLike}>
+              {isLiked ? <HeartIconSolid className="h-5 w-5 text-red-500" /> : <HeartIcon className="h-5 w-5" />}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleAddToCart}>
+              <ShoppingCartIcon className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </div>
 
+      {/* Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Book Info Sidebar */}
+          {/* Book Info */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-8">
+            <Card>
               <CardContent className="p-6">
-                {/* Cover Image */}
-                <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden mb-6">
-                  {(bookContent.coverImage || bookContent.coverImageUrl) ? (
+                <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-4 overflow-hidden">
+                  {bookContent.coverImageUrl ? (
                     <img
-                      src={bookContent.coverImage || bookContent.coverImageUrl}
+                      src={bookContent.coverImageUrl}
                       alt={bookContent.title}
                       className="w-full h-full object-cover"
                     />
@@ -252,46 +251,34 @@ const Reader: React.FC = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Book Details */}
+                
                 <div className="space-y-4">
                   <div>
-                    <h1 className="text-2xl font-bold mb-2">{bookContent.title}</h1>
+                    <h2 className="text-xl font-bold">{bookContent.title}</h2>
                     <p className="text-gray-600">by {bookContent.author}</p>
                   </div>
-
-                  <p className="text-gray-700">{bookContent.description}</p>
-
-                  {/* Price/Action */}
-                  <div className="border-t pt-4">
-                    {(bookContent.isFree || bookContent.price === 0) ? (
-                      <div className="text-center">
-                        <Badge variant="secondary" className="text-lg px-4 py-2">
-                          Free to Read
-                        </Badge>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="text-center">
-                          <span className="text-2xl font-bold">${bookContent.price}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            className="flex-1" 
-                            onClick={handlePurchase}
-                          >
-                            Purchase
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={handleAddToCart}
-                          >
-                            <ShoppingCartIcon className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                  
+                  <p className="text-sm text-gray-700">{bookContent.description}</p>
+                  
+                  <div className="flex items-center gap-2">
+                    <Badge variant={bookContent.isFree ? "default" : "secondary"}>
+                      {bookContent.isFree ? "Free" : `$${bookContent.price}`}
+                    </Badge>
+                    {bookContent.isPremium && (
+                      <Badge variant="outline">Premium</Badge>
                     )}
                   </div>
+                  
+                  {!bookContent.isFree && !showFullContent && (
+                    <div className="space-y-2">
+                      <Button onClick={handlePurchase} className="w-full">
+                        Purchase to Read Full Content
+                      </Button>
+                      <p className="text-xs text-gray-500 text-center">
+                        Preview available below
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -300,45 +287,7 @@ const Reader: React.FC = () => {
           {/* Book Content */}
           <div className="lg:col-span-2">
             <Card>
-              <CardContent className="p-8">
-                {/* Reading Controls */}
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-500">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {bookContent.formatting && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowFullContent(!showFullContent)}
-                    >
-                      <EyeIcon className="h-4 w-4 mr-2" />
-                      {showFullContent ? 'Show Preview' : 'Show Full Content'}
-                    </Button>
-                  )}
-                </div>
-
-                {/* Book Content */}
+              <CardContent className="p-6">
                 <div 
                   className="prose max-w-none"
                   style={{
@@ -347,44 +296,24 @@ const Reader: React.FC = () => {
                     fontFamily: bookContent.formatting?.fontFamily || 'Arial',
                     fontSize: `${bookContent.formatting?.fontSize || 16}px`,
                     lineHeight: bookContent.formatting?.lineHeight || 1.5,
-                    padding: bookContent.formatting ? 
-                      `${bookContent.formatting.margins.top}in ${bookContent.formatting.margins.right}in ${bookContent.formatting.margins.bottom}in ${bookContent.formatting.margins.left}in` : 
-                      '1in',
-                    minHeight: bookContent.formatting ? `${bookContent.formatting.pageHeight * 100}px` : 'auto',
-                    width: bookContent.formatting ? `${bookContent.formatting.pageWidth * 100}px` : '100%',
-                    margin: '0 auto',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    padding: `${bookContent.formatting?.margins?.top || 0.5}in ${bookContent.formatting?.margins?.right || 0.75}in ${bookContent.formatting?.margins?.bottom || 0.5}in ${bookContent.formatting?.margins?.left || 0.75}in`,
                   }}
                 >
-                  {showFullContent || bookContent.isFree || bookContent.price === 0 ? (
-                    <div>
-                      <h1 className="text-3xl font-bold mb-4">{bookContent.title}</h1>
-                      <p className="text-lg mb-8">by {bookContent.author}</p>
-                      <div className="whitespace-pre-wrap">
-                        {bookContent.content}
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <h1 className="text-3xl font-bold mb-4">{bookContent.title}</h1>
-                      <p className="text-lg mb-8">by {bookContent.author}</p>
-                      <div className="whitespace-pre-wrap">
-                        {bookContent.content?.substring(0, 500)}...
-                      </div>
-                      <div className="mt-8 text-center">
-                        <div className="bg-gray-100 rounded-lg p-6">
-                          <BookOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold mb-2">Continue Reading</h3>
-                          <p className="text-gray-600 mb-4">
-                            Purchase this book to read the full content
-                          </p>
-                          <Button onClick={handlePurchase}>
-                            Purchase for ${bookContent.price}
-                          </Button>
-                        </div>
-                      </div>
+                  <h1 className="text-2xl font-bold mb-4">{bookContent.title}</h1>
+                  <p className="text-sm text-gray-600 mb-6">by {bookContent.author}</p>
+                  
+                  <div className="whitespace-pre-wrap">
+                    {bookContent.isFree || showFullContent 
+                      ? bookContent.content 
+                      : bookContent.content?.substring(0, 500) + '...'
+                    }
+                  </div>
+                  
+                  {!bookContent.isFree && !showFullContent && bookContent.content && bookContent.content.length > 500 && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">
+                        This is a preview. Purchase the book to read the full content.
+                      </p>
                     </div>
                   )}
                 </div>

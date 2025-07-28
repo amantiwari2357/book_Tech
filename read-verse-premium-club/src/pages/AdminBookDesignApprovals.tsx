@@ -56,11 +56,17 @@ const AdminBookDesignApprovals: React.FC = () => {
 
   const fetchPendingDesigns = async () => {
     try {
+      console.log('Fetching pending book designs...');
       const res = await authFetch('/book-designs/admin/pending');
+      console.log('Response status:', res.status);
+      
       if (res.ok) {
         const data = await res.json();
+        console.log('Pending designs data:', data);
         setPendingDesigns(data);
       } else {
+        const errorData = await res.json();
+        console.error('Error response:', errorData);
         toast({
           title: "Error",
           description: "Failed to fetch pending book designs",
