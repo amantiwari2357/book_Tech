@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { store } from "@/store";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
@@ -40,6 +40,8 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -50,6 +52,13 @@ const AppContent = () => {
           if (res.ok) {
             const user = await res.json();
             dispatch(setUser(user));
+            
+            // Check if there's a redirect URL stored in localStorage
+            const redirectUrl = localStorage.getItem('redirectAfterLogin');
+            if (redirectUrl && location.pathname !== redirectUrl) {
+              localStorage.removeItem('redirectAfterLogin'); // Clear the stored URL
+              navigate(redirectUrl);
+            }
           }
         } catch (error) {
           console.error('Failed to restore session:', error);
@@ -58,7 +67,7 @@ const AppContent = () => {
     };
 
     initializeAuth();
-  }, [dispatch]);
+  }, [dispatch, navigate, location.pathname]);
 
   return (
     <TooltipProvider>

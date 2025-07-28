@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,8 @@ import {
   BookOpenIcon,
   EyeIcon,
   ShoppingCartIcon,
-  HeartIcon
+  HeartIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 
@@ -51,6 +52,7 @@ interface BookContent {
 const Reader: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const [bookContent, setBookContent] = useState<BookContent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,20 +61,53 @@ const Reader: React.FC = () => {
   const [showFullContent, setShowFullContent] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
     if (id) {
+      // Check if user is authenticated
+      if (!isAuthenticated) {
+        setShowLoginPrompt(true);
+        setLoading(false);
+        return;
+      }
       fetchBookContent();
     }
-  }, [id]);
+  }, [id, isAuthenticated]);
+
+  const handleLoginRedirect = () => {
+    // Save the current book ID in localStorage so we can redirect back after login
+    localStorage.setItem('redirectAfterLogin', `/reader/${id}`);
+    navigate('/login');
+  };
+
+  const handleSignupRedirect = () => {
+    // Save the current book ID in localStorage so we can redirect back after signup
+    localStorage.setItem('redirectAfterLogin', `/reader/${id}`);
+    navigate('/signup');
+  };
 
   const fetchBookContent = async () => {
     try {
       setLoading(true);
       setError('');
       
+      console.log('Fetching book content for ID:', id);
+      console.log('Is authenticated:', isAuthenticated);
+      
       // First try to fetch as a book design
-      let res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/book-designs/${id}`);
+      let res;
+      if (isAuthenticated) {
+        // Use authFetch when authenticated
+        console.log('Using authFetch for book design');
+        res = await authFetch(`/book-designs/${id}`);
+      } else {
+        // Use regular fetch when not authenticated
+        console.log('Using regular fetch for book design');
+        res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/book-designs/${id}`);
+      }
+      
+      console.log('Book design response status:', res.status);
       
       if (res.ok) {
         const data = await res.json();
@@ -98,10 +133,21 @@ const Reader: React.FC = () => {
           setError('This book design is not yet approved for reading.');
           return;
         }
+      } else {
+        console.log('Book design fetch failed, trying regular book');
       }
 
       // If not a book design, try as a regular book
-      res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/books/${id}`);
+      if (isAuthenticated) {
+        console.log('Using authFetch for regular book');
+        res = await authFetch(`/books/${id}`);
+      } else {
+        console.log('Using regular fetch for regular book');
+        res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/books/${id}`);
+      }
+      
+      console.log('Regular book response status:', res.status);
+      
       if (res.ok) {
         const data = await res.json();
         console.log('Regular book data:', data);
@@ -188,6 +234,53 @@ const Reader: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Show login prompt if user is not authenticated
+  if (showLoginPrompt) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <LockClosedIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h1>
+            <p className="text-gray-600 mb-4">
+              Please login or create an account to read this book
+            </p>
+            <p className="text-sm text-gray-500">
+              After login, you'll be automatically redirected back to this book
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <Button 
+              onClick={handleLoginRedirect}
+              className="w-full"
+              size="lg"
+            >
+              Login to Continue
+            </Button>
+            
+            <Button 
+              onClick={handleSignupRedirect}
+              variant="outline"
+              className="w-full"
+              size="lg"
+            >
+              Create New Account
+            </Button>
+            
+            <Button 
+              onClick={() => navigate('/')}
+              variant="ghost"
+              className="w-full"
+            >
+              Go Back Home
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }

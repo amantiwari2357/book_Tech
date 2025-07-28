@@ -30,10 +30,19 @@ const SignUp: React.FC = () => {
       if (res.ok) {
         setToken(data.token);
         dispatch(setUser(data.user));
-        if (data.user.role === 'author') {
-          navigate('/author-dashboard');
+        
+        // Check if there's a redirect URL stored in localStorage
+        const redirectUrl = localStorage.getItem('redirectAfterLogin');
+        if (redirectUrl) {
+          localStorage.removeItem('redirectAfterLogin'); // Clear the stored URL
+          navigate(redirectUrl);
         } else {
-          navigate('/customer-dashboard');
+          // Default navigation based on user role
+          if (data.user.role === 'author') {
+            navigate('/author-dashboard');
+          } else {
+            navigate('/customer-dashboard');
+          }
         }
       } else {
         setError(data.message || 'Signup failed');

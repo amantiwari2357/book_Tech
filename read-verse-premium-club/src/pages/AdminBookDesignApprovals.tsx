@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { authFetch } from '@/lib/api';
 import { toast } from '@/components/ui/use-toast';
 import { EyeIcon, CheckIcon, XMarkIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { useAppSelector } from '@/store';
 
 interface BookDesign {
   _id: string;
@@ -45,6 +46,7 @@ interface BookDesign {
 }
 
 const AdminBookDesignApprovals: React.FC = () => {
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [pendingDesigns, setPendingDesigns] = useState<BookDesign[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDesign, setSelectedDesign] = useState<BookDesign | null>(null);
@@ -57,8 +59,11 @@ const AdminBookDesignApprovals: React.FC = () => {
   const fetchPendingDesigns = async () => {
     try {
       console.log('Fetching pending book designs...');
+      console.log('User authentication status:', isAuthenticated);
+      
       const res = await authFetch('/book-designs/admin/pending');
       console.log('Response status:', res.status);
+      console.log('Response headers:', res.headers);
       
       if (res.ok) {
         const data = await res.json();

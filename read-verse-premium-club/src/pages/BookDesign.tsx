@@ -113,18 +113,26 @@ const BookDesign: React.FC = () => {
     }
 
     try {
+      console.log('Submitting book design:', form);
       const url = editingDesign 
         ? `/book-designs/${editingDesign._id}`
         : '/book-designs';
       
       const method = editingDesign ? 'PUT' : 'POST';
       
+      console.log('Making request to:', url, 'with method:', method);
+      
       const res = await authFetch(url, {
         method,
         body: JSON.stringify(form)
       });
 
+      console.log('Response status:', res.status);
+      
       if (res.ok) {
+        const responseData = await res.json();
+        console.log('Book design created/updated:', responseData);
+        
         toast({
           title: "Success",
           description: editingDesign 
@@ -138,6 +146,7 @@ const BookDesign: React.FC = () => {
         fetchBookDesigns();
       } else {
         const error = await res.json();
+        console.error('Error response:', error);
         toast({
           title: "Error",
           description: error.message || "Something went wrong",
@@ -145,6 +154,7 @@ const BookDesign: React.FC = () => {
         });
       }
     } catch (error) {
+      console.error('Error creating book design:', error);
       toast({
         title: "Error",
         description: "Something went wrong",
