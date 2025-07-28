@@ -24,6 +24,78 @@ const Header: React.FC = () => {
   const [avatarLoaded, setAvatarLoaded] = useState(true);
   const [avatarError, setAvatarError] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.classList.add('mobile-menu-open');
+    } else {
+      document.body.classList.remove('mobile-menu-open');
+    }
+    
+    return () => {
+      document.body.classList.remove('mobile-menu-open');
+    };
+  }, [mobileMenuOpen]);
+
+  // Global search functionality
+  const performGlobalSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      const res = await authFetch(`/books/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data);
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm) {
+        performGlobalSearch(searchTerm);
+      } else {
+        setSearchResults([]);
+        setShowSearchResults(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.search-container')) {
+        setShowSearchResults(false);
+      }
+    };
+
+    if (showSearchResults) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSearchResults]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -93,18 +165,87 @@ const Header: React.FC = () => {
   const totalItems = items.length;
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+    <header className="sticky top-0 header-z-index bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+          <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity flex-shrink-0">
             <BookOpenIcon className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-serif font-bold text-primary">BookTech</span>
+            <span className="text-xl sm:text-2xl font-serif font-bold text-primary">BookTech</span>
           </Link>
+
+          {/* Mobile Search Bar (only visible on mobile) */}
+          <div className="flex-1 mx-2 sm:hidden search-container relative">
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search books, authors..."
+                value={searchTerm}
+                onChange={(e) => dispatch(setSearchTerm(e.target.value))}
+                className="pl-8 pr-3 h-9 text-sm"
+                onFocus={() => {
+                  if (searchResults.length > 0) setShowSearchResults(true);
+                }}
+              />
+              {searchLoading && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                </div>
+              )}
+            </div>
+            
+            {/* Mobile Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                {searchResults.map((result) => (
+                  <Link
+                    key={result._id || result.id}
+                    to={`/book/${result._id || result.id}`}
+                    className="flex items-center p-3 hover:bg-gray-50 border-b last:border-b-0"
+                    onClick={() => {
+                      setShowSearchResults(false);
+                      dispatch(setSearchTerm(''));
+                    }}
+                  >
+                    <div className="flex-shrink-0 w-10 h-12 bg-gray-200 rounded mr-3 flex items-center justify-center">
+                      {result.coverImage ? (
+                        <img
+                          src={result.coverImage}
+                          alt={result.title}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      ) : (
+                        <BookOpenIcon className="h-6 w-6 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{result.title}</div>
+                      <div className="text-xs text-gray-500 truncate">by {result.author}</div>
+                      {result.category && (
+                        <div className="text-xs text-blue-600 mt-1">{result.category}</div>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+                <div className="p-2 text-center border-t">
+                  <Link
+                    to={`/browse?search=${encodeURIComponent(searchTerm)}`}
+                    className="text-primary hover:underline text-sm"
+                    onClick={() => {
+                      setShowSearchResults(false);
+                    }}
+                  >
+                    View all results
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Hamburger for mobile */}
           <button
-            className="sm:hidden p-2 ml-2 rounded focus:outline-none hover:bg-accent"
+            className="sm:hidden p-2 ml-2 rounded focus:outline-none hover:bg-accent flex-shrink-0"
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label="Open menu"
           >
@@ -112,7 +253,7 @@ const Header: React.FC = () => {
           </button>
 
           {/* Search Bar (hidden on xs, shown on sm+) */}
-          <div className="hidden sm:flex flex-1 max-w-md mx-8 relative">
+          <div className="hidden sm:flex flex-1 max-w-md mx-4 lg:mx-8 relative search-container">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
@@ -120,15 +261,70 @@ const Header: React.FC = () => {
               value={searchTerm}
               onChange={(e) => dispatch(setSearchTerm(e.target.value))}
               className="pl-10 pr-4 font-sans"
+              onFocus={() => {
+                if (searchResults.length > 0) setShowSearchResults(true);
+              }}
             />
+            {searchLoading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              </div>
+            )}
+            
+            {/* Desktop Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                {searchResults.map((result) => (
+                  <Link
+                    key={result._id || result.id}
+                    to={`/book/${result._id || result.id}`}
+                    className="flex items-center p-3 hover:bg-gray-50 border-b last:border-b-0"
+                    onClick={() => {
+                      setShowSearchResults(false);
+                      dispatch(setSearchTerm(''));
+                    }}
+                  >
+                    <div className="flex-shrink-0 w-10 h-12 bg-gray-200 rounded mr-3 flex items-center justify-center">
+                      {result.coverImage ? (
+                        <img
+                          src={result.coverImage}
+                          alt={result.title}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      ) : (
+                        <BookOpenIcon className="h-6 w-6 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{result.title}</div>
+                      <div className="text-xs text-gray-500 truncate">by {result.author}</div>
+                      {result.category && (
+                        <div className="text-xs text-blue-600 mt-1">{result.category}</div>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+                <div className="p-2 text-center border-t">
+                  <Link
+                    to={`/browse?search=${encodeURIComponent(searchTerm)}`}
+                    className="text-primary hover:underline text-sm"
+                    onClick={() => {
+                      setShowSearchResults(false);
+                    }}
+                  >
+                    View all results
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden sm:flex items-center gap-4">
-            <Link to="/browse" className="text-foreground hover:text-primary transition-colors">
+          <nav className="hidden sm:flex items-center gap-2 lg:gap-4 flex-shrink-0">
+            <Link to="/browse" className="text-foreground hover:text-primary transition-colors text-sm lg:text-base">
               Browse
             </Link>
-            <Link to="/subscriptions" className="text-foreground hover:text-primary transition-colors">
+            <Link to="/subscriptions" className="text-foreground hover:text-primary transition-colors text-sm lg:text-base">
               Plans
             </Link>
             {/* Cart */}
@@ -155,11 +351,11 @@ const Header: React.FC = () => {
                   <button onClick={handleBellClick} className="relative p-2 rounded-full hover:bg-accent focus:outline-none">
                     <BellIcon className="w-6 h-6" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{unreadCount}</span>
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] flex items-center justify-center">{unreadCount}</span>
                     )}
                   </button>
                   {showNotifDropdown && (
-                    <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-lg z-50 max-h-96 overflow-y-auto">
+                    <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-lg dropdown-z-index max-h-96 overflow-y-auto">
                       <div className="p-2 font-semibold border-b">Notifications</div>
                       {notifications.length === 0 ? (
                         <div className="p-4 text-center text-muted-foreground">No notifications</div>
@@ -210,7 +406,7 @@ const Header: React.FC = () => {
                     )}
                   </button>
                   {showProfileDropdown && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border rounded shadow-lg z-50">
+                    <div className="absolute right-0 mt-2 w-56 bg-white border rounded shadow-lg dropdown-z-index">
                       <div className="p-4 border-b">
                         <div className="font-bold">{user?.name}</div>
                         <div className="text-xs text-muted-foreground">{user?.email}</div>
@@ -268,150 +464,203 @@ const Header: React.FC = () => {
 
         {/* Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="sm:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
-            <div className="absolute top-0 left-0 w-4/5 max-w-xs h-full bg-white shadow-2xl border-r border-gray-200 flex flex-col" onClick={e => e.stopPropagation()}>
+          <div
+            className="mobile-menu-overlay sm:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <div
+              className="mobile-menu-drawer"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
                 <span className="text-xl font-bold text-gray-900">Menu</span>
-                <button 
-                  onClick={() => setMobileMenuOpen(false)} 
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
                   aria-label="Close menu"
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
                   <XMarkIcon className="h-6 w-6 text-gray-600" />
                 </button>
               </div>
-              
-              {/* Menu Items */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <div className="space-y-2">
-                  {/* Main Navigation */}
+
+              {/* Menu Content */}
+              <div className="mobile-menu-content">
+                {/* Search Bar for Mobile */}
+                <div className="relative mb-6">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search books, authors, categories..."
+                    value={searchTerm}
+                    onChange={(e) => dispatch(setSearchTerm(e.target.value))}
+                    className="pl-10 pr-4 font-sans"
+                  />
+                </div>
+
+                {/* Navigation */}
+                <div className="mb-6">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Navigation
+                  </h3>
+                  <div className="space-y-1">
+                    <Link
+                      to="/browse"
+                      className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <BookOpenIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                      Browse Books
+                    </Link>
+                    <Link
+                      to="/subscriptions"
+                      className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                      Plans
+                    </Link>
+                    <button
+                      className="flex items-center w-full px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      onClick={() => {
+                        dispatch(toggleCart());
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <ShoppingCartIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                      Cart
+                      {totalItems > 0 && (
+                        <Badge className="ml-auto h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-blue-500 text-white">
+                          {totalItems}
+                        </Badge>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Notifications for Mobile */}
+                {isAuthenticated && (
                   <div className="mb-6">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Navigation</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                      Notifications
+                    </h3>
                     <div className="space-y-1">
-                      <Link 
-                        to="/browse" 
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <BookOpenIcon className="h-5 w-5 mr-3" />
-                        Browse Books
-                      </Link>
-                      <Link 
-                        to="/subscriptions" 
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <UserIcon className="h-5 w-5 mr-3" />
-                        Plans
-                      </Link>
                       <button
-                        className="flex items-center w-full px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                        onClick={() => { dispatch(toggleCart()); setMobileMenuOpen(false); }}
+                        className="flex items-center w-full px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => {
+                          setShowNotifDropdown(!showNotifDropdown);
+                          setMobileMenuOpen(false);
+                        }}
                       >
-                        <ShoppingCartIcon className="h-5 w-5 mr-3" />
-                        Cart
-                        {totalItems > 0 && (
-                          <Badge className="ml-auto h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-blue-500 text-white">{totalItems}</Badge>
+                        <BellIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                        Notifications
+                        {unreadCount > 0 && (
+                          <Badge className="ml-auto h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-red-500 text-white">
+                            {unreadCount}
+                          </Badge>
                         )}
                       </button>
                     </div>
                   </div>
+                )}
 
-                  {/* User Section */}
-                  {isAuthenticated ? (
-                    <div className="mb-6">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Account</h3>
-                      <div className="space-y-1">
-                        <Link 
-                          to="/edit-profile" 
-                          className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <UserIcon className="h-5 w-5 mr-3" />
-                          Edit Profile
-                        </Link>
-                        <Link 
-                          to="/notifications" 
-                          className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <BellIcon className="h-5 w-5 mr-3" />
-                          Notifications
-                        </Link>
-                        {user?.role === 'author' && (
-                          <Link 
-                            to="/author-dashboard" 
-                            className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <BookOpenIcon className="h-5 w-5 mr-3" />
-                            Author Dashboard
-                          </Link>
-                        )}
-                        {user?.role === 'customer' && (
-                          <Link 
-                            to="/customer-dashboard" 
-                            className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <UserIcon className="h-5 w-5 mr-3" />
-                            Customer Dashboard
-                          </Link>
-                        )}
-                        {user?.role === 'admin' && (
-                          <Link 
-                            to="/admin-dashboard" 
-                            className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <UserIcon className="h-5 w-5 mr-3" />
-                            Admin Dashboard
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mb-6">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Account</h3>
-                      <div className="space-y-1">
-                        <Link 
-                          to="/login" 
-                          className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <UserIcon className="h-5 w-5 mr-3" />
-                          Sign In
-                        </Link>
-                        <Link 
-                          to="/signup" 
-                          className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <UserIcon className="h-5 w-5 mr-3" />
-                          Sign Up
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Logout Section */}
-                  {isAuthenticated && (
-                    <div className="border-t border-gray-200 pt-4">
-                      <button 
-                        onClick={handleLogout} 
-                        className="flex items-center w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                {/* Auth Section */}
+                {isAuthenticated ? (
+                  <div>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                      Account
+                    </h3>
+                    <div className="space-y-1">
+                      <Link
+                        to="/edit-profile"
+                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
                       >
-                        <UserIcon className="h-5 w-5 mr-3" />
+                        <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                        Edit Profile
+                      </Link>
+                      <Link
+                        to="/notifications"
+                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <BellIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                        Notifications
+                      </Link>
+                      {user?.role === 'author' && (
+                        <Link
+                          to="/author-dashboard"
+                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <BookOpenIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                          Author Dashboard
+                        </Link>
+                      )}
+                      {user?.role === 'customer' && (
+                        <Link
+                          to="/customer-dashboard"
+                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                          Customer Dashboard
+                        </Link>
+                      )}
+                      {user?.role === 'admin' && (
+                        <Link
+                          to="/admin-dashboard"
+                          className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                          Admin Dashboard
+                        </Link>
+                      )}
+                    </div>
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="flex items-center w-full px-3 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
                         Logout
                       </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                      Account
+                    </h3>
+                    <div className="space-y-1">
+                      <Link
+                        to="/login"
+                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                        Sign In
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <UserIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                        Sign Up
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
+
       </div>
     </header>
   );

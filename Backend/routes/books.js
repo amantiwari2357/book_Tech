@@ -12,6 +12,37 @@ router.get('/', async (req, res) => {
   res.json(books);
 });
 
+// Search books (public endpoint)
+router.get('/search', async (req, res) => {
+  const { q } = req.query;
+  
+  if (!q || typeof q !== 'string') {
+    return res.json([]);
+  }
+
+  const searchQuery = q.trim();
+  if (searchQuery.length < 2) {
+    return res.json([]);
+  }
+
+  try {
+    const books = await Book.find({
+      status: 'approved',
+      $or: [
+        { title: { $regex: searchQuery, $options: 'i' } },
+        { author: { $regex: searchQuery, $options: 'i' } },
+        { category: { $regex: searchQuery, $options: 'i' } },
+        { tags: { $in: [new RegExp(searchQuery, 'i')] } }
+      ]
+    }).limit(10).select('title author category coverImage tags');
+
+    res.json(books);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Search failed' });
+  }
+});
+
 // Get book by ID (public for approved books, auth required for others)
 router.get('/:id', async (req, res) => {
   const book = await Book.findById(req.params.id);

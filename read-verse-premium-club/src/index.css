@@ -98,21 +98,80 @@ All colors MUST be HSL.
     --ring: 212.7 26.8% 83.9%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
+
+    --sidebar-primary: 0 0% 98%;
+
+    --sidebar-primary-foreground: 240 5.9% 10%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
     --sidebar-border: 240 3.7% 15.9%;
+
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Mobile menu specific styles */
+  .mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  .mobile-menu-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 80%;
+    max-width: 320px;
+    height: 100vh;
+    background-color: white;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
+    overflow: hidden;
+  }
+
+  .mobile-menu-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    padding-bottom: 5rem;
+  }
+
+  /* Prevent body scroll when mobile menu is open */
+  body.mobile-menu-open {
+    overflow: hidden;
+  }
+
+  /* Ensure proper z-index stacking */
+  .header-z-index {
+    z-index: 50;
+  }
+
+  .mobile-menu-z-index {
+    z-index: 100;
+  }
+
+  .dropdown-z-index {
+    z-index: 60;
   }
 }
