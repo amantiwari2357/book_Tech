@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { store } from "@/store";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
@@ -35,13 +35,13 @@ import AdminBookManagement from './pages/AdminBookManagement';
 import BookDesign from './pages/BookDesign';
 import BookDesignReader from './pages/BookDesignReader';
 import AdminBookDesignApprovals from './pages/AdminBookDesignApprovals';
+import AuthRedirect from '@/components/AuthRedirect';
 
 const queryClient = new QueryClient();
 
+// Separate component for handling redirects inside Router context
 const AppContent = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -52,13 +52,6 @@ const AppContent = () => {
           if (res.ok) {
             const user = await res.json();
             dispatch(setUser(user));
-            
-            // Check if there's a redirect URL stored in localStorage
-            const redirectUrl = localStorage.getItem('redirectAfterLogin');
-            if (redirectUrl && location.pathname !== redirectUrl) {
-              localStorage.removeItem('redirectAfterLogin'); // Clear the stored URL
-              navigate(redirectUrl);
-            }
           }
         } catch (error) {
           console.error('Failed to restore session:', error);
@@ -67,47 +60,46 @@ const AppContent = () => {
     };
 
     initializeAuth();
-  }, [dispatch, navigate, location.pathname]);
+  }, [dispatch]);
 
   return (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <div className="min-h-screen bg-background text-foreground font-sans">
-          <Header />
-          <main>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/browse" element={<Browse />} />
-              <Route path="/book/:id" element={<BookDetails />} />
-              <Route path="/subscriptions" element={<Subscriptions />} />
-              <Route path="/reader/:id" element={<Reader />} />
-              <Route path="/upload" element={<Upload />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
-              <Route path="/admin-book-approvals" element={<AdminBookApprovals />} />
-              <Route path="/admin-book-management" element={<AdminBookManagement />} />
-              <Route path="/admin-plan-management" element={<AdminPlanManagement />} />
-              <Route path="/book-design" element={<BookDesign />} />
-              <Route path="/book-design-reader/:id" element={<BookDesignReader />} />
-              <Route path="/admin-book-design-approvals" element={<AdminBookDesignApprovals />} />
-              <Route path="/author-dashboard" element={<AuthorDashboard />} />
-              <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-                              <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/edit-profile" element={<EditProfile />} />
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          <Footer />
-          <CartSidebar />
-        </div>
-      </BrowserRouter>
+      <AuthRedirect />
+      <div className="min-h-screen bg-background text-foreground font-sans">
+        <Header />
+        <main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/browse" element={<Browse />} />
+            <Route path="/book/:id" element={<BookDetails />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/reader/:id" element={<Reader />} />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-book-approvals" element={<AdminBookApprovals />} />
+            <Route path="/admin-book-management" element={<AdminBookManagement />} />
+            <Route path="/admin-plan-management" element={<AdminPlanManagement />} />
+            <Route path="/book-design" element={<BookDesign />} />
+            <Route path="/book-design-reader/:id" element={<BookDesignReader />} />
+            <Route path="/admin-book-design-approvals" element={<AdminBookDesignApprovals />} />
+            <Route path="/author-dashboard" element={<AuthorDashboard />} />
+            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+        <Footer />
+        <CartSidebar />
+      </div>
     </TooltipProvider>
   );
 };
@@ -115,7 +107,9 @@ const AppContent = () => {
 const App = () => (
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </QueryClientProvider>
   </Provider>
 );
