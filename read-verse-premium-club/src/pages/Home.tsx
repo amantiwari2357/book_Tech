@@ -54,6 +54,8 @@ const Home: React.FC = () => {
   const [recommendedBooks, setRecommendedBooks] = useState([]);
   const [featuredBooksFromAPI, setFeaturedBooksFromAPI] = useState([]);
   const [bookDesigns, setBookDesigns] = useState([]);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Scroll animation hooks
   const { elementRef: heroRef, isVisible: heroVisible } = useScrollAnimation();
@@ -64,9 +66,24 @@ const Home: React.FC = () => {
   const { elementRef: featuresRef, isVisible: featuresVisible } = useScrollAnimation();
   const { elementRef: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
+  // Fetch books with retry mechanism
   useEffect(() => {
-    dispatch(fetchBooks());
-  }, [dispatch]);
+    const fetchBooksWithRetry = async () => {
+      try {
+        await dispatch(fetchBooks()).unwrap();
+      } catch (error) {
+        console.error('Failed to fetch books:', error);
+        if (retryCount < 3) {
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            dispatch(fetchBooks());
+          }, 2000 * (retryCount + 1)); // Exponential backoff
+        }
+      }
+    };
+
+    fetchBooksWithRetry();
+  }, [dispatch, retryCount]);
 
   useEffect(() => {
     if (books.length > 0) {
@@ -76,12 +93,16 @@ const Home: React.FC = () => {
 
   // Fetch recommended and featured books from API
   useEffect(() => {
+    setApiLoading(true);
+    
     const fetchRecommendedBooks = async () => {
       try {
         const res = await authFetch('/books/recommended/list');
         if (res.ok) {
           const data = await res.json();
           setRecommendedBooks(data);
+        } else {
+          console.error('Failed to fetch recommended books:', res.status);
         }
       } catch (error) {
         console.error('Error fetching recommended books:', error);
@@ -94,6 +115,8 @@ const Home: React.FC = () => {
         if (res.ok) {
           const data = await res.json();
           setFeaturedBooksFromAPI(data);
+        } else {
+          console.error('Failed to fetch featured books:', res.status);
         }
       } catch (error) {
         console.error('Error fetching featured books:', error);
@@ -106,15 +129,27 @@ const Home: React.FC = () => {
         if (res.ok) {
           const data = await res.json();
           setBookDesigns(data);
+        } else {
+          console.error('Failed to fetch book designs:', res.status);
         }
       } catch (error) {
         console.error('Error fetching book designs:', error);
       }
     };
 
-    fetchRecommendedBooks();
-    fetchFeaturedBooks();
-    fetchBookDesigns();
+    // Fetch all data with error handling
+    Promise.allSettled([
+      fetchRecommendedBooks(),
+      fetchFeaturedBooks(),
+      fetchBookDesigns()
+    ]).then((results) => {
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`API call ${index} failed:`, result.reason);
+        }
+      });
+      setApiLoading(false);
+    });
   }, []);
 
   // Determine user subscription status
@@ -392,7 +427,7 @@ const Home: React.FC = () => {
       )}
 
       {/* Empty State - Show when no content is available */}
-      {!loading && !hasAnyContent && (
+      {!loading && !apiLoading && !hasAnyContent && (
         <section className="py-16 sm:py-20">
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-md mx-auto">
@@ -403,6 +438,40 @@ const Home: React.FC = () => {
               </p>
               <Button onClick={handleBrowseLibrary} className="mobile-button">
                 Browse Library
+                <ArrowRightIcon className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Loading State */}
+      {(loading || apiLoading) && (
+        <section className="py-16 sm:py-20">
+          <div className="container mx-auto px-4 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+              <h2 className="text-2xl font-serif font-bold mb-4">Loading Books...</h2>
+              <p className="text-muted-foreground mb-6">
+                Please wait while we fetch the latest books for you.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <section className="py-16 sm:py-20">
+          <div className="container mx-auto px-4 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="text-red-500 text-4xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-serif font-bold mb-4">Error Loading Books</h2>
+              <p className="text-muted-foreground mb-6">
+                {error}
+              </p>
+              <Button onClick={() => window.location.reload()} className="mobile-button">
+                Try Again
                 <ArrowRightIcon className="h-4 w-4 ml-2" />
               </Button>
             </div>
