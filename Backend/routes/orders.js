@@ -109,63 +109,93 @@ const sendPaymentEmail = async (userEmail, userName, orderId, paymentLink, order
   }
 };
 
+// AUTHENTICATED ROUTES (require authentication)
 // Create Razorpay payment order
 router.post('/create-payment', auth, async (req, res) => {
   try {
+    console.log('🔍 Payment creation started');
+    console.log('📦 Request body:', req.body);
+    console.log('👤 User:', req.user);
+    
     const { items, total, shippingAddress, paymentMethod, userId } = req.body;
     
     // Validate required fields
     if (!items || !total || !shippingAddress || !paymentMethod) {
+      console.log('❌ Missing required fields');
       return res.status(400).json({ 
-        message: 'Missing required fields: items, total, shippingAddress, paymentMethod' 
+        message: 'Missing required fields: items, total, shippingAddress, paymentMethod',
+        received: { items, total, shippingAddress, paymentMethod }
       });
     }
+    
+    console.log('✅ All required fields present');
     
     // Check if Razorpay is configured
     if (!razorpay) {
       console.log('⚠️  Razorpay not configured, creating demo order');
       
-      // Create demo order without Razorpay
-      const orderId = 'DEMO' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
-      const order = new Order({
-        orderId,
-        userId: req.user.id,
-        items: items,
-        total: total * 1.18,
-        shippingAddress: shippingAddress,
-        paymentMethod: paymentMethod,
-        status: 'processing',
-        paymentStatus: 'completed' // Demo payment completed
-      });
-      
-      await order.save();
-      
-      // Send demo email if transporter is available
-      if (transporter) {
-        const demoPaymentLink = `https://book-tech.vercel.app/orders?demo=true&orderId=${orderId}`;
-        await sendPaymentEmail(
-          req.user.email,
-          req.user.name,
+      try {
+        // Create demo order without Razorpay
+        const orderId = 'DEMO' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+        console.log('🆔 Demo Order ID:', orderId);
+        
+        const order = new Order({
           orderId,
-          demoPaymentLink,
-          {
-            total: (total * 1.18).toFixed(2),
-            items: items
-          }
-        );
+          userId: req.user.id,
+          items: items,
+          total: total * 1.18,
+          shippingAddress: shippingAddress,
+          paymentMethod: paymentMethod,
+          status: 'processing',
+          paymentStatus: 'completed' // Demo payment completed
+        });
+        
+        console.log('💾 Saving demo order...');
+        await order.save();
+        console.log('✅ Demo order saved successfully');
+        
+        // Send demo email if transporter is available
+        if (transporter) {
+          console.log('📧 Sending demo email...');
+          const demoPaymentLink = `https://book-tech.vercel.app/orders?demo=true&orderId=${orderId}`;
+          await sendPaymentEmail(
+            req.user.email,
+            req.user.name,
+            orderId,
+            demoPaymentLink,
+            {
+              total: (total * 1.18).toFixed(2),
+              items: items
+            }
+          );
+          console.log('✅ Demo email sent');
+        } else {
+          console.log('⚠️  No email transporter available');
+        }
+        
+        const response = {
+          key_id: 'demo_key',
+          amount: Math.round(total * 1.18 * 100),
+          currency: 'INR',
+          order_id: 'demo_order_' + Date.now(),
+          receipt: 'demo_receipt',
+          payment_link: `https://book-tech.vercel.app/orders?demo=true&orderId=${orderId}`,
+          order_id_db: orderId,
+          is_demo: true
+        };
+        
+        console.log('📤 Sending demo response:', response);
+        return res.json(response);
+      } catch (demoError) {
+        console.error('❌ Demo order creation failed:', demoError);
+        return res.status(500).json({ 
+          message: 'Failed to create demo order',
+          error: demoError.message 
+        });
       }
-      
-      return res.json({
-        key_id: 'demo_key',
-        amount: Math.round(total * 1.18 * 100),
-        currency: 'INR',
-        order_id: 'demo_order_' + Date.now(),
-        receipt: 'demo_receipt',
-        payment_link: `https://book-tech.vercel.app/orders?demo=true&orderId=${orderId}`,
-        order_id_db: orderId,
-        is_demo: true
-      });
     }
+    
+    console.log('💰 Creating Razorpay order...');
     
     // Calculate amount in paise (Razorpay expects amount in smallest currency unit)
     const amountInPaise = Math.round(total * 1.18 * 100); // Including 18% tax
@@ -182,6 +212,8 @@ router.post('/create-payment', auth, async (req, res) => {
       }
     });
     
+    console.log('✅ Razorpay order created:', razorpayOrder.id);
+    
     // Create order in database with pending status
     const orderId = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
     const order = new Order({
@@ -196,13 +228,16 @@ router.post('/create-payment', auth, async (req, res) => {
       razorpayOrderId: razorpayOrder.id
     });
     
+    console.log('💾 Saving order to database...');
     await order.save();
+    console.log('✅ Order saved successfully');
     
     // Create payment link
     const paymentLink = `https://checkout.razorpay.com/v1/pay/${razorpayOrder.id}?key=${process.env.RAZORPAY_KEY_ID}`;
     
     // Send payment email
     if (transporter) { // Use the transporter we created earlier
+      console.log('📧 Sending payment email...');
       await sendPaymentEmail(
         req.user.email,
         req.user.name,
@@ -213,9 +248,12 @@ router.post('/create-payment', auth, async (req, res) => {
           items: items
         }
       );
+      console.log('✅ Payment email sent');
+    } else {
+      console.log('⚠️  No email transporter available');
     }
     
-    res.json({
+    const response = {
       key_id: process.env.RAZORPAY_KEY_ID,
       amount: amountInPaise,
       currency: 'INR',
@@ -223,12 +261,17 @@ router.post('/create-payment', auth, async (req, res) => {
       receipt: razorpayOrder.receipt,
       payment_link: paymentLink,
       order_id_db: orderId
-    });
+    };
+    
+    console.log('📤 Sending response:', response);
+    res.json(response);
   } catch (error) {
-    console.error('Error creating payment order:', error);
+    console.error('❌ Error creating payment order:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({ 
       message: 'Failed to create payment order',
-      error: error.message 
+      error: error.message,
+      stack: error.stack
     });
   }
 });
@@ -286,9 +329,129 @@ router.post('/verify-payment', auth, async (req, res) => {
   }
 });
 
-// Test route to check if orders route is working
+// Test routes (NO AUTHENTICATION REQUIRED)
 router.get('/test', (req, res) => {
   res.json({ message: 'Orders route is working!', timestamp: new Date().toISOString() });
+});
+
+// Health check route (NO AUTHENTICATION REQUIRED)
+router.get('/health', (req, res) => {
+  res.json({ 
+    message: 'Orders API is healthy!', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    razorpay: !!razorpay,
+    email: !!transporter
+  });
+});
+
+// Test database connection and Order model (NO AUTHENTICATION REQUIRED)
+router.get('/test-db', async (req, res) => {
+  try {
+    console.log('🔍 Testing database connection...');
+    
+    // Test Order model
+    const testOrder = new Order({
+      orderId: 'TEST' + Date.now(),
+      userId: '507f1f77bcf86cd799439011', // Test ObjectId
+      items: [{
+        bookId: 'test-book-1',
+        title: 'Test Book',
+        price: 10,
+        author: 'Test Author'
+      }],
+      total: 10,
+      shippingAddress: {
+        fullName: 'Test User',
+        email: 'test@example.com',
+        phone: '1234567890',
+        address: 'Test Address',
+        city: 'Test City',
+        state: 'Test State',
+        zipCode: '12345',
+        country: 'Test Country'
+      },
+      paymentMethod: {
+        type: 'demo'
+      },
+      status: 'pending',
+      paymentStatus: 'pending'
+    });
+    
+    console.log('✅ Order model created successfully');
+    console.log('📦 Test order data:', testOrder);
+    
+    res.json({ 
+      message: 'Database and Order model working!', 
+      timestamp: new Date().toISOString(),
+      testOrder: testOrder
+    });
+  } catch (error) {
+    console.error('❌ Database test failed:', error);
+    res.status(500).json({ 
+      message: 'Database test failed',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Simple test route without authentication (NO AUTHENTICATION REQUIRED)
+router.post('/test-create', async (req, res) => {
+  try {
+    console.log('🔍 Test order creation started');
+    console.log('📦 Request body:', req.body);
+    
+    const { items, total, shippingAddress, paymentMethod } = req.body;
+    
+    // Create demo order
+    const orderId = 'TEST' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+    console.log('🆔 Test Order ID:', orderId);
+    
+    const order = new Order({
+      orderId,
+      userId: '507f1f77bcf86cd799439011', // Test ObjectId
+      items: items || [{
+        bookId: 'test-book-1',
+        title: 'Test Book',
+        price: 10,
+        author: 'Test Author'
+      }],
+      total: total || 10,
+      shippingAddress: shippingAddress || {
+        fullName: 'Test User',
+        email: 'test@example.com',
+        phone: '1234567890',
+        address: 'Test Address',
+        city: 'Test City',
+        state: 'Test State',
+        zipCode: '12345',
+        country: 'Test Country'
+      },
+      paymentMethod: paymentMethod || {
+        type: 'demo'
+      },
+      status: 'processing',
+      paymentStatus: 'completed'
+    });
+    
+    console.log('💾 Saving test order...');
+    await order.save();
+    console.log('✅ Test order saved successfully');
+    
+    res.json({
+      message: 'Test order created successfully!',
+      orderId: orderId,
+      is_demo: true
+    });
+  } catch (error) {
+    console.error('❌ Test order creation failed:', error);
+    res.status(500).json({ 
+      message: 'Test order creation failed',
+      error: error.message,
+      stack: error.stack
+    });
+  }
 });
 
 // Get user's orders
