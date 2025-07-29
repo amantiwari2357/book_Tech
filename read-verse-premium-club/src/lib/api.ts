@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://book-tech.onrender.com/api';
 
 export function getToken() {
   return localStorage.getItem('token');
