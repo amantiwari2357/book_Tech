@@ -50,6 +50,131 @@ const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
     })
   : null;
 
+// TEST ROUTES (NO AUTHENTICATION REQUIRED) - MUST BE FIRST
+router.get('/test', (req, res) => {
+  res.json({ message: 'Orders route is working!', timestamp: new Date().toISOString() });
+});
+
+// Health check route (NO AUTHENTICATION REQUIRED)
+router.get('/health', (req, res) => {
+  res.json({ 
+    message: 'Orders API is healthy!', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    razorpay: !!razorpay,
+    email: !!transporter
+  });
+});
+
+// Test database connection and Order model (NO AUTHENTICATION REQUIRED)
+router.get('/test-db', async (req, res) => {
+  try {
+    console.log('🔍 Testing database connection...');
+    
+    // Test Order model
+    const testOrder = new Order({
+      orderId: 'TEST' + Date.now(),
+      userId: '507f1f77bcf86cd799439011', // Test ObjectId
+      items: [{
+        bookId: 'test-book-1',
+        title: 'Test Book',
+        price: 10,
+        author: 'Test Author'
+      }],
+      total: 10,
+      shippingAddress: {
+        fullName: 'Test User',
+        email: 'test@example.com',
+        phone: '1234567890',
+        address: 'Test Address',
+        city: 'Test City',
+        state: 'Test State',
+        zipCode: '12345',
+        country: 'Test Country'
+      },
+      paymentMethod: {
+        type: 'demo'
+      },
+      status: 'pending',
+      paymentStatus: 'pending'
+    });
+    
+    console.log('✅ Order model created successfully');
+    console.log('📦 Test order data:', testOrder);
+    
+    res.json({ 
+      message: 'Database and Order model working!', 
+      timestamp: new Date().toISOString(),
+      testOrder: testOrder
+    });
+  } catch (error) {
+    console.error('❌ Database test failed:', error);
+    res.status(500).json({ 
+      message: 'Database test failed',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Simple test route without authentication (NO AUTHENTICATION REQUIRED)
+router.post('/test-create', async (req, res) => {
+  try {
+    console.log('🔍 Test order creation started');
+    console.log('📦 Request body:', req.body);
+    
+    const { items, total, shippingAddress, paymentMethod } = req.body;
+    
+    // Create demo order
+    const orderId = 'TEST' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+    console.log('🆔 Test Order ID:', orderId);
+    
+    const order = new Order({
+      orderId,
+      userId: '507f1f77bcf86cd799439011', // Test ObjectId
+      items: items || [{
+        bookId: 'test-book-1',
+        title: 'Test Book',
+        price: 10,
+        author: 'Test Author'
+      }],
+      total: total || 10,
+      shippingAddress: shippingAddress || {
+        fullName: 'Test User',
+        email: 'test@example.com',
+        phone: '1234567890',
+        address: 'Test Address',
+        city: 'Test City',
+        state: 'Test State',
+        zipCode: '12345',
+        country: 'Test Country'
+      },
+      paymentMethod: paymentMethod || {
+        type: 'demo'
+      },
+      status: 'processing',
+      paymentStatus: 'completed'
+    });
+    
+    console.log('💾 Saving test order...');
+    await order.save();
+    console.log('✅ Test order saved successfully');
+    
+    res.json({
+      message: 'Test order created successfully!',
+      orderId: orderId,
+      is_demo: true
+    });
+  } catch (error) {
+    console.error('❌ Test order creation failed:', error);
+    res.status(500).json({ 
+      message: 'Test order creation failed',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // Function to send payment email
 const sendPaymentEmail = async (userEmail, userName, orderId, paymentLink, orderDetails) => {
   try {
@@ -325,131 +450,6 @@ router.post('/verify-payment', auth, async (req, res) => {
     res.status(500).json({ 
       message: 'Failed to verify payment',
       error: error.message 
-    });
-  }
-});
-
-// Test routes (NO AUTHENTICATION REQUIRED)
-router.get('/test', (req, res) => {
-  res.json({ message: 'Orders route is working!', timestamp: new Date().toISOString() });
-});
-
-// Health check route (NO AUTHENTICATION REQUIRED)
-router.get('/health', (req, res) => {
-  res.json({ 
-    message: 'Orders API is healthy!', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    razorpay: !!razorpay,
-    email: !!transporter
-  });
-});
-
-// Test database connection and Order model (NO AUTHENTICATION REQUIRED)
-router.get('/test-db', async (req, res) => {
-  try {
-    console.log('🔍 Testing database connection...');
-    
-    // Test Order model
-    const testOrder = new Order({
-      orderId: 'TEST' + Date.now(),
-      userId: '507f1f77bcf86cd799439011', // Test ObjectId
-      items: [{
-        bookId: 'test-book-1',
-        title: 'Test Book',
-        price: 10,
-        author: 'Test Author'
-      }],
-      total: 10,
-      shippingAddress: {
-        fullName: 'Test User',
-        email: 'test@example.com',
-        phone: '1234567890',
-        address: 'Test Address',
-        city: 'Test City',
-        state: 'Test State',
-        zipCode: '12345',
-        country: 'Test Country'
-      },
-      paymentMethod: {
-        type: 'demo'
-      },
-      status: 'pending',
-      paymentStatus: 'pending'
-    });
-    
-    console.log('✅ Order model created successfully');
-    console.log('📦 Test order data:', testOrder);
-    
-    res.json({ 
-      message: 'Database and Order model working!', 
-      timestamp: new Date().toISOString(),
-      testOrder: testOrder
-    });
-  } catch (error) {
-    console.error('❌ Database test failed:', error);
-    res.status(500).json({ 
-      message: 'Database test failed',
-      error: error.message,
-      stack: error.stack
-    });
-  }
-});
-
-// Simple test route without authentication (NO AUTHENTICATION REQUIRED)
-router.post('/test-create', async (req, res) => {
-  try {
-    console.log('🔍 Test order creation started');
-    console.log('📦 Request body:', req.body);
-    
-    const { items, total, shippingAddress, paymentMethod } = req.body;
-    
-    // Create demo order
-    const orderId = 'TEST' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
-    console.log('🆔 Test Order ID:', orderId);
-    
-    const order = new Order({
-      orderId,
-      userId: '507f1f77bcf86cd799439011', // Test ObjectId
-      items: items || [{
-        bookId: 'test-book-1',
-        title: 'Test Book',
-        price: 10,
-        author: 'Test Author'
-      }],
-      total: total || 10,
-      shippingAddress: shippingAddress || {
-        fullName: 'Test User',
-        email: 'test@example.com',
-        phone: '1234567890',
-        address: 'Test Address',
-        city: 'Test City',
-        state: 'Test State',
-        zipCode: '12345',
-        country: 'Test Country'
-      },
-      paymentMethod: paymentMethod || {
-        type: 'demo'
-      },
-      status: 'processing',
-      paymentStatus: 'completed'
-    });
-    
-    console.log('💾 Saving test order...');
-    await order.save();
-    console.log('✅ Test order saved successfully');
-    
-    res.json({
-      message: 'Test order created successfully!',
-      orderId: orderId,
-      is_demo: true
-    });
-  } catch (error) {
-    console.error('❌ Test order creation failed:', error);
-    res.status(500).json({ 
-      message: 'Test order creation failed',
-      error: error.message,
-      stack: error.stack
     });
   }
 });
