@@ -307,6 +307,43 @@ const AdminDashboard: React.FC = () => {
     toast({ title: 'Exported', description: `Exported ${type} data as CSV.` });
   };
 
+  const handleCleanup = async () => {
+    try {
+      setLoading(true);
+      const response = await authFetch('/admin/cleanup', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        toast({ 
+          title: 'Cleanup Completed', 
+          description: `Successfully cleaned up orphaned data. ${result.results.map((r: any) => `${r.deleted || 0} ${r.type}`).join(', ')}` 
+        });
+        
+        // Refresh data after cleanup
+        fetchData();
+        fetchAnalytics();
+      } else {
+        const error = await response.json();
+        toast({ 
+          title: 'Cleanup Failed', 
+          description: error.message || 'Failed to cleanup orphaned data',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      toast({ 
+        title: 'Cleanup Failed', 
+        description: 'An error occurred during cleanup',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Prepare chart data
   const userRoleData = analytics ? Object.entries(analytics.userCounts || {}).map(([role, count]) => ({ name: role, value: count as number })) : [];
   const bookCategoryData = analytics ? Object.entries(analytics.bookCategoryCounts || {}).map(([cat, count]) => ({ name: cat, value: count as number })) : [];
@@ -431,6 +468,14 @@ const AdminDashboard: React.FC = () => {
                     <button onClick={() => handleExport('analytics')}>
                       <ChartBarIcon className="w-5 h-5" />
                       <span>Export Analytics</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Cleanup Orphaned Data">
+                    <button onClick={handleCleanup} className="text-orange-600 hover:text-orange-700">
+                      <Cog6ToothIcon className="w-5 h-5" />
+                      <span>Cleanup Data</span>
                     </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

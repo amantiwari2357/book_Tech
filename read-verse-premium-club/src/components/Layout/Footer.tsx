@@ -1,10 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpenIcon, EnvelopeIcon, PhoneIcon, MapPinIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon, EnvelopeIcon, PhoneIcon, MapPinIcon, GlobeAltIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const Footer: React.FC = () => {
   const { elementRef: footerRef, isVisible: footerVisible } = useScrollAnimation();
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const footerSections = [
+    {
+      id: 'quick-links',
+      title: 'Quick Links',
+      links: [
+        { name: 'Browse Books', to: '/browse' },
+        { name: 'Categories', to: '/categories' },
+        { name: 'New Releases', to: '/new-releases' },
+        { name: 'Bestsellers', to: '/bestsellers' },
+        { name: 'Premium Plans', to: '/subscriptions' }
+      ]
+    },
+    {
+      id: 'services',
+      title: 'Services',
+      links: [
+        { name: 'Upload Books', to: '/upload' },
+        { name: 'Online Reader', to: '/reader' },
+        { name: 'Book Design Studio', to: '/book-design' },
+        { name: 'Support Center', to: '/support' },
+        { name: 'Notifications', to: '/notifications' }
+      ]
+    },
+    {
+      id: 'contact-support',
+      title: 'Contact & Support',
+      links: [
+        { name: 'Help Center', to: '/help' },
+        { name: 'Contact Us', to: '/contact' },
+        { name: 'Privacy Policy', to: '/privacy' },
+        { name: 'Terms of Service', to: '/terms' },
+        { name: 'About Us', to: '/about' }
+      ]
+    }
+  ];
 
   return (
     <footer ref={footerRef} className={`bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 mt-16 relative overflow-hidden footer-mobile ${footerVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
@@ -15,12 +59,12 @@ const Footer: React.FC = () => {
         }} />
       </div>
 
-      <div className="relative container mx-auto px-4 py-12 sm:py-16">
+      <div className="relative container mx-auto px-4 py-12 sm:py-16 lg:py-20">
         {/* Main Footer Content */}
-        <div className="mobile-footer-grid">
-          {/* Brand Section */}
-          <div className={`space-y-6 footer-mobile-brand ${footerVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`}>
-            <div className="flex items-center justify-center sm:justify-start space-x-3">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+          {/* Brand Section - Full width on mobile, 1/4 on desktop */}
+          <div className={`lg:col-span-1 space-y-6 footer-mobile-brand ${footerVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`}>
+            <div className="flex items-center justify-center lg:justify-start space-x-3">
               <div className="bg-gradient-to-br from-primary to-primary/80 p-2 rounded-lg shadow-lg">
                 <BookOpenIcon className="h-6 w-6 text-white" />
               </div>
@@ -28,11 +72,11 @@ const Footer: React.FC = () => {
                 BookTech
               </span>
             </div>
-            <p className="text-gray-600 text-sm sm:text-base leading-relaxed text-center sm:text-left">
+            <p className="text-gray-600 text-sm sm:text-base leading-relaxed text-center lg:text-left">
               Your premier destination for digital books and premium reading experiences. 
               Discover, read, and explore the world of literature.
             </p>
-            <div className="flex justify-center sm:justify-start space-x-4">
+            <div className="flex justify-center lg:justify-start space-x-4">
               <a href="#" className="mobile-social-icon p-2 rounded-full transition-all duration-300 hover:scale-110">
                 <svg className="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
@@ -51,159 +95,99 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className={`footer-mobile-links ${footerVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`} style={{ transitionDelay: '0.1s' }}>
-            <h3 className="mobile-section-header font-bold text-lg mb-6 text-gray-800 relative">
-              Quick Links
-              <div className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-primary to-primary/50 rounded-full"></div>
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/browse" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Browse Books
-                </Link>
-              </li>
-              <li>
-                <Link to="/categories" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Categories
-                </Link>
-              </li>
-              <li>
-                <Link to="/new-releases" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  New Releases
-                </Link>
-              </li>
-              <li>
-                <Link to="/bestsellers" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Bestsellers
-                </Link>
-              </li>
-              <li>
-                <Link to="/subscriptions" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Premium Plans
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {/* Footer Sections - Responsive Grid */}
+          <div className="lg:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {footerSections.map((section, index) => (
+                <div key={section.id} className={`footer-mobile-links ${footerVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`} style={{ transitionDelay: `${(index + 1) * 0.1}s` }}>
+                  {/* Mobile Accordion Header */}
+                  <div className="md:hidden">
+                    <button
+                      onClick={() => toggleSection(section.id)}
+                      className="w-full flex items-center justify-between py-4 text-left border-b border-gray-200"
+                    >
+                      <h3 className="mobile-section-header font-bold text-lg text-gray-800 relative">
+                        {section.title}
+                        <div className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-primary to-primary/50 rounded-full"></div>
+                      </h3>
+                      {expandedSections[section.id] ? (
+                        <ChevronUpIcon className="h-5 w-5 text-gray-500 transition-transform" />
+                      ) : (
+                        <ChevronDownIcon className="h-5 w-5 text-gray-500 transition-transform" />
+                      )}
+                    </button>
+                  </div>
 
-          {/* Services */}
-          <div className={`footer-mobile-links ${footerVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`} style={{ transitionDelay: '0.2s' }}>
-            <h3 className="mobile-section-header font-bold text-lg mb-6 text-gray-800 relative">
-              Services
-              <div className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-primary to-primary/50 rounded-full"></div>
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/upload" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Upload Books
-                </Link>
-              </li>
-              <li>
-                <Link to="/reader" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Online Reader
-                </Link>
-              </li>
-              <li>
-                <Link to="/book-design" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Book Design Studio
-                </Link>
-              </li>
-              <li>
-                <Link to="/support" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Support Center
-                </Link>
-              </li>
-              <li>
-                <Link to="/notifications" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Notifications
-                </Link>
-              </li>
-            </ul>
-          </div>
+                  {/* Desktop Header */}
+                  <div className="hidden md:block">
+                    <h3 className="mobile-section-header font-bold text-lg mb-6 text-gray-800 relative">
+                      {section.title}
+                      <div className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-primary to-primary/50 rounded-full"></div>
+                    </h3>
+                  </div>
 
-          {/* Contact & Support */}
-          <div className={`footer-mobile-links ${footerVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`} style={{ transitionDelay: '0.3s' }}>
-            <h3 className="mobile-section-header font-bold text-lg mb-6 text-gray-800 relative">
-              Contact & Support
-              <div className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-primary to-primary/50 rounded-full"></div>
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/help" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group">
-                  <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  About Us
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Newsletter Section - Mobile Responsive */}
-        <div className={`footer-mobile-newsletter ${footerVisible ? 'scale-in animate-in' : 'scale-in'}`} style={{ transitionDelay: '0.4s' }}>
-          <div className="text-center sm:text-left sm:flex sm:items-center sm:justify-between">
-            <div className="mb-4 sm:mb-0">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Stay Updated</h3>
-              <p className="text-gray-600 text-sm sm:text-base">Get the latest books and reading recommendations delivered to your inbox.</p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="mobile-newsletter-input px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-300 text-sm sm:text-base"
-              />
-              <button className="mobile-newsletter-btn px-6 py-3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white rounded-lg font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
-                Subscribe
-              </button>
+                  {/* Links - Show on desktop, conditional on mobile */}
+                  <div className={`${expandedSections[section.id] ? 'block' : 'hidden'} md:block`}>
+                    <ul className="space-y-3">
+                      {section.links.map((link) => (
+                        <li key={link.name}>
+                          <Link 
+                            to={link.to} 
+                            className="mobile-link-hover text-gray-600 hover:text-primary transition-all duration-300 hover:translate-x-1 flex items-center group"
+                          >
+                            <span className="w-1 h-1 bg-primary rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
+                            {link.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className={`footer-mobile-bottom ${footerVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`} style={{ transitionDelay: '0.5s' }}>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-center sm:text-left">
-              <p className="text-gray-600 text-sm">
-                © 2024 <span className="font-semibold text-primary">BookTech</span>. All rights reserved. 
-                <span className="hidden sm:inline"> Empowering readers worldwide.</span>
+        {/* Newsletter Section - Enhanced Mobile Responsive */}
+        <div className={`footer-mobile-newsletter mt-12 lg:mt-16 ${footerVisible ? 'scale-in animate-in' : 'scale-in'}`} style={{ transitionDelay: '0.4s' }}>
+          <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-6 lg:p-8 border border-primary/20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
+              <div className="text-center lg:text-left">
+                <h3 className="text-xl lg:text-2xl font-bold text-gray-800 mb-3">Stay Updated</h3>
+                <p className="text-gray-600 text-sm lg:text-base leading-relaxed">
+                  Get the latest books and reading recommendations delivered to your inbox. 
+                  Never miss a new release or exclusive content.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  className="mobile-newsletter-input px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-300 text-sm lg:text-base flex-1"
+                />
+                <button className="mobile-newsletter-btn px-6 py-3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white rounded-lg font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl text-sm lg:text-base whitespace-nowrap">
+                  Subscribe
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar - Enhanced */}
+        <div className={`footer-mobile-bottom mt-8 lg:mt-12 ${footerVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`} style={{ transitionDelay: '0.5s' }}>
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 py-6 border-t border-gray-200">
+            <div className="text-center lg:text-left">
+              <p className="text-gray-600 text-sm lg:text-base">
+                © 2025 <span className="font-semibold text-primary">BookTech</span>. All rights reserved. 
+                <span className="hidden lg:inline"> Empowering readers worldwide.</span>
               </p>
             </div>
-            <div className="flex items-center space-x-6 text-sm">
-              <span className="text-gray-500">Made with ❤️ for readers</span>
-              <div className="hidden sm:flex items-center space-x-2 text-gray-400">
+            <div className="flex flex-col sm:flex-row items-center gap-4 lg:gap-6 text-sm lg:text-base">
+              <span className="text-gray-500 flex items-center">
+                <span className="text-red-500 mr-1">❤️</span>
+                Made with love for readers
+              </span>
+              <div className="hidden lg:flex items-center space-x-2 text-gray-400">
                 <GlobeAltIcon className="h-4 w-4" />
                 <span>English</span>
               </div>

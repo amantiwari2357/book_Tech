@@ -9,12 +9,7 @@ interface BookGridProps {
 
 const BookGrid: React.FC<BookGridProps> = ({ books, onBookSelect }) => {
   if (books.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-muted-foreground text-lg">No books found</div>
-        <p className="text-muted-foreground mt-2">Try adjusting your search or filters</p>
-      </div>
-    );
+    return null; // Return null instead of showing empty state message
   }
 
   return (

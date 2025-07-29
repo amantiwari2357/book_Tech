@@ -69,7 +69,9 @@ const Home: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(setFeaturedBooks(books.slice(0, 3)));
+    if (books.length > 0) {
+      dispatch(setFeaturedBooks(books.slice(0, 3)));
+    }
   }, [books, dispatch]);
 
   // Fetch recommended and featured books from API
@@ -127,6 +129,16 @@ const Home: React.FC = () => {
   const booksInProgress = isAuthenticated ? getBooksInProgress(user, books) : [];
   const trendingInCategory = isAuthenticated ? getTrendingInCategory(favoriteCategory, books) : [];
   const becauseYouRead = isAuthenticated ? getBecauseYouRead(user, books) : [];
+
+  // Check if there's any content to show
+  const hasAnyContent = books.length > 0 || 
+                       featuredBooks.length > 0 || 
+                       recommendedBooks.length > 0 || 
+                       featuredBooksFromAPI.length > 0 || 
+                       bookDesigns.length > 0 ||
+                       booksInProgress.length > 0 ||
+                       trendingInCategory.length > 0 ||
+                       becauseYouRead.length > 0;
 
   // Handler for Start Reading button
   const handleStartReading = () => {
@@ -207,51 +219,55 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section ref={statsRef} className={`py-12 sm:py-16 bg-muted/30 ${statsVisible ? 'scroll-animate animate-in' : 'scroll-animate'}`}>
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-center">
-            <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <BookOpenIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
-              <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.filter(b => b.isPremium).length}+</h3>
-              <p className="text-muted-foreground">Premium Books</p>
-            </div>
-            <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <UsersIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
-              <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.length * 5}+</h3>
-              <p className="text-muted-foreground">Happy Readers</p>
-            </div>
-            <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <StarIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
-              <h3 className="text-2xl sm:text-3xl font-bold text-primary">
-                {books.length > 0 ? (books.reduce((sum, book) => sum + (book.rating || 0), 0) / books.length).toFixed(1) : '4.8'}/5
-              </h3>
-              <p className="text-muted-foreground">Average Rating</p>
+      {/* Stats Section - Only show if there are books */}
+      {books.length > 0 && (
+        <section ref={statsRef} className={`py-12 sm:py-16 bg-muted/30 ${statsVisible ? 'scroll-animate animate-in' : 'scroll-animate'}`}>
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-center">
+              <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+                <BookOpenIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
+                <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.filter(b => b.isPremium).length}+</h3>
+                <p className="text-muted-foreground">Premium Books</p>
+              </div>
+              <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+                <UsersIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
+                <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.length * 5}+</h3>
+                <p className="text-muted-foreground">Happy Readers</p>
+              </div>
+              <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+                <StarIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
+                <h3 className="text-2xl sm:text-3xl font-bold text-primary">
+                  {books.length > 0 ? (books.reduce((sum, book) => sum + (book.rating || 0), 0) / books.length).toFixed(1) : '4.8'}/5
+                </h3>
+                <p className="text-muted-foreground">Average Rating</p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Featured Books */}
-      <section ref={featuredRef} className={`py-12 sm:py-16 ${featuredVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`}>
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-2 mobile-text-gradient">Featured Books</h2>
-              <p className="text-muted-foreground">Discover our most popular and trending titles</p>
+      {/* Featured Books - Only show if there are featured books */}
+      {featuredBooks.length > 0 && (
+        <section ref={featuredRef} className={`py-12 sm:py-16 ${featuredVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`}>
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-2 mobile-text-gradient">Featured Books</h2>
+                <p className="text-muted-foreground">Discover our most popular and trending titles</p>
+              </div>
+              <Button variant="outline" className="mobile-button">
+                View All
+                <ArrowRightIcon className="h-4 w-4 ml-2" />
+              </Button>
             </div>
-            <Button variant="outline" className="mobile-button">
-              View All
-              <ArrowRightIcon className="h-4 w-4 ml-2" />
-            </Button>
+            {loading && <p>Loading books...</p>}
+            {error && <p className="text-red-500">{error}</p>}
+            <BookGrid books={featuredBooks} />
           </div>
-          {loading && <p>Loading books...</p>}
-          {error && <p className="text-red-500">{error}</p>}
-          <BookGrid books={featuredBooks} />
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Recommended for You */}
+      {/* Recommended for You - Only show if there are recommended books */}
       {recommendedBooks.length > 0 && (
         <section ref={recommendedRef} className={`py-12 sm:py-16 bg-muted/30 ${recommendedVisible ? 'slide-in-right animate-in' : 'slide-in-right'}`}>
           <div className="container mx-auto px-4">
@@ -261,7 +277,7 @@ const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Featured Books */}
+      {/* Featured Books from API - Only show if there are featured books */}
       {featuredBooksFromAPI.length > 0 && (
         <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4">
@@ -271,7 +287,7 @@ const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Book Designs */}
+      {/* Book Designs - Only show if there are book designs */}
       {bookDesigns.length > 0 && (
         <section ref={bookDesignsRef} className={`py-12 sm:py-16 bg-muted/30 ${bookDesignsVisible ? 'scale-in animate-in' : 'scale-in'}`}>
           <div className="container mx-auto px-4">
@@ -330,6 +346,7 @@ const Home: React.FC = () => {
         </section>
       )}
 
+      {/* Continue Reading - Only show if user is authenticated and has books in progress */}
       {isAuthenticated && booksInProgress.length > 0 && (
         <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4">
@@ -339,6 +356,8 @@ const Home: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Trending in Category - Only show if user is authenticated and has trending books */}
       {isAuthenticated && favoriteCategory && trendingInCategory.length > 0 && (
         <section className="py-12 sm:py-16 bg-muted/30">
           <div className="container mx-auto px-4">
@@ -348,6 +367,8 @@ const Home: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Because You Read - Only show if user is authenticated and has recommendations */}
       {isAuthenticated && becauseYouRead.length > 0 && (
         <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4">
@@ -358,63 +379,86 @@ const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Features Section */}
-      <section ref={featuresRef} className={`py-12 sm:py-16 bg-muted/30 ${featuresVisible ? 'rotate-in animate-in' : 'rotate-in'}`}>
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 mobile-text-gradient">Why Choose BookTech?</h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Experience the future of digital reading with our innovative platform
+      {/* Empty State - Show when no content is available */}
+      {!loading && !hasAnyContent && (
+        <section className="py-16 sm:py-20">
+          <div className="container mx-auto px-4 text-center">
+            <div className="max-w-md mx-auto">
+              <BookOpenIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-2xl font-serif font-bold mb-4">No Books Available</h2>
+              <p className="text-muted-foreground mb-6">
+                We're working on adding amazing books to our library. Check back soon!
+              </p>
+              <Button onClick={handleBrowseLibrary} className="mobile-button">
+                Browse Library
+                <ArrowRightIcon className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Features Section - Only show if there's content or user is not authenticated */}
+      {(hasAnyContent || !isAuthenticated) && (
+        <section ref={featuresRef} className={`py-12 sm:py-16 bg-muted/30 ${featuresVisible ? 'rotate-in animate-in' : 'rotate-in'}`}>
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 mobile-text-gradient">Why Choose BookTech?</h2>
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+                Experience the future of digital reading with our innovative platform
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+                <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                  <BookOpenIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold">Advanced Reader</h3>
+                <p className="text-muted-foreground">
+                  Enjoy customizable reading experience with adjustable fonts, themes, and bookmarks
+                </p>
+              </div>
+              <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+                <div className="bg-accent/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                  <StarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold">Premium Content</h3>
+                <p className="text-muted-foreground">
+                  Access exclusive books and latest releases from top authors worldwide
+                </p>
+              </div>
+              <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+                <div className="bg-secondary/50 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                  <UsersIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold">Community</h3>
+                <p className="text-muted-foreground">
+                  Join thousands of readers, share reviews, and discover new favorites
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Pricing Section - Only show if there's content or user is not authenticated */}
+      {(hasAnyContent || !isAuthenticated) && <PricingSection />}
+
+      {/* CTA Section - Only show if there's content or user is not authenticated */}
+      {(hasAnyContent || !isAuthenticated) && (
+        <section ref={ctaRef} className={`py-12 sm:py-16 bg-gradient-hero text-primary-foreground ${ctaVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4">Ready to Start Reading?</h2>
+            <p className="text-lg sm:text-xl mb-8 opacity-90">
+              Join thousands of readers and unlock unlimited access to premium content
             </p>
+            <Button variant="premium" size="lg" className="text-lg px-8 py-4 mobile-button">
+              Get Started Today
+              <ArrowRightIcon className="h-5 w-5 ml-2" />
+            </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                <BookOpenIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold">Advanced Reader</h3>
-              <p className="text-muted-foreground">
-                Enjoy customizable reading experience with adjustable fonts, themes, and bookmarks
-              </p>
-            </div>
-            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <div className="bg-accent/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                <StarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold">Premium Content</h3>
-              <p className="text-muted-foreground">
-                Access exclusive books and latest releases from top authors worldwide
-              </p>
-            </div>
-            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <div className="bg-secondary/50 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                <UsersIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold">Community</h3>
-              <p className="text-muted-foreground">
-                Join thousands of readers, share reviews, and discover new favorites
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <PricingSection />
-
-      {/* CTA Section */}
-      <section ref={ctaRef} className={`py-12 sm:py-16 bg-gradient-hero text-primary-foreground ${ctaVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4">Ready to Start Reading?</h2>
-          <p className="text-lg sm:text-xl mb-8 opacity-90">
-            Join thousands of readers and unlock unlimited access to premium content
-          </p>
-          <Button variant="premium" size="lg" className="text-lg px-8 py-4 mobile-button">
-            Get Started Today
-            <ArrowRightIcon className="h-5 w-5 ml-2" />
-          </Button>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 };

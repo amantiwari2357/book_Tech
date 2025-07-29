@@ -44,9 +44,33 @@ const bookDesignSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-bookDesignSchema.pre('save', function(next) {
+// Pre-save hook to validate author exists
+bookDesignSchema.pre('save', async function(next) {
   this.updatedAt = Date.now();
+  
+  // Validate that the author exists
+  if (this.authorRef) {
+    try {
+      const User = mongoose.model('User');
+      const author = await User.findById(this.authorRef);
+      if (!author) {
+        return next(new Error('Author does not exist'));
+      }
+    } catch (error) {
+      return next(error);
+    }
+  }
+  
   next();
+});
+
+// Pre-find hook to populate author info
+bookDesignSchema.pre('find', function() {
+  this.populate('authorRef', 'name email');
+});
+
+bookDesignSchema.pre('findOne', function() {
+  this.populate('authorRef', 'name email');
 });
 
 module.exports = mongoose.model('BookDesign', bookDesignSchema); 

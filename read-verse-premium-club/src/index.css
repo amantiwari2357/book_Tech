@@ -485,6 +485,28 @@ All colors MUST be HSL.
       padding: 1rem 0;
     }
 
+    /* Mobile accordion styles */
+    .footer-mobile-links .md\:hidden button {
+      transition: all 0.3s ease;
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-mobile-links .md\:hidden button:hover {
+      background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .footer-mobile-links .md\:hidden button:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Smooth accordion animation */
+    .footer-mobile-links .md\:hidden + div {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
     .footer-mobile-newsletter {
       margin: 1.5rem 0;
       padding: 1.5rem;
@@ -570,42 +592,82 @@ All colors MUST be HSL.
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
     }
 
-    /* Mobile section headers */
+    /* Enhanced mobile section headers */
     .mobile-section-header {
       position: relative;
-      margin-bottom: 1.5rem;
+      display: inline-block;
     }
 
     .mobile-section-header::after {
       content: '';
       position: absolute;
-      bottom: -8px;
+      bottom: -4px;
       left: 0;
-      width: 40px;
-      height: 3px;
-      background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
-      border-radius: 2px;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, transparent);
+      border-radius: 1px;
     }
 
-    /* Mobile grid improvements */
+    /* Responsive footer grid */
     .mobile-footer-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 2rem;
-      padding: 1rem 0;
     }
 
     @media (min-width: 640px) {
       .mobile-footer-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2.5rem;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
       }
     }
 
     @media (min-width: 1024px) {
       .mobile-footer-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 3rem;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 4rem;
+      }
+    }
+
+    /* Large screen enhancements */
+    @media (min-width: 1280px) {
+      .footer-mobile {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+      }
+
+      .footer-mobile-brand {
+        padding: 2rem 0;
+      }
+
+      .footer-mobile-links {
+        padding: 1.5rem 0;
+      }
+
+      .footer-mobile-newsletter {
+        margin: 2rem 0;
+        padding: 2rem;
+      }
+
+      .footer-mobile-bottom {
+        padding: 1.5rem 0;
+      }
+    }
+
+    /* Extra large screen optimizations */
+    @media (min-width: 1536px) {
+      .footer-mobile-brand p {
+        font-size: 1.125rem;
+        line-height: 1.75;
+      }
+
+      .mobile-link-hover {
+        font-size: 1.125rem;
+      }
+
+      .mobile-newsletter-btn {
+        font-size: 1.125rem;
+        padding: 1rem 2rem;
       }
     }
   }
