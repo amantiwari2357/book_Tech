@@ -32,6 +32,21 @@ const BookDetails: React.FC = () => {
   const [imageLoading, setImageLoading] = useState(true);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [orders, setOrders] = useState<{ _id?: string }[]>([]);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editRating, setEditRating] = useState(0);
+  const [editComment, setEditComment] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  // Add state for appeal modal
+  const [showAppealModal, setShowAppealModal] = useState(false);
+  const [appealMessage, setAppealMessage] = useState('');
+  const [appealStatus, setAppealStatus] = useState('');
+  const [appealLoading, setAppealLoading] = useState(false);
+  const [appealReviewId, setAppealReviewId] = useState<string | null>(null);
+  // Add state for delete modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteTargetReviewId, setDeleteTargetReviewId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const book = books.find(b => b.id === id);
 
@@ -133,6 +148,101 @@ const BookDetails: React.FC = () => {
     }
   };
 
+  // Handler for delete
+  const handleDeleteReview = (reviewId: string) => {
+    setDeleteTargetReviewId(reviewId);
+    setDeleteReason('');
+    setDeleteError('');
+    setShowDeleteModal(true);
+  };
+  // Add confirmDeleteReview to actually send request
+  const confirmDeleteReview = async () => {
+    if (!deleteTargetReviewId || !id) return;
+    if (!deleteReason || deleteReason.trim().length < 5) {
+      setDeleteError('Please provide a reason (at least 5 characters).');
+      return;
+    }
+    setEditLoading(true);
+    setDeleteError('');
+    try {
+      const res = await authFetch(`/books/${id}/reviews/${deleteTargetReviewId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: deleteReason }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+        setShowDeleteModal(false);
+        setDeleteTargetReviewId(null);
+      } else {
+        const data = await res.json();
+        setDeleteError(data.message || 'Failed to delete review.');
+      }
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // Handler for start editing
+  const startEditReview = (review: Review) => {
+    setEditingReviewId(review._id || '');
+    setEditRating(review.rating);
+    setEditComment(review.comment);
+  };
+
+  // Handler for submit edit
+  const handleEditReview = async (reviewId: string) => {
+    if (!id) return;
+    if (!window.confirm('Save changes to this review?')) return;
+    setEditLoading(true);
+    try {
+      const res = await authFetch(`/books/${id}/reviews/${reviewId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ rating: editRating, comment: editComment }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+        setEditingReviewId(null);
+      } else {
+        // Optionally handle error
+      }
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // Add handler to open appeal modal
+  const openAppealModal = (reviewId: string) => {
+    setAppealReviewId(reviewId);
+    setShowAppealModal(true);
+    setAppealMessage('');
+    setAppealStatus('');
+  };
+  // Add handler to submit appeal
+  const handleAppealSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!appealReviewId || !id) return;
+    setAppealLoading(true);
+    setAppealStatus('');
+    try {
+      const res = await authFetch('/support/appeal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId: appealReviewId, bookId: id, message: appealMessage }),
+      });
+      if (res.ok) {
+        setAppealStatus('Appeal submitted successfully. Our team will review your request.');
+        setShowAppealModal(false);
+      } else {
+        setAppealStatus('Failed to submit appeal.');
+      }
+    } finally {
+      setAppealLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-8">
@@ -218,8 +328,37 @@ const BookDetails: React.FC = () => {
                     {renderStars(r.rating)}
                     <span className="text-sm text-muted-foreground">by {r.user?.name || 'User'}</span>
                   </div>
-                  <div className="text-sm">{r.comment}</div>
-                  <div className="text-xs text-muted-foreground">{r.date ? new Date(r.date).toLocaleDateString() : ''}</div>
+                  {editingReviewId === r._id ? (
+                    <form onSubmit={e => { e.preventDefault(); handleEditReview(r._id!); }} className="space-y-2">
+                      <div className="flex gap-1">
+                        {[1,2,3,4,5].map(star => (
+                          <button type="button" key={star} onClick={() => setEditRating(star)} className={star <= editRating ? 'text-yellow-400' : 'text-gray-300'}>
+                            <StarIcon className="h-5 w-5" />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea className="w-full p-2 border rounded" value={editComment} onChange={e => setEditComment(e.target.value)} rows={2} />
+                      <div className="flex gap-2">
+                        <Button type="submit" size="sm" disabled={editLoading}>{editLoading ? 'Saving...' : 'Save'}</Button>
+                        <Button type="button" size="sm" variant="outline" onClick={() => setEditingReviewId(null)}>Cancel</Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="text-sm">{r.comment}</div>
+                      <div className="text-xs text-muted-foreground">{r.date ? new Date(r.date).toLocaleDateString() : ''}</div>
+                      {/* Author controls */}
+                      {user && book.authorRef === user.id && (
+                        <div className="flex gap-2 mt-1">
+                          <Button size="xs" variant="outline" onClick={() => startEditReview(r)}>Edit</Button>
+                          <Button size="xs" variant="destructive" onClick={() => handleDeleteReview(r._id!)} disabled={editLoading}>{editLoading ? 'Deleting...' : 'Delete'}</Button>
+                        </div>
+                      )}
+                      {user && r.user?._id === user.id && (
+                        <Button size="xs" variant="outline" onClick={() => openAppealModal(r._id!)} className="ml-2">Appeal Moderation</Button>
+                      )}
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -262,6 +401,49 @@ const BookDetails: React.FC = () => {
           )}
         </div>
       </div>
+      {showAppealModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded shadow-lg max-w-md w-full">
+            <h2 className="text-lg font-bold mb-2">Appeal Moderation Action</h2>
+            <form onSubmit={handleAppealSubmit} className="space-y-3">
+              <textarea
+                className="w-full p-2 border rounded"
+                value={appealMessage}
+                onChange={e => setAppealMessage(e.target.value)}
+                rows={4}
+                placeholder="Explain why you believe this moderation action should be reviewed..."
+                required
+              />
+              {appealStatus && <p className="text-green-600 text-sm">{appealStatus}</p>}
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setShowAppealModal(false)}>Cancel</Button>
+                <Button type="submit" disabled={appealLoading}>{appealLoading ? 'Submitting...' : 'Submit Appeal'}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {showDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded shadow-lg max-w-md w-full">
+            <h2 className="text-lg font-bold mb-2">Delete Review</h2>
+            <p className="mb-2">Please provide a reason for deleting this review (required):</p>
+            <textarea
+              className="w-full p-2 border rounded mb-2"
+              value={deleteReason}
+              onChange={e => setDeleteReason(e.target.value)}
+              rows={3}
+              placeholder="Reason for deletion..."
+              required
+            />
+            {deleteError && <p className="text-red-500 text-sm mb-2">{deleteError}</p>}
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+              <Button type="button" variant="destructive" onClick={confirmDeleteReview} disabled={editLoading}>{editLoading ? 'Deleting...' : 'Delete Review'}</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -59,6 +59,19 @@ type ReadingStats = {
   // add other fields as needed
 };
 
+// Add ModerationLog type
+interface ModerationLog {
+  _id: string;
+  actionType: 'edit' | 'delete';
+  review: string;
+  moderator: { _id: string; name: string };
+  targetUser: { _id: string; name: string };
+  reason?: string;
+  timestamp: string;
+  oldValue?: any;
+  newValue?: any;
+}
+
 // Helper: Get user's favorite category (most orders or most books)
 function getFavoriteCategory(user: any, books: any[]) {
   if (!user || !user.orders || !books.length) return null;
@@ -106,6 +119,7 @@ const AuthorDashboard: React.FC = () => {
   // If stats structure is unknown, use unknown instead of any
   const [stats, setStats] = useState<ReadingStats | null>(null);
   const [achievements, setAchievements] = useState<string[]>([]);
+  const [moderationLogs, setModerationLogs] = useState<Record<string, ModerationLog[]>>({});
 
   useEffect(() => {
     if (!user) {
@@ -381,6 +395,19 @@ const AuthorDashboard: React.FC = () => {
   const favoriteCategory = getFavoriteCategory(user, books);
   const trendingInCategory = getTrendingInCategory(favoriteCategory, books);
   const recommendedBooks = getRecommendedBooks(books);
+
+  // Fetch moderation logs for all books
+  useEffect(() => {
+    if (books && books.length > 0 && user?.role === 'author') {
+      books.forEach(async (book) => {
+        const res = await authFetch(`/books/${book.id}/moderation-log`);
+        if (res.ok) {
+          const data = await res.json();
+          setModerationLogs((prev) => ({ ...prev, [book.id]: data }));
+        }
+      });
+    }
+  }, [books, user]);
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">
@@ -858,6 +885,48 @@ const AuthorDashboard: React.FC = () => {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Review Moderation Log Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold mb-4">Review Moderation Log</h2>
+        {books.map((book) => (
+          <div key={book.id} className="mb-8">
+            <h3 className="text-lg font-semibold mb-2">{book.title}</h3>
+            {moderationLogs[book.id] && moderationLogs[book.id].length > 0 ? (
+              <table className="w-full text-sm border">
+                <thead>
+                  <tr>
+                    <th className="border px-2 py-1">Action</th>
+                    <th className="border px-2 py-1">Review ID</th>
+                    <th className="border px-2 py-1">Moderator</th>
+                    <th className="border px-2 py-1">Target User</th>
+                    <th className="border px-2 py-1">Reason</th>
+                    <th className="border px-2 py-1">Timestamp</th>
+                    <th className="border px-2 py-1">Old Value</th>
+                    <th className="border px-2 py-1">New Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {moderationLogs[book.id].map((log) => (
+                    <tr key={log._id}>
+                      <td className="border px-2 py-1">{log.actionType}</td>
+                      <td className="border px-2 py-1">{log.review}</td>
+                      <td className="border px-2 py-1">{log.moderator?.name || '-'}</td>
+                      <td className="border px-2 py-1">{log.targetUser?.name || '-'}</td>
+                      <td className="border px-2 py-1">{log.reason || '-'}</td>
+                      <td className="border px-2 py-1">{new Date(log.timestamp).toLocaleString()}</td>
+                      <td className="border px-2 py-1">{log.oldValue ? JSON.stringify(log.oldValue) : '-'}</td>
+                      <td className="border px-2 py-1">{log.newValue ? JSON.stringify(log.newValue) : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-muted-foreground">No moderation actions for this book.</p>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

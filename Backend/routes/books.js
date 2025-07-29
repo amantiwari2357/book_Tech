@@ -3,8 +3,19 @@ const Book = require('../models/Book');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const ModerationLog = require('../models/ModerationLog');
+const nodemailer = require('nodemailer');
 
 const router = express.Router();
+
+// Setup nodemailer transporter (example using Gmail, replace with your SMTP config)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 // Get all approved books (premium first)
 router.get('/', async (req, res) => {
@@ -235,6 +246,127 @@ router.get('/:id/reviews', async (req, res) => {
   const book = await Book.findById(req.params.id).populate('reviews.user', 'name');
   if (!book) return res.status(404).json({ message: 'Book not found' });
   res.json(book.reviews);
+});
+
+// Edit a review (author or admin)
+router.put('/:bookId/reviews/:reviewId', auth, async (req, res) => {
+  const { rating, comment } = req.body;
+  const book = await Book.findById(req.params.bookId);
+  if (!book) return res.status(404).json({ message: 'Book not found' });
+  const isAuthor = book.authorRef.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+  if (!isAuthor && !isAdmin) {
+    return res.status(403).json({ message: 'Only the author or admin can edit reviews' });
+  }
+  const review = book.reviews.id(req.params.reviewId);
+  if (!review) return res.status(404).json({ message: 'Review not found' });
+  const now = new Date();
+  const reviewDate = review.date || review.createdAt || now;
+  const diffDays = (now - new Date(reviewDate)) / (1000 * 60 * 60 * 24);
+  if (diffDays > 7 && !isAdmin) {
+    return res.status(403).json({ message: 'You can only edit or delete reviews within 7 days of posting.' });
+  }
+  const oldValue = { rating: review.rating, comment: review.comment };
+  if (rating !== undefined) review.rating = rating;
+  if (comment !== undefined) review.comment = comment;
+  // Recalculate rating and totalReviews
+  book.rating = book.reviews.reduce((sum, r) => sum + r.rating, 0) / book.reviews.length;
+  await book.save();
+  // Log moderation action
+  await ModerationLog.create({
+    actionType: 'edit',
+    book: book._id,
+    review: review._id.toString(),
+    moderator: req.user.id,
+    targetUser: review.user,
+    oldValue,
+    newValue: { rating: review.rating, comment: review.comment },
+  });
+  // Notify the reviewer
+  await Notification.create({
+    recipient: review.user,
+    sender: req.user.id,
+    message: `Your review on "${book.title}" was edited by ${isAdmin ? 'an admin' : 'the author'}.`,
+    type: 'info',
+  });
+  // Fetch reviewer's email
+  const reviewerUser = await User.findById(review.user);
+  if (reviewerUser && reviewerUser.email) {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: reviewerUser.email,
+      subject: `Your review was edited`,
+      text: `Hello ${reviewerUser.name || ''},\n\nYour review on the book "${book.title}" was edited by ${isAdmin ? 'an admin' : 'the author'}.\n\nIf you have questions, you can appeal this action in your dashboard.\n\nThank you.`,
+    });
+  }
+  res.json(book.reviews);
+});
+
+// Delete a review (author or admin)
+router.delete('/:bookId/reviews/:reviewId', auth, async (req, res) => {
+  const { reason } = req.body;
+  if (!reason || reason.trim().length < 5) {
+    return res.status(400).json({ message: 'A reason (at least 5 characters) is required to delete a review.' });
+  }
+  const book = await Book.findById(req.params.bookId);
+  if (!book) return res.status(404).json({ message: 'Book not found' });
+  const isAuthor = book.authorRef.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+  if (!isAuthor && !isAdmin) {
+    return res.status(403).json({ message: 'Only the author or admin can delete reviews' });
+  }
+  const review = book.reviews.id(req.params.reviewId);
+  if (!review) return res.status(404).json({ message: 'Review not found' });
+  const now = new Date();
+  const reviewDate = review.date || review.createdAt || now;
+  const diffDays = (now - new Date(reviewDate)) / (1000 * 60 * 60 * 24);
+  if (diffDays > 7 && !isAdmin) {
+    return res.status(403).json({ message: 'You can only edit or delete reviews within 7 days of posting.' });
+  }
+  // Log moderation action before removing
+  await ModerationLog.create({
+    actionType: 'delete',
+    book: book._id,
+    review: review._id.toString(),
+    moderator: req.user.id,
+    targetUser: review.user,
+    reason,
+    oldValue: { rating: review.rating, comment: review.comment },
+  });
+  // Notify the reviewer before removing
+  await Notification.create({
+    recipient: review.user,
+    sender: req.user.id,
+    message: `Your review on "${book.title}" was deleted by ${isAdmin ? 'an admin' : 'the author'}.${reason ? ' Reason: ' + reason : ''}`,
+    type: 'info',
+  });
+  // Fetch reviewer's email
+  const reviewerUser = await User.findById(review.user);
+  if (reviewerUser && reviewerUser.email) {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: reviewerUser.email,
+      subject: `Your review was deleted`,
+      text: `Hello ${reviewerUser.name || ''},\n\nYour review on the book "${book.title}" was deleted by ${isAdmin ? 'an admin' : 'the author'}.${reason ? '\nReason: ' + reason : ''}\n\nIf you have questions, you can appeal this action in your dashboard.\n\nThank you.`,
+    });
+  }
+  review.remove();
+  // Recalculate rating and totalReviews
+  book.totalReviews = book.reviews.length;
+  book.rating = book.reviews.length > 0 ? book.reviews.reduce((sum, r) => sum + r.rating, 0) / book.reviews.length : 0;
+  await book.save();
+  res.json(book.reviews);
+});
+
+// Get moderation log for a book (author only)
+router.get('/:id/moderation-log', auth, async (req, res) => {
+  const book = await Book.findById(req.params.id);
+  if (!book) return res.status(404).json({ message: 'Book not found' });
+  if (book.authorRef.toString() !== req.user.id) {
+    return res.status(403).json({ message: 'Only the author can view the moderation log' });
+  }
+  const logs = await ModerationLog.find({ book: book._id }).sort({ timestamp: -1 }).populate('moderator', 'name').populate('targetUser', 'name');
+  res.json(logs);
 });
 
 module.exports = router; 
