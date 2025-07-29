@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,46 @@ const Browse: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-16">
+      <Helmet>
+        <title>Browse Books - BookTech Digital Library</title>
+        <meta name="description" content="Browse and search through thousands of premium books across all categories. Find your next great read with our advanced search and filtering options." />
+        <meta name="keywords" content="browse books, search books, digital library, premium books, book categories" />
+        <link rel="canonical" href="https://booktech.com/browse" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="Browse Books - BookTech Digital Library" />
+        <meta property="og:description" content="Browse and search through thousands of premium books across all categories." />
+        <meta property="og:url" content="https://booktech.com/browse" />
+        <meta property="og:type" content="website" />
+        
+        {/* Twitter */}
+        <meta property="twitter:title" content="Browse Books - BookTech Digital Library" />
+        <meta property="twitter:description" content="Browse and search through thousands of premium books across all categories." />
+        <meta property="twitter:url" content="https://booktech.com/browse" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Browse Books",
+            "description": "Browse and search through thousands of premium books",
+            "url": "https://booktech.com/browse",
+            "mainEntity": {
+              "@type": "ItemList",
+              "numberOfItems": books.length,
+              "itemListElement": books.slice(0, 10).map((book, index) => ({
+                "@type": "Book",
+                "position": index + 1,
+                "name": book.title,
+                "author": book.author,
+                "description": book.description
+              }))
+            }
+          })}
+        </script>
+      </Helmet>
+      
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
         <div className="flex-1 flex items-center gap-2">
           <Input

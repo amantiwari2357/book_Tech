@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import BookGrid from '@/components/Books/BookGrid';
@@ -6,9 +8,9 @@ import PricingSection from '@/components/Subscription/PricingSection';
 import { ArrowRightIcon, BookOpenIcon, StarIcon, UsersIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { setFeaturedBooks, fetchBooks } from '@/store/slices/booksSlice';
-import { useNavigate } from 'react-router-dom';
 import { authFetch } from '@/lib/api';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 
 // Helper: Get user's favorite category (most orders or most books)
 function getFavoriteCategory(user, books) {
@@ -57,6 +59,14 @@ const Home: React.FC = () => {
   const [apiLoading, setApiLoading] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [selectedBookDesign, setSelectedBookDesign] = useState(null);
+  const [bookDesignsLoaded, setBookDesignsLoaded] = useState(false);
+
+  // Intersection observer for lazy loading book designs
+  const { elementRef: bookDesignsTriggerRef, hasTriggered: bookDesignsTriggered } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '100px',
+    triggerOnce: true
+  });
 
   // Scroll animation hooks
   const { elementRef: heroRef, isVisible: heroVisible } = useScrollAnimation();
@@ -124,32 +134,10 @@ const Home: React.FC = () => {
       }
     };
 
-    const fetchBookDesigns = async () => {
-      try {
-        console.log('🔍 Fetching book designs...');
-        console.log('🔍 API URL:', `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/book-designs`);
-        const res = await authFetch('/book-designs');
-        console.log('🔍 Book designs response status:', res.status);
-        if (res.ok) {
-          const data = await res.json();
-          console.log('🔍 Book designs data received:', data);
-          console.log('🔍 Number of book designs:', data.length);
-          setBookDesigns(data);
-        } else {
-          console.error('❌ Failed to fetch book designs:', res.status);
-          const errorText = await res.text();
-          console.error('❌ Error response:', errorText);
-        }
-      } catch (error) {
-        console.error('❌ Error fetching book designs:', error);
-      }
-    };
-
     // Fetch all data with error handling
     Promise.allSettled([
       fetchRecommendedBooks(),
-      fetchFeaturedBooks(),
-      fetchBookDesigns()
+      fetchFeaturedBooks()
     ]).then((results) => {
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
@@ -159,6 +147,30 @@ const Home: React.FC = () => {
       setApiLoading(false);
     });
   }, []);
+
+  // Lazy load book designs when section becomes visible
+  useEffect(() => {
+    if (bookDesignsTriggered && !bookDesignsLoaded) {
+      const fetchBookDesigns = async () => {
+        try {
+          console.log('🔍 Lazy loading book designs...');
+          const res = await authFetch('/book-designs');
+          if (res.ok) {
+            const data = await res.json();
+            console.log('🔍 Book designs loaded:', data.length);
+            setBookDesigns(data);
+            setBookDesignsLoaded(true);
+          } else {
+            console.error('❌ Failed to fetch book designs:', res.status);
+          }
+        } catch (error) {
+          console.error('❌ Error fetching book designs:', error);
+        }
+      };
+
+      fetchBookDesigns();
+    }
+  }, [bookDesignsTriggered, bookDesignsLoaded]);
 
   // Determine user subscription status
   const isPremium = user?.subscription === 'premium' || user?.subscription === 'enterprise';
@@ -204,6 +216,63 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>BookTech - Your Digital Library | Premium Books & Custom Designs</title>
+        <meta name="description" content="Discover thousands of premium books, enjoy seamless reading experiences, and unlock knowledge with our advanced digital platform. Custom book designs with beautiful formatting." />
+        <meta name="keywords" content="digital books, premium reading, book designs, custom formatting, online library, ebooks, digital reading" />
+        <meta name="author" content="BookTech" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://booktech.com/" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://booktech.com/" />
+        <meta property="og:title" content="BookTech - Your Digital Library" />
+        <meta property="og:description" content="Discover thousands of premium books, enjoy seamless reading experiences, and unlock knowledge with our advanced digital platform." />
+        <meta property="og:image" content="https://booktech.com/og-image.jpg" />
+        <meta property="og:site_name" content="BookTech" />
+        <meta property="og:locale" content="en_US" />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://booktech.com/" />
+        <meta property="twitter:title" content="BookTech - Your Digital Library" />
+        <meta property="twitter:description" content="Discover thousands of premium books, enjoy seamless reading experiences, and unlock knowledge with our advanced digital platform." />
+        <meta property="twitter:image" content="https://booktech.com/twitter-image.jpg" />
+        
+        {/* Additional SEO */}
+        <meta name="robots" content="index, follow" />
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="7 days" />
+        <meta name="distribution" content="global" />
+        <meta name="rating" content="general" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "BookTech",
+            "description": "Your Digital Library - Discover thousands of premium books and custom book designs",
+            "url": "https://booktech.com/",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://booktech.com/search?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "BookTech",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://booktech.com/logo.png"
+              }
+            }
+          })}
+        </script>
+      </Helmet>
       {/* Hero Section */}
       <section ref={heroRef} className={`relative bg-gradient-hero text-primary-foreground py-16 sm:py-20 overflow-hidden ${heroVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
         <div className="absolute inset-0 bg-[url('/api/placeholder/1920/1080')] bg-cover bg-center opacity-10" />
@@ -330,6 +399,9 @@ const Home: React.FC = () => {
         </section>
       )}
 
+      {/* Book Designs Trigger for Lazy Loading */}
+      <div ref={bookDesignsTriggerRef} className="h-4" />
+
       {/* Book Designs - Only show if there are book designs */}
       {bookDesigns.length > 0 && (
         <section ref={bookDesignsRef} className="py-12 sm:py-16 bg-muted/30">
@@ -388,6 +460,19 @@ const Home: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Loading indicator for book designs */}
+      {bookDesignsTriggered && !bookDesignsLoaded && bookDesigns.length === 0 && (
+        <section className="py-12 sm:py-16 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Custom Book Designs</h2>
+            <p className="text-muted-foreground mb-6">Loading beautiful book designs...</p>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           </div>
         </section>
