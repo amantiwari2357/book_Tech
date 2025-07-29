@@ -55,7 +55,7 @@
     res.json({ message: 'Orders route test!', timestamp: new Date().toISOString() });
   });
 
-  const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 8080;
 
   // Check if MONGODB_URI is set
   if (!process.env.MONGODB_URI) {

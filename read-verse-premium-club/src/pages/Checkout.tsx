@@ -153,7 +153,8 @@ const Checkout: React.FC = () => {
         items: cartItems.map(item => ({
           bookId: item.id,
           title: item.title,
-          price: item.price
+          price: item.price,
+          author: item.author
         })),
         total: total,
         shippingAddress: address,
