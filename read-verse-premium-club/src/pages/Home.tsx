@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import BookGrid from '@/components/Books/BookGrid';
 import PricingSection from '@/components/Subscription/PricingSection';
-import { ArrowRightIcon, BookOpenIcon, StarIcon, UsersIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, BookOpenIcon, StarIcon, UsersIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { setFeaturedBooks, fetchBooks } from '@/store/slices/booksSlice';
 import { useNavigate } from 'react-router-dom';
@@ -56,6 +56,7 @@ const Home: React.FC = () => {
   const [bookDesigns, setBookDesigns] = useState([]);
   const [apiLoading, setApiLoading] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [selectedBookDesign, setSelectedBookDesign] = useState(null);
 
   // Scroll animation hooks
   const { elementRef: heroRef, isVisible: heroVisible } = useScrollAnimation();
@@ -181,14 +182,6 @@ const Home: React.FC = () => {
                        booksInProgress.length > 0 ||
                        trendingInCategory.length > 0 ||
                        becauseYouRead.length > 0;
-
-  // Debug logging for book designs
-  console.log('🔍 Book designs state:', {
-    bookDesigns: bookDesigns.length,
-    hasAnyContent,
-    loading,
-    apiLoading
-  });
 
   // Handler for Start Reading button
   const handleStartReading = () => {
@@ -339,15 +332,20 @@ const Home: React.FC = () => {
 
       {/* Book Designs - Only show if there are book designs */}
       {bookDesigns.length > 0 && (
-        <section ref={bookDesignsRef} className="py-12 sm:py-16 bg-muted/30 border-4 border-red-500">
+        <section ref={bookDesignsRef} className="py-12 sm:py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Custom Book Designs</h2>
             <p className="text-muted-foreground mb-6">Read beautifully designed books with custom formatting.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {bookDesigns.slice(0, 6).map((design, index) => {
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              {bookDesigns.slice(0, 5).map((design, index) => {
                 console.log('🔍 Rendering book design:', design.title, design._id);
                 return (
-                  <div key={design._id} className="bg-blue-100 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border-2 border-blue-500" style={{ minHeight: '400px' }}>
+                  <div 
+                    key={design._id} 
+                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200" 
+                    style={{ minHeight: '280px' }}
+                    onClick={() => setSelectedBookDesign(design)}
+                  >
                     <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                       {design.coverImageUrl ? (
                         <img
@@ -361,42 +359,28 @@ const Home: React.FC = () => {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <BookOpenIcon className="h-12 w-12 text-gray-400" />
+                          <BookOpenIcon className="h-8 w-8 text-gray-400" />
                         </div>
                       )}
                       {design.isPremium && (
-                        <Badge className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg">
+                        <Badge className="absolute top-1 right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg text-xs">
                           Premium
                         </Badge>
                       )}
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-1 text-gray-900">{design.title}</h3>
-                      <p className="text-gray-600 text-sm mb-2">by {design.author}</p>
-                      <p className="text-sm text-gray-500 mb-3 overflow-hidden" style={{ 
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical'
-                      }}>
-                        {design.description}
-                      </p>
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {design.tags && design.tags.slice(0, 2).map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
+                    <div className="p-2">
+                      <h3 className="font-semibold text-sm mb-1 text-gray-900 line-clamp-1">{design.title}</h3>
+                      <p className="text-gray-600 text-xs mb-1">by {design.author}</p>
+                      <p className="text-xs text-gray-500 mb-2 line-clamp-2">{design.description}</p>
                       <div className="flex justify-between items-center">
-                        <div className="text-lg font-bold text-primary">
+                        <div className="text-sm font-bold text-primary">
                           {design.isFree ? 'Free' : `$${design.price}`}
                         </div>
                         <Button 
                           size="sm" 
-                          onClick={() => navigate(`/reader/${design._id}`)}
-                          className="flex items-center gap-1"
+                          className="flex items-center gap-1 h-6 px-2 text-xs"
                         >
-                          <BookOpenIcon className="h-4 w-4" />
+                          <BookOpenIcon className="h-3 w-3" />
                           Read
                         </Button>
                       </div>
@@ -408,41 +392,6 @@ const Home: React.FC = () => {
           </div>
         </section>
       )}
-
-      {/* Debug: Force show book designs section */}
-      {/* {bookDesigns.length === 0 && (
-        <section className="py-12 sm:py-16 bg-red-100 border-4 border-red-500">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-red-800">DEBUG: No Book Designs Found</h2>
-            <p className="text-red-600">bookDesigns.length = {bookDesigns.length}</p>
-            <p className="text-red-600">hasAnyContent = {hasAnyContent.toString()}</p>
-            <p className="text-red-600">loading = {loading.toString()}</p>
-            <p className="text-red-600">apiLoading = {apiLoading.toString()}</p>
-          </div>
-        </section>
-      )} */}
-
-      {/* Debug: Show book designs count */}
-      {/* <section className="py-4 bg-yellow-100">
-        <div className="container mx-auto px-4">
-          <p className="text-sm text-yellow-800">
-            Debug: bookDesigns.length = {bookDesigns.length}, 
-            hasAnyContent = {hasAnyContent.toString()}, 
-            loading = {loading.toString()}, 
-            apiLoading = {apiLoading.toString()}
-          </p>
-          {bookDesigns.length > 0 && (
-            <div className="mt-2">
-              <p className="text-sm text-yellow-800 font-bold">Book Designs Data:</p>
-              {bookDesigns.slice(0, 3).map((design, index) => (
-                <p key={index} className="text-xs text-yellow-800">
-                  {index + 1}. {design.title} - {design.author} - {design.isFree ? 'Free' : `$${design.price}`}
-                </p>
-              ))}
-            </div>
-          )}
-        </div>
-      </section> */}
 
       {/* Continue Reading - Only show if user is authenticated and has books in progress */}
       {isAuthenticated && booksInProgress.length > 0 && (
@@ -577,16 +526,100 @@ const Home: React.FC = () => {
       {/* CTA Section - Always show */}
       <section ref={ctaRef} className={`py-12 sm:py-16 bg-gradient-hero text-primary-foreground ${ctaVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4">Ready to Start Reading?</h2>
-          <p className="text-lg sm:text-xl mb-8 opacity-90">
-            Join thousands of readers and unlock unlimited access to premium content
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-6">Ready to Start Reading?</h2>
+          <p className="text-lg sm:text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+            Join thousands of readers and discover amazing books today.
           </p>
-          <Button variant="premium" size="lg" className="text-lg px-8 py-4 mobile-button">
-            Get Started Today
-            <ArrowRightIcon className="h-5 w-5 ml-2" />
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              className="text-lg px-8 py-4 mobile-button"
+              onClick={handleStartReading}
+            >
+              Start Reading Now
+              <ArrowRightIcon className="h-5 w-5 ml-2" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="text-lg px-8 py-4 mobile-button"
+              onClick={handleBrowseLibrary}
+            >
+              Browse Library
+              <ArrowRightIcon className="h-5 w-5 ml-2" />
+            </Button>
+          </div>
         </div>
       </section>
+
+      {/* Book Design Modal */}
+      {selectedBookDesign && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">{selectedBookDesign.title}</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedBookDesign(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden">
+                  {selectedBookDesign.coverImageUrl ? (
+                    <img
+                      src={selectedBookDesign.coverImageUrl}
+                      alt={selectedBookDesign.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <BookOpenIcon className="h-16 w-16 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                
+                <div>
+                  <p className="text-gray-600 mb-2">by {selectedBookDesign.author}</p>
+                  <p className="text-gray-700 mb-4">{selectedBookDesign.description}</p>
+                  
+                  {selectedBookDesign.tags && selectedBookDesign.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {selectedBookDesign.tags.map((tag, index) => (
+                        <Badge key={index} variant="secondary">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold text-primary">
+                      {selectedBookDesign.isFree ? 'Free' : `$${selectedBookDesign.price}`}
+                    </div>
+                    <Button 
+                      size="lg"
+                      onClick={() => {
+                        navigate(`/reader/${selectedBookDesign._id}`);
+                        setSelectedBookDesign(null);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <BookOpenIcon className="h-5 w-5" />
+                      Start Reading
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
