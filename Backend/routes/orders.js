@@ -175,6 +175,68 @@ router.post('/test-create', async (req, res) => {
   }
 });
 
+// Test payment creation without authentication (for debugging)
+router.post('/test-payment', async (req, res) => {
+  try {
+    console.log('🔍 Test payment creation started');
+    console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
+    
+    const { items, total, shippingAddress, paymentMethod } = req.body;
+    
+    // Create demo order
+    const orderId = 'TEST_PAYMENT_' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+    console.log('🆔 Test Payment Order ID:', orderId);
+    
+    const order = new Order({
+      orderId,
+      userId: '507f1f77bcf86cd799439011', // Test ObjectId
+      items: items || [{
+        bookId: 'test-book-1',
+        title: 'Test Book',
+        price: 10,
+        author: 'Test Author'
+      }],
+      total: total || 10,
+      shippingAddress: shippingAddress || {
+        fullName: 'Test User',
+        email: 'test@example.com',
+        phone: '1234567890',
+        address: 'Test Address',
+        city: 'Test City',
+        state: 'Test State',
+        zipCode: '12345',
+        country: 'Test Country'
+      },
+      paymentMethod: paymentMethod || {
+        type: 'demo'
+      },
+      status: 'processing',
+      paymentStatus: 'completed'
+    });
+    
+    console.log('💾 Saving test payment order...');
+    console.log('📦 Order data:', JSON.stringify(order, null, 2));
+    await order.save();
+    console.log('✅ Test payment order saved successfully');
+    
+    res.json({
+      message: 'Test payment order created successfully!',
+      orderId: orderId,
+      is_demo: true,
+      total: order.total,
+      items: order.items
+    });
+  } catch (error) {
+    console.error('❌ Test payment creation failed:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Test payment creation failed',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // Function to send payment email
 const sendPaymentEmail = async (userEmail, userName, orderId, paymentLink, orderDetails) => {
   try {
@@ -239,14 +301,26 @@ const sendPaymentEmail = async (userEmail, userName, orderId, paymentLink, order
 router.post('/create-payment', auth, async (req, res) => {
   try {
     console.log('🔍 Payment creation started');
-    console.log('📦 Request body:', req.body);
+    console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
     console.log('👤 User:', req.user);
+    console.log('🔑 Auth token present:', !!req.headers.authorization);
     
     const { items, total, shippingAddress, paymentMethod, userId } = req.body;
+    
+    // Log each field separately
+    console.log('📋 Items:', items);
+    console.log('💰 Total:', total);
+    console.log('🏠 Shipping Address:', shippingAddress);
+    console.log('💳 Payment Method:', paymentMethod);
+    console.log('👤 User ID from body:', userId);
     
     // Validate required fields
     if (!items || !total || !shippingAddress || !paymentMethod) {
       console.log('❌ Missing required fields');
+      console.log('❌ Items present:', !!items);
+      console.log('❌ Total present:', !!total);
+      console.log('❌ Shipping Address present:', !!shippingAddress);
+      console.log('❌ Payment Method present:', !!paymentMethod);
       return res.status(400).json({ 
         message: 'Missing required fields: items, total, shippingAddress, paymentMethod',
         received: { items, total, shippingAddress, paymentMethod }
@@ -276,6 +350,7 @@ router.post('/create-payment', auth, async (req, res) => {
         });
         
         console.log('💾 Saving demo order...');
+        console.log('📦 Order data:', JSON.stringify(order, null, 2));
         await order.save();
         console.log('✅ Demo order saved successfully');
         
@@ -313,9 +388,11 @@ router.post('/create-payment', auth, async (req, res) => {
         return res.json(response);
       } catch (demoError) {
         console.error('❌ Demo order creation failed:', demoError);
+        console.error('❌ Demo error stack:', demoError.stack);
         return res.status(500).json({ 
           message: 'Failed to create demo order',
-          error: demoError.message 
+          error: demoError.message,
+          stack: demoError.stack
         });
       }
     }
@@ -354,6 +431,7 @@ router.post('/create-payment', auth, async (req, res) => {
     });
     
     console.log('💾 Saving order to database...');
+    console.log('📦 Order data:', JSON.stringify(order, null, 2));
     await order.save();
     console.log('✅ Order saved successfully');
     
@@ -393,6 +471,7 @@ router.post('/create-payment', auth, async (req, res) => {
   } catch (error) {
     console.error('❌ Error creating payment order:', error);
     console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error message:', error.message);
     res.status(500).json({ 
       message: 'Failed to create payment order',
       error: error.message,
