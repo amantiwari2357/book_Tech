@@ -19,8 +19,12 @@
   const app = express();
   app.use(cors({
     origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
       'http://localhost:8080', 
       'http://127.0.0.1:8080',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
       'https://book-tech.vercel.app',
       'https://book-tech-frontend.vercel.app'
     ],
@@ -40,6 +44,11 @@
   app.use('/api/orders', ordersRoutes);
   app.use('/api/razorpay', razorpayRoutes);
   app.use('/api/book-designs', bookDesignRoutes);
+
+  // Test route
+  app.get('/api/test', (req, res) => {
+    res.json({ message: 'Backend server is running!', timestamp: new Date().toISOString() });
+  });
 
   const PORT = process.env.PORT || 5000;
 

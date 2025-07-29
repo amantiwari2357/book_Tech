@@ -125,17 +125,12 @@ const Home: React.FC = () => {
 
     const fetchBookDesigns = async () => {
       try {
-        console.log('Fetching book designs...');
         const res = await authFetch('/book-designs');
-        console.log('Book designs response status:', res.status);
         if (res.ok) {
           const data = await res.json();
-          console.log('Book designs data:', data);
           setBookDesigns(data);
         } else {
           console.error('Failed to fetch book designs:', res.status);
-          const errorText = await res.text();
-          console.error('Error response:', errorText);
         }
       } catch (error) {
         console.error('Error fetching book designs:', error);
@@ -179,18 +174,6 @@ const Home: React.FC = () => {
                        booksInProgress.length > 0 ||
                        trendingInCategory.length > 0 ||
                        becauseYouRead.length > 0;
-
-  // Debug logging
-  console.log('Home Debug:', {
-    books: books.length,
-    featuredBooks: featuredBooks.length,
-    recommendedBooks: recommendedBooks.length,
-    featuredBooksFromAPI: featuredBooksFromAPI.length,
-    bookDesigns: bookDesigns.length,
-    loading,
-    hasAnyContent,
-    isAuthenticated
-  });
 
   // Handler for Start Reading button
   const handleStartReading = () => {
