@@ -50,6 +50,11 @@
     res.json({ message: 'Backend server is running!', timestamp: new Date().toISOString() });
   });
 
+  // Test orders route
+  app.get('/api/orders-test', (req, res) => {
+    res.json({ message: 'Orders route test!', timestamp: new Date().toISOString() });
+  });
+
   const PORT = process.env.PORT || 5000;
 
   // Check if MONGODB_URI is set

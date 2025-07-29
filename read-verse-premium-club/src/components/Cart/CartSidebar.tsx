@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { XMarkIcon, ShoppingBagIcon, BookOpenIcon } from '@heroicons/react/24/outline';
@@ -9,6 +10,7 @@ import { authFetch } from '@/lib/api';
 
 const CartSidebar: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { items, isOpen, total, loading, error } = useAppSelector((state) => state.cart);
   const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
   const [imageLoading, setImageLoading] = useState<{ [key: string]: boolean }>({});
@@ -21,6 +23,16 @@ const CartSidebar: React.FC = () => {
 
   const handleRemoveItem = (id: string) => {
     dispatch(removeFromCartAsync(id));
+  };
+
+  const handleCheckout = () => {
+    if (items.length === 0) {
+      alert('Your cart is empty!');
+      return;
+    }
+    
+    dispatch(toggleCart()); // Close cart sidebar
+    navigate('/checkout'); // Navigate to checkout page
   };
 
   if (!isOpen) return null;
@@ -140,41 +152,7 @@ const CartSidebar: React.FC = () => {
           <Button 
             className="w-full" 
             variant="hero"
-            onClick={async () => {
-              if (items.length === 0) {
-                alert('Your cart is empty!');
-                return;
-              }
-              
-              // For now, process first item in cart
-              const firstItem = items[0];
-              try {
-                const res = await authFetch('/checkout/create-payment-link', {
-                  method: 'POST',
-                  body: JSON.stringify({ bookId: firstItem.id }),
-                });
-                
-                if (res.ok) {
-                  const data = await res.json();
-                  if (data.paymentLink) {
-                    // Redirect to Razorpay payment page
-                    window.location.href = data.paymentLink;
-                  } else {
-                    alert('Failed to create payment link');
-                  }
-                } else {
-                  let errorMsg = 'Checkout failed';
-                  try {
-                    const errorData = await res.json();
-                    if (errorData && errorData.message) errorMsg = errorData.message;
-                  } catch {}
-                  alert(errorMsg);
-                }
-              } catch (error) {
-                console.error('Checkout failed:', error);
-                alert('Checkout failed. Please try again.');
-              }
-            }}
+            onClick={handleCheckout}
           >
             Proceed to Checkout
           </Button>

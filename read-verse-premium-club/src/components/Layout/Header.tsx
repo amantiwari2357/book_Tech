@@ -415,6 +415,7 @@ const Header: React.FC = () => {
                       
                       <Link to="/edit-profile" className="block px-4 py-2 hover:bg-accent">Edit Profile</Link>
                       <Link to="/notifications" className="block px-4 py-2 hover:bg-accent">Notifications</Link>
+                      <Link to="/orders" className="block px-4 py-2 hover:bg-accent">My Orders</Link>
                       {user?.avatar && (
                         <button
                           onClick={async () => {

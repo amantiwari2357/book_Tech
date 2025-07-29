@@ -37,11 +37,13 @@ import BookDesign from './pages/BookDesign';
 import BookDesignReader from './pages/BookDesignReader';
 import AdminBookDesignApprovals from './pages/AdminBookDesignApprovals';
 import AuthRedirect from '@/components/AuthRedirect';
+import Orders from './pages/Orders';
+import Checkout from './pages/Checkout';
 
 const queryClient = new QueryClient();
 
-// Separate component for handling redirects inside Router context
-const AppContent = () => {
+// Auth initialization component
+const AuthInitializer = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -63,10 +65,16 @@ const AppContent = () => {
     initializeAuth();
   }, [dispatch]);
 
+  return null;
+};
+
+// Main app content component
+const AppContent = () => {
   return (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AuthInitializer />
       <AuthRedirect />
       <div className="min-h-screen bg-background text-foreground font-sans">
         <Header />
@@ -94,6 +102,8 @@ const AppContent = () => {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/checkout" element={<Checkout />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

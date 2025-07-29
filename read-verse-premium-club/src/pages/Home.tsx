@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import BookGrid from '@/components/Books/BookGrid';
 import PricingSection from '@/components/Subscription/PricingSection';
-import { ArrowRightIcon, BookOpenIcon, StarIcon, UsersIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, BookOpenIcon, StarIcon, UsersIcon, XMarkIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { setFeaturedBooks, fetchBooks } from '@/store/slices/booksSlice';
+import { addToCartAsync } from '@/store/slices/cartSlice';
 import { authFetch } from '@/lib/api';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { toast } from '@/hooks/use-toast';
 
 // Helper: Get user's favorite category (most orders or most books)
 function getFavoriteCategory(user, books) {
@@ -60,6 +62,25 @@ const Home: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [selectedBookDesign, setSelectedBookDesign] = useState(null);
   const [bookDesignsLoaded, setBookDesignsLoaded] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+
+  // Cart functionality
+  const handleAddToCart = async (book: any, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent modal from opening
+    try {
+      await dispatch(addToCartAsync(book.id)).unwrap();
+      toast({
+        title: "Added to Cart",
+        description: `${book.title} has been added to your cart.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add book to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Intersection observer for lazy loading book designs
   const { elementRef: bookDesignsTriggerRef, hasTriggered: bookDesignsTriggered } = useIntersectionObserver({
@@ -374,7 +395,66 @@ const Home: React.FC = () => {
             </div>
             {loading && <p>Loading books...</p>}
             {error && <p className="text-red-500">{error}</p>}
-            <BookGrid books={featuredBooks} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              {featuredBooks.slice(0, 5).map((book, index) => (
+                <div 
+                  key={book.id} 
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200" 
+                  style={{ minHeight: '280px' }}
+                  onClick={() => setSelectedBook(book)}
+                >
+                  <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                    {book.coverImage ? (
+                      <img
+                        src={book.coverImage}
+                        alt={book.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.log('🔍 Image failed to load for:', book.title);
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpenIcon className="h-8 w-8 text-gray-400" />
+                      </div>
+                    )}
+                    {book.isPremium && (
+                      <Badge className="absolute top-1 right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg text-xs">
+                        Premium
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-2">
+                    <h3 className="font-semibold text-sm mb-1 text-gray-900 line-clamp-1">{book.title}</h3>
+                    <p className="text-gray-600 text-xs mb-1">by {book.author}</p>
+                    <p className="text-xs text-gray-500 mb-2 line-clamp-2">{book.description}</p>
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm font-bold text-primary">
+                        {book.price === 0 ? 'Free' : `$${book.price}`}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={(e) => handleAddToCart(book, e)}
+                          className="h-6 px-2 text-xs"
+                        >
+                          <ShoppingCartIcon className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex items-center gap-1 h-6 px-2 text-xs"
+                        >
+                          <BookOpenIcon className="h-3 w-3" />
+                          Read
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -384,7 +464,66 @@ const Home: React.FC = () => {
         <section ref={recommendedRef} className={`py-12 sm:py-16 bg-muted/30 ${recommendedVisible ? 'slide-in-right animate-in' : 'slide-in-right'}`}>
           <div className="container mx-auto px-4">
             <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Recommended for You</h2>
-            <BookGrid books={recommendedBooks} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              {recommendedBooks.slice(0, 5).map((book, index) => (
+                <div 
+                  key={book.id} 
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200" 
+                  style={{ minHeight: '280px' }}
+                  onClick={() => setSelectedBook(book)}
+                >
+                  <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                    {book.coverImage ? (
+                      <img
+                        src={book.coverImage}
+                        alt={book.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.log('🔍 Image failed to load for:', book.title);
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpenIcon className="h-8 w-8 text-gray-400" />
+                      </div>
+                    )}
+                    {book.isPremium && (
+                      <Badge className="absolute top-1 right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg text-xs">
+                        Premium
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-2">
+                    <h3 className="font-semibold text-sm mb-1 text-gray-900 line-clamp-1">{book.title}</h3>
+                    <p className="text-gray-600 text-xs mb-1">by {book.author}</p>
+                    <p className="text-xs text-gray-500 mb-2 line-clamp-2">{book.description}</p>
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm font-bold text-primary">
+                        {book.price === 0 ? 'Free' : `$${book.price}`}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={(e) => handleAddToCart(book, e)}
+                          className="h-6 px-2 text-xs"
+                        >
+                          <ShoppingCartIcon className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex items-center gap-1 h-6 px-2 text-xs"
+                        >
+                          <BookOpenIcon className="h-3 w-3" />
+                          Read
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -394,7 +533,66 @@ const Home: React.FC = () => {
         <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Featured Books</h2>
-            <BookGrid books={featuredBooksFromAPI} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              {featuredBooksFromAPI.slice(0, 5).map((book, index) => (
+                <div 
+                  key={book.id} 
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200" 
+                  style={{ minHeight: '280px' }}
+                  onClick={() => setSelectedBook(book)}
+                >
+                  <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                    {book.coverImage ? (
+                      <img
+                        src={book.coverImage}
+                        alt={book.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.log('🔍 Image failed to load for:', book.title);
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpenIcon className="h-8 w-8 text-gray-400" />
+                      </div>
+                    )}
+                    {book.isPremium && (
+                      <Badge className="absolute top-1 right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg text-xs">
+                        Premium
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="p-2">
+                    <h3 className="font-semibold text-sm mb-1 text-gray-900 line-clamp-1">{book.title}</h3>
+                    <p className="text-gray-600 text-xs mb-1">by {book.author}</p>
+                    <p className="text-xs text-gray-500 mb-2 line-clamp-2">{book.description}</p>
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm font-bold text-primary">
+                        {book.price === 0 ? 'Free' : `$${book.price}`}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={(e) => handleAddToCart(book, e)}
+                          className="h-6 px-2 text-xs"
+                        >
+                          <ShoppingCartIcon className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex items-center gap-1 h-6 px-2 text-xs"
+                        >
+                          <BookOpenIcon className="h-3 w-3" />
+                          Read
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -692,6 +890,75 @@ const Home: React.FC = () => {
                       onClick={() => {
                         navigate(`/reader/${selectedBookDesign._id}`);
                         setSelectedBookDesign(null);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <BookOpenIcon className="h-5 w-5" />
+                      Start Reading
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Book Modal */}
+      {selectedBook && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">{selectedBook.title}</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedBook(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden">
+                  {selectedBook.coverImage ? (
+                    <img
+                      src={selectedBook.coverImage}
+                      alt={selectedBook.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <BookOpenIcon className="h-16 w-16 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                
+                <div>
+                  <p className="text-gray-600 mb-2">by {selectedBook.author}</p>
+                  <p className="text-gray-700 mb-4">{selectedBook.description}</p>
+                  
+                  {selectedBook.tags && selectedBook.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {selectedBook.tags.map((tag, index) => (
+                        <Badge key={index} variant="secondary">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold text-primary">
+                      {selectedBook.price === 0 ? 'Free' : `$${selectedBook.price}`}
+                    </div>
+                    <Button 
+                      size="lg"
+                      onClick={() => {
+                        navigate(`/reader/${selectedBook.id}`);
+                        setSelectedBook(null);
                       }}
                       className="flex items-center gap-2"
                     >
