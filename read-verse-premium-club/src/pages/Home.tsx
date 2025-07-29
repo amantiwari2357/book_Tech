@@ -140,6 +140,18 @@ const Home: React.FC = () => {
                        trendingInCategory.length > 0 ||
                        becauseYouRead.length > 0;
 
+  // Debug logging
+  console.log('Home Debug:', {
+    books: books.length,
+    featuredBooks: featuredBooks.length,
+    recommendedBooks: recommendedBooks.length,
+    featuredBooksFromAPI: featuredBooksFromAPI.length,
+    bookDesigns: bookDesigns.length,
+    loading,
+    hasAnyContent,
+    isAuthenticated
+  });
+
   // Handler for Start Reading button
   const handleStartReading = () => {
     if (!isAuthenticated) {
@@ -398,67 +410,63 @@ const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Features Section - Only show if there's content or user is not authenticated */}
-      {(hasAnyContent || !isAuthenticated) && (
-        <section ref={featuresRef} className={`py-12 sm:py-16 bg-muted/30 ${featuresVisible ? 'rotate-in animate-in' : 'rotate-in'}`}>
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 mobile-text-gradient">Why Choose BookTech?</h2>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Experience the future of digital reading with our innovative platform
+      {/* Features Section - Always show */}
+      <section ref={featuresRef} className={`py-12 sm:py-16 bg-muted/30 ${featuresVisible ? 'rotate-in animate-in' : 'rotate-in'}`}>
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 mobile-text-gradient">Why Choose BookTech?</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Experience the future of digital reading with our innovative platform
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+              <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <BookOpenIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold">Advanced Reader</h3>
+              <p className="text-muted-foreground">
+                Enjoy customizable reading experience with adjustable fonts, themes, and bookmarks
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-                <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                  <BookOpenIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold">Advanced Reader</h3>
-                <p className="text-muted-foreground">
-                  Enjoy customizable reading experience with adjustable fonts, themes, and bookmarks
-                </p>
+            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+              <div className="bg-accent/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <StarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
               </div>
-              <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-                <div className="bg-accent/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                  <StarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold">Premium Content</h3>
-                <p className="text-muted-foreground">
-                  Access exclusive books and latest releases from top authors worldwide
-                </p>
+              <h3 className="text-lg sm:text-xl font-semibold">Premium Content</h3>
+              <p className="text-muted-foreground">
+                Access exclusive books and latest releases from top authors worldwide
+              </p>
+            </div>
+            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
+              <div className="bg-secondary/50 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <UsersIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-                <div className="bg-secondary/50 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                  <UsersIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold">Community</h3>
-                <p className="text-muted-foreground">
-                  Join thousands of readers, share reviews, and discover new favorites
-                </p>
-              </div>
+              <h3 className="text-lg sm:text-xl font-semibold">Community</h3>
+              <p className="text-muted-foreground">
+                Join thousands of readers, share reviews, and discover new favorites
+              </p>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* Pricing Section - Only show if there's content or user is not authenticated */}
-      {(hasAnyContent || !isAuthenticated) && <PricingSection />}
+      {/* Pricing Section - Always show */}
+      <PricingSection />
 
-      {/* CTA Section - Only show if there's content or user is not authenticated */}
-      {(hasAnyContent || !isAuthenticated) && (
-        <section ref={ctaRef} className={`py-12 sm:py-16 bg-gradient-hero text-primary-foreground ${ctaVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4">Ready to Start Reading?</h2>
-            <p className="text-lg sm:text-xl mb-8 opacity-90">
-              Join thousands of readers and unlock unlimited access to premium content
-            </p>
-            <Button variant="premium" size="lg" className="text-lg px-8 py-4 mobile-button">
-              Get Started Today
-              <ArrowRightIcon className="h-5 w-5 ml-2" />
-            </Button>
-          </div>
-        </section>
-      )}
+      {/* CTA Section - Always show */}
+      <section ref={ctaRef} className={`py-12 sm:py-16 bg-gradient-hero text-primary-foreground ${ctaVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4">Ready to Start Reading?</h2>
+          <p className="text-lg sm:text-xl mb-8 opacity-90">
+            Join thousands of readers and unlock unlimited access to premium content
+          </p>
+          <Button variant="premium" size="lg" className="text-lg px-8 py-4 mobile-button">
+            Get Started Today
+            <ArrowRightIcon className="h-5 w-5 ml-2" />
+          </Button>
+        </div>
+      </section>
     </div>
   );
 };
