@@ -202,7 +202,7 @@ const Home: React.FC = () => {
             <Button
               variant="outline"
               size="lg"
-              className="text-lg px-8 py-4 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary relative mobile-glass"
+              className="text-lg px-8 py-4 bg-primary text-white border-2 border-primary hover:bg-primary/90 hover:text-white relative mobile-button font-semibold shadow-lg"
               onClick={handleBrowseLibrary}
               title={!isAuthenticated ? 'Sign up for more features!' : !isPremium ? 'Upgrade for premium content' : 'Browse all books'}
             >
