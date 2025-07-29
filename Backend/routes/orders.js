@@ -11,14 +11,31 @@ const crypto = require('crypto');
 // Email functionality
 const nodemailer = require('nodemailer');
 
-// Create email transporter
-const transporter = nodemailer.createTransporter({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// Create email transporter (only if email credentials are available)
+// To enable email notifications, add these to your .env file:
+// EMAIL_USER=your-gmail@gmail.com
+// EMAIL_PASS=your-gmail-app-password
+// 
+// How to get Gmail app password:
+// 1. Go to Gmail.com and login
+// 2. Enable 2-Factor Authentication
+// 3. Go to Security → App passwords
+// 4. Generate app password for "BookTech Email"
+let transporter = null;
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+  console.log('✅ Email notifications enabled');
+} else {
+  console.warn('⚠️  Email credentials not found. Email notifications will be disabled.');
+  console.warn('📝 To enable emails, add EMAIL_USER and EMAIL_PASS to your .env file');
+  console.warn('📧 Users will still get payment links, but no email will be sent');
+}
 
 // Check if Razorpay credentials are available
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -36,6 +53,11 @@ const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
 // Function to send payment email
 const sendPaymentEmail = async (userEmail, userName, orderId, paymentLink, orderDetails) => {
   try {
+    if (!transporter) {
+      console.log('Email transporter not configured, skipping email send');
+      return;
+    }
+    
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: userEmail,
@@ -99,6 +121,13 @@ router.post('/create-payment', auth, async (req, res) => {
 
     const { items, total, shippingAddress, paymentMethod, userId } = req.body;
     
+    // Validate required fields
+    if (!items || !total || !shippingAddress || !paymentMethod) {
+      return res.status(400).json({ 
+        message: 'Missing required fields: items, total, shippingAddress, paymentMethod' 
+      });
+    }
+    
     // Calculate amount in paise (Razorpay expects amount in smallest currency unit)
     const amountInPaise = Math.round(total * 1.18 * 100); // Including 18% tax
     
@@ -108,7 +137,7 @@ router.post('/create-payment', auth, async (req, res) => {
       currency: 'INR',
       receipt: 'booktech_' + Date.now(),
       notes: {
-        userId: userId,
+        userId: req.user.id,
         items: JSON.stringify(items),
         shippingAddress: JSON.stringify(shippingAddress)
       }
@@ -119,10 +148,10 @@ router.post('/create-payment', auth, async (req, res) => {
     const order = new Order({
       orderId,
       userId: req.user.id,
-      items,
+      items: items,
       total: total * 1.18,
-      shippingAddress,
-      paymentMethod,
+      shippingAddress: shippingAddress,
+      paymentMethod: paymentMethod,
       status: 'pending',
       paymentStatus: 'pending',
       razorpayOrderId: razorpayOrder.id
@@ -134,7 +163,7 @@ router.post('/create-payment', auth, async (req, res) => {
     const paymentLink = `https://checkout.razorpay.com/v1/pay/${razorpayOrder.id}?key=${process.env.RAZORPAY_KEY_ID}`;
     
     // Send payment email
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    if (transporter) { // Use the transporter we created earlier
       await sendPaymentEmail(
         req.user.email,
         req.user.name,
@@ -240,16 +269,23 @@ router.post('/', auth, async (req, res) => {
   try {
     const { items, total, shippingAddress, paymentMethod } = req.body;
     
+    // Validate required fields
+    if (!items || !total || !shippingAddress || !paymentMethod) {
+      return res.status(400).json({ 
+        message: 'Missing required fields: items, total, shippingAddress, paymentMethod' 
+      });
+    }
+    
     // Generate unique order ID
     const orderId = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
     
     const order = new Order({
       orderId,
       userId: req.user.id,
-      items,
-      total,
-      shippingAddress,
-      paymentMethod,
+      items: items,
+      total: total * 1.18, // Including tax
+      shippingAddress: shippingAddress,
+      paymentMethod: paymentMethod,
       status: 'pending',
       paymentStatus: 'pending'
     });
@@ -270,7 +306,8 @@ router.post('/', auth, async (req, res) => {
 // Get order by ID
 router.get('/:orderId', auth, async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId);
+    // Use orderId field instead of _id
+    const order = await Order.findOne({ orderId: req.params.orderId });
     
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
@@ -298,7 +335,8 @@ router.patch('/:orderId/status', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only admins can update order status' });
     }
     
-    const order = await Order.findById(req.params.orderId);
+    // Use orderId field instead of _id
+    const order = await Order.findOne({ orderId: req.params.orderId });
     
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
@@ -337,6 +375,7 @@ router.get('/admin/all', auth, async (req, res) => {
 // Check payment status
 router.get('/payment-status/:orderId', auth, async (req, res) => {
   try {
+    // Use orderId field instead of _id
     const order = await Order.findOne({ orderId: req.params.orderId });
     
     if (!order) {
