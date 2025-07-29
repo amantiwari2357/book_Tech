@@ -125,12 +125,17 @@ const Home: React.FC = () => {
 
     const fetchBookDesigns = async () => {
       try {
+        console.log('Fetching book designs...');
         const res = await authFetch('/book-designs');
+        console.log('Book designs response status:', res.status);
         if (res.ok) {
           const data = await res.json();
+          console.log('Book designs data:', data);
           setBookDesigns(data);
         } else {
           console.error('Failed to fetch book designs:', res.status);
+          const errorText = await res.text();
+          console.error('Error response:', errorText);
         }
       } catch (error) {
         console.error('Error fetching book designs:', error);

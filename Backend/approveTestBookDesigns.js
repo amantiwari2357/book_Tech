@@ -1,6 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const BookDesign = require('./models/BookDesign');
+const User = require('./models/User');
 
 async function approveTestBookDesigns() {
   try {
@@ -15,15 +16,27 @@ async function approveTestBookDesigns() {
     const pendingDesigns = await BookDesign.find({ status: 'pending' });
     console.log(`Found ${pendingDesigns.length} pending book designs`);
 
-    // Approve all pending designs
-    for (const design of pendingDesigns) {
-      design.status = 'approved';
-      await design.save();
-      console.log(`Approved: ${design.title}`);
+    if (pendingDesigns.length === 0) {
+      console.log('No pending book designs found');
+      return;
     }
 
-    console.log('All test book designs have been approved!');
-    console.log('You can now read them online at /reader/[book-design-id]');
+    // Approve all pending designs
+    const updateResult = await BookDesign.updateMany(
+      { status: 'pending' },
+      { status: 'approved' }
+    );
+
+    console.log(`Approved ${updateResult.modifiedCount} book designs`);
+
+    // List the approved designs
+    const approvedDesigns = await BookDesign.find({ status: 'approved' });
+    console.log('\nApproved book designs:');
+    approvedDesigns.forEach((design, index) => {
+      console.log(`${index + 1}. ${design.title} - ${design.isFree ? 'Free' : `$${design.price}`} - ${design.category}`);
+    });
+
+    console.log('\nBook designs approved successfully!');
 
   } catch (error) {
     console.error('Error approving book designs:', error);

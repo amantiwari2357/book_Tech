@@ -6,15 +6,38 @@ const Notification = require('../models/Notification');
 
 const router = express.Router();
 
-// Get all approved book designs
+// Get all book designs (for home page display)
 router.get('/', async (req, res) => {
+  try {
+    console.log('📚 Book designs API called - fetching all designs...');
+    // For home page, show all book designs regardless of status
+    const bookDesigns = await BookDesign.find()
+      .populate('authorRef', 'name')
+      .sort({ createdAt: -1 })
+      .limit(10); // Limit to 10 for home page
+    
+    console.log(`📚 Found ${bookDesigns.length} book designs`);
+    bookDesigns.forEach((design, index) => {
+      console.log(`  ${index + 1}. ${design.title} - ${design.status} - ${design.isFree ? 'Free' : `$${design.price}`}`);
+    });
+    
+    res.json(bookDesigns);
+  } catch (error) {
+    console.error('❌ Error fetching book designs:', error);
+    res.status(500).json({ message: 'Error fetching book designs' });
+  }
+});
+
+// Get approved book designs only (for specific use cases)
+router.get('/approved', async (req, res) => {
   try {
     const bookDesigns = await BookDesign.find({ status: 'approved' })
       .populate('authorRef', 'name')
       .sort({ createdAt: -1 });
     res.json(bookDesigns);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching book designs' });
+    console.error('Error fetching approved book designs:', error);
+    res.status(500).json({ message: 'Error fetching approved book designs' });
   }
 });
 
