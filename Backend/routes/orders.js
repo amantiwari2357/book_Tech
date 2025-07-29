@@ -112,19 +112,58 @@ const sendPaymentEmail = async (userEmail, userName, orderId, paymentLink, order
 // Create Razorpay payment order
 router.post('/create-payment', auth, async (req, res) => {
   try {
-    // Check if Razorpay is configured
-    if (!razorpay) {
-      return res.status(503).json({ 
-        message: 'Payment gateway is not configured. Please contact support.' 
-      });
-    }
-
     const { items, total, shippingAddress, paymentMethod, userId } = req.body;
     
     // Validate required fields
     if (!items || !total || !shippingAddress || !paymentMethod) {
       return res.status(400).json({ 
         message: 'Missing required fields: items, total, shippingAddress, paymentMethod' 
+      });
+    }
+    
+    // Check if Razorpay is configured
+    if (!razorpay) {
+      console.log('⚠️  Razorpay not configured, creating demo order');
+      
+      // Create demo order without Razorpay
+      const orderId = 'DEMO' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+      const order = new Order({
+        orderId,
+        userId: req.user.id,
+        items: items,
+        total: total * 1.18,
+        shippingAddress: shippingAddress,
+        paymentMethod: paymentMethod,
+        status: 'processing',
+        paymentStatus: 'completed' // Demo payment completed
+      });
+      
+      await order.save();
+      
+      // Send demo email if transporter is available
+      if (transporter) {
+        const demoPaymentLink = `https://book-tech.vercel.app/orders?demo=true&orderId=${orderId}`;
+        await sendPaymentEmail(
+          req.user.email,
+          req.user.name,
+          orderId,
+          demoPaymentLink,
+          {
+            total: (total * 1.18).toFixed(2),
+            items: items
+          }
+        );
+      }
+      
+      return res.json({
+        key_id: 'demo_key',
+        amount: Math.round(total * 1.18 * 100),
+        currency: 'INR',
+        order_id: 'demo_order_' + Date.now(),
+        receipt: 'demo_receipt',
+        payment_link: `https://book-tech.vercel.app/orders?demo=true&orderId=${orderId}`,
+        order_id_db: orderId,
+        is_demo: true
       });
     }
     
@@ -186,7 +225,7 @@ router.post('/create-payment', auth, async (req, res) => {
       order_id_db: orderId
     });
   } catch (error) {
-    console.error('Error creating Razorpay order:', error);
+    console.error('Error creating payment order:', error);
     res.status(500).json({ 
       message: 'Failed to create payment order',
       error: error.message 

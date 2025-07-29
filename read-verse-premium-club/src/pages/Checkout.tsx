@@ -169,24 +169,41 @@ const Checkout: React.FC = () => {
       if (response.ok) {
         const paymentData = await response.json();
         
-        // Show success message with payment link
-        toast({
-          title: "Payment Link Sent!",
-          description: "Check your email for the payment link. You can also pay directly here.",
-        });
+        // Check if this is a demo payment
+        if (paymentData.is_demo) {
+          toast({
+            title: "Demo Order Created!",
+            description: "Your demo order has been created successfully. Check your email for details.",
+          });
+          
+          // Navigate to orders page for demo order
+          navigate('/orders', { 
+            state: { 
+              newOrderId: paymentData.order_id_db,
+              showPaymentStatus: true,
+              isDemo: true
+            } 
+          });
+        } else {
+          // Show success message with payment link
+          toast({
+            title: "Payment Link Sent!",
+            description: "Check your email for the payment link. You can also pay directly here.",
+          });
 
-        // Open payment link in new tab
-        if (paymentData.payment_link) {
-          window.open(paymentData.payment_link, '_blank');
+          // Open payment link in new tab
+          if (paymentData.payment_link) {
+            window.open(paymentData.payment_link, '_blank');
+          }
+
+          // Navigate to order status page
+          navigate('/orders', { 
+            state: { 
+              newOrderId: paymentData.order_id_db,
+              showPaymentStatus: true 
+            } 
+          });
         }
-
-        // Navigate to order status page
-        navigate('/orders', { 
-          state: { 
-            newOrderId: paymentData.order_id_db,
-            showPaymentStatus: true 
-          } 
-        });
       } else {
         const errorData = await response.json();
         

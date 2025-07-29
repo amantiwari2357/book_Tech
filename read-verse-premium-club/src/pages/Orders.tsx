@@ -71,10 +71,18 @@ const Orders: React.FC = () => {
     if (location.state?.newOrderId) {
       const newOrderId = location.state.newOrderId;
       const showPaymentStatus = location.state.showPaymentStatus;
+      const isDemo = location.state.isDemo;
       
       if (showPaymentStatus) {
-        // Check payment status for new order
-        checkPaymentStatus(newOrderId);
+        if (isDemo) {
+          toast({
+            title: "Demo Order Created!",
+            description: `Demo order #${newOrderId} has been created successfully.`,
+          });
+        } else {
+          // Check payment status for new order
+          checkPaymentStatus(newOrderId);
+        }
       }
     }
   }, [user, navigate, location.state]);
