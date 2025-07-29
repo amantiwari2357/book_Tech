@@ -125,15 +125,22 @@ const Home: React.FC = () => {
 
     const fetchBookDesigns = async () => {
       try {
+        console.log('🔍 Fetching book designs...');
+        console.log('🔍 API URL:', `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/book-designs`);
         const res = await authFetch('/book-designs');
+        console.log('🔍 Book designs response status:', res.status);
         if (res.ok) {
           const data = await res.json();
+          console.log('🔍 Book designs data received:', data);
+          console.log('🔍 Number of book designs:', data.length);
           setBookDesigns(data);
         } else {
-          console.error('Failed to fetch book designs:', res.status);
+          console.error('❌ Failed to fetch book designs:', res.status);
+          const errorText = await res.text();
+          console.error('❌ Error response:', errorText);
         }
       } catch (error) {
-        console.error('Error fetching book designs:', error);
+        console.error('❌ Error fetching book designs:', error);
       }
     };
 
@@ -174,6 +181,14 @@ const Home: React.FC = () => {
                        booksInProgress.length > 0 ||
                        trendingInCategory.length > 0 ||
                        becauseYouRead.length > 0;
+
+  // Debug logging for book designs
+  console.log('🔍 Book designs state:', {
+    bookDesigns: bookDesigns.length,
+    hasAnyContent,
+    loading,
+    apiLoading
+  });
 
   // Handler for Start Reading button
   const handleStartReading = () => {
@@ -324,62 +339,110 @@ const Home: React.FC = () => {
 
       {/* Book Designs - Only show if there are book designs */}
       {bookDesigns.length > 0 && (
-        <section ref={bookDesignsRef} className={`py-12 sm:py-16 bg-muted/30 ${bookDesignsVisible ? 'scale-in animate-in' : 'scale-in'}`}>
+        <section ref={bookDesignsRef} className="py-12 sm:py-16 bg-muted/30 border-4 border-red-500">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-8 mobile-text-gradient">Custom Book Designs</h2>
             <p className="text-muted-foreground mb-6">Read beautifully designed books with custom formatting.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {bookDesigns.slice(0, 6).map((design, index) => (
-                <div key={design._id} className={`mobile-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${bookDesignsVisible ? 'mobile-card-animate animate-in' : 'mobile-card-animate'}`} style={{ transitionDelay: `${index * 0.1}s` }}>
-                  <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                    {design.coverImageUrl ? (
-                      <img
-                        src={design.coverImageUrl}
-                        alt={design.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpenIcon className="h-12 w-12 text-gray-400" />
-                      </div>
-                    )}
-                    {design.isPremium && (
-                      <Badge className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg">
-                        Premium
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-1">{design.title}</h3>
-                    <p className="text-gray-600 text-sm mb-2">by {design.author}</p>
-                    <p className="text-sm text-gray-500 mb-3 line-clamp-2">{design.description}</p>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {design.tags.slice(0, 2).map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {tag}
+              {bookDesigns.slice(0, 6).map((design, index) => {
+                console.log('🔍 Rendering book design:', design.title, design._id);
+                return (
+                  <div key={design._id} className="bg-blue-100 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border-2 border-blue-500" style={{ minHeight: '400px' }}>
+                    <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                      {design.coverImageUrl ? (
+                        <img
+                          src={design.coverImageUrl}
+                          alt={design.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.log('🔍 Image failed to load for:', design.title);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <BookOpenIcon className="h-12 w-12 text-gray-400" />
+                        </div>
+                      )}
+                      {design.isPremium && (
+                        <Badge className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg">
+                          Premium
                         </Badge>
-                      ))}
+                      )}
                     </div>
-                    <div className="flex justify-between items-center">
-                      <div className="text-lg font-bold text-primary">
-                        {design.isFree ? 'Free' : `$${design.price}`}
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg mb-1 text-gray-900">{design.title}</h3>
+                      <p className="text-gray-600 text-sm mb-2">by {design.author}</p>
+                      <p className="text-sm text-gray-500 mb-3 overflow-hidden" style={{ 
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical'
+                      }}>
+                        {design.description}
+                      </p>
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {design.tags && design.tags.slice(0, 2).map((tag, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
                       </div>
-                      <Button 
-                        size="sm" 
-                        onClick={() => navigate(`/reader/${design._id}`)}
-                        className="flex items-center gap-1 mobile-button"
-                      >
-                        <BookOpenIcon className="h-4 w-4" />
-                        Read
-                      </Button>
+                      <div className="flex justify-between items-center">
+                        <div className="text-lg font-bold text-primary">
+                          {design.isFree ? 'Free' : `$${design.price}`}
+                        </div>
+                        <Button 
+                          size="sm" 
+                          onClick={() => navigate(`/reader/${design._id}`)}
+                          className="flex items-center gap-1"
+                        >
+                          <BookOpenIcon className="h-4 w-4" />
+                          Read
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
       )}
+
+      {/* Debug: Force show book designs section */}
+      {/* {bookDesigns.length === 0 && (
+        <section className="py-12 sm:py-16 bg-red-100 border-4 border-red-500">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold text-red-800">DEBUG: No Book Designs Found</h2>
+            <p className="text-red-600">bookDesigns.length = {bookDesigns.length}</p>
+            <p className="text-red-600">hasAnyContent = {hasAnyContent.toString()}</p>
+            <p className="text-red-600">loading = {loading.toString()}</p>
+            <p className="text-red-600">apiLoading = {apiLoading.toString()}</p>
+          </div>
+        </section>
+      )} */}
+
+      {/* Debug: Show book designs count */}
+      {/* <section className="py-4 bg-yellow-100">
+        <div className="container mx-auto px-4">
+          <p className="text-sm text-yellow-800">
+            Debug: bookDesigns.length = {bookDesigns.length}, 
+            hasAnyContent = {hasAnyContent.toString()}, 
+            loading = {loading.toString()}, 
+            apiLoading = {apiLoading.toString()}
+          </p>
+          {bookDesigns.length > 0 && (
+            <div className="mt-2">
+              <p className="text-sm text-yellow-800 font-bold">Book Designs Data:</p>
+              {bookDesigns.slice(0, 3).map((design, index) => (
+                <p key={index} className="text-xs text-yellow-800">
+                  {index + 1}. {design.title} - {design.author} - {design.isFree ? 'Free' : `$${design.price}`}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      </section> */}
 
       {/* Continue Reading - Only show if user is authenticated and has books in progress */}
       {isAuthenticated && booksInProgress.length > 0 && (
