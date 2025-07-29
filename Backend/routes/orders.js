@@ -8,6 +8,18 @@ const router = express.Router();
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 
+// Email functionality
+const nodemailer = require('nodemailer');
+
+// Create email transporter
+const transporter = nodemailer.createTransporter({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
 // Check if Razorpay credentials are available
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
   console.warn('⚠️  Razorpay credentials not found. Payment features will be disabled.');
@@ -20,6 +32,60 @@ const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     })
   : null;
+
+// Function to send payment email
+const sendPaymentEmail = async (userEmail, userName, orderId, paymentLink, orderDetails) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject: `Payment Link for Order #${orderId} - BookTech`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0;">BookTech</h1>
+            <p style="margin: 10px 0 0 0;">Complete Your Payment</p>
+          </div>
+          
+          <div style="padding: 20px; background: #f9f9f9;">
+            <h2 style="color: #333;">Hello ${userName},</h2>
+            <p style="color: #666;">Your order has been created successfully. Please complete your payment to proceed.</p>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #ddd;">
+              <h3 style="color: #333; margin-top: 0;">Order Details</h3>
+              <p><strong>Order ID:</strong> ${orderId}</p>
+              <p><strong>Total Amount:</strong> ₹${orderDetails.total}</p>
+              <p><strong>Items:</strong></p>
+              <ul>
+                ${orderDetails.items.map(item => `<li>${item.title} by ${item.author} - ₹${item.price}</li>`).join('')}
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${paymentLink}" 
+                 style="background: #3B82F6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                Complete Payment
+              </a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">
+              This payment link will expire in 24 hours. If you have any questions, please contact our support team.
+            </p>
+          </div>
+          
+          <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
+            <p>© 2024 BookTech. All rights reserved.</p>
+          </div>
+        </div>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    console.log(`Payment email sent to ${userEmail}`);
+  } catch (error) {
+    console.error('Error sending payment email:', error);
+  }
+};
 
 // Create Razorpay payment order
 router.post('/create-payment', auth, async (req, res) => {
@@ -48,12 +114,47 @@ router.post('/create-payment', auth, async (req, res) => {
       }
     });
     
+    // Create order in database with pending status
+    const orderId = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+    const order = new Order({
+      orderId,
+      userId: req.user.id,
+      items,
+      total: total * 1.18,
+      shippingAddress,
+      paymentMethod,
+      status: 'pending',
+      paymentStatus: 'pending',
+      razorpayOrderId: razorpayOrder.id
+    });
+    
+    await order.save();
+    
+    // Create payment link
+    const paymentLink = `https://checkout.razorpay.com/v1/pay/${razorpayOrder.id}?key=${process.env.RAZORPAY_KEY_ID}`;
+    
+    // Send payment email
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      await sendPaymentEmail(
+        req.user.email,
+        req.user.name,
+        orderId,
+        paymentLink,
+        {
+          total: (total * 1.18).toFixed(2),
+          items: items
+        }
+      );
+    }
+    
     res.json({
       key_id: process.env.RAZORPAY_KEY_ID,
       amount: amountInPaise,
       currency: 'INR',
       order_id: razorpayOrder.id,
-      receipt: razorpayOrder.receipt
+      receipt: razorpayOrder.receipt,
+      payment_link: paymentLink,
+      order_id_db: orderId
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
@@ -230,6 +331,54 @@ router.get('/admin/all', auth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching all orders:', error);
     res.status(500).json({ message: 'Failed to fetch orders' });
+  }
+});
+
+// Check payment status
+router.get('/payment-status/:orderId', auth, async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderId: req.params.orderId });
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    // Check if user is authorized to view this order
+    if (order.userId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to view this order' });
+    }
+    
+    // If order has Razorpay order ID, check payment status
+    if (order.razorpayOrderId && razorpay) {
+      try {
+        const razorpayOrder = await razorpay.orders.fetch(order.razorpayOrderId);
+        const payments = await razorpay.orders.fetchPayments(order.razorpayOrderId);
+        
+        if (payments.items && payments.items.length > 0) {
+          const payment = payments.items[0];
+          if (payment.status === 'captured') {
+            order.paymentStatus = 'completed';
+            order.status = 'processing';
+            await order.save();
+          }
+        }
+      } catch (error) {
+        console.error('Error checking Razorpay payment status:', error);
+      }
+    }
+    
+    res.json({
+      orderId: order.orderId,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      total: order.total,
+      items: order.items,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt
+    });
+  } catch (error) {
+    console.error('Error checking payment status:', error);
+    res.status(500).json({ message: 'Failed to check payment status' });
   }
 });
 

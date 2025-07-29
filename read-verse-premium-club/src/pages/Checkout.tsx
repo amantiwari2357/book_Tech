@@ -148,22 +148,6 @@ const Checkout: React.FC = () => {
 
     setPaymentLoading(true);
     try {
-      // Load Razorpay script if not already loaded
-      if (!window.Razorpay && window.loadRazorpayScript) {
-        await window.loadRazorpayScript();
-      }
-
-      // Check if Razorpay is loaded
-      if (!window.Razorpay) {
-        toast({
-          title: "Payment Error",
-          description: "Payment gateway is not available. Please try again later.",
-          variant: "destructive",
-        });
-        setPaymentLoading(false);
-        return;
-      }
-
       // Create order on backend
       const orderData = {
         items: cartItems.map(item => ({
@@ -185,35 +169,24 @@ const Checkout: React.FC = () => {
       if (response.ok) {
         const paymentData = await response.json();
         
-        // Initialize Razorpay
-        const options = {
-          key: paymentData.key_id, // Your Razorpay Key ID
-          amount: paymentData.amount,
-          currency: paymentData.currency,
-          name: 'BookTech',
-          description: 'Book Purchase',
-          order_id: paymentData.order_id,
-          handler: function (response: any) {
-            // Payment successful
-            handlePaymentSuccess(response, paymentData.order_id);
-          },
-          prefill: {
-            name: address.fullName,
-            email: address.email,
-            contact: address.phone
-          },
-          theme: {
-            color: '#3B82F6'
-          },
-          modal: {
-            ondismiss: function() {
-              setPaymentLoading(false);
-            }
-          }
-        };
+        // Show success message with payment link
+        toast({
+          title: "Payment Link Sent!",
+          description: "Check your email for the payment link. You can also pay directly here.",
+        });
 
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
+        // Open payment link in new tab
+        if (paymentData.payment_link) {
+          window.open(paymentData.payment_link, '_blank');
+        }
+
+        // Navigate to order status page
+        navigate('/orders', { 
+          state: { 
+            newOrderId: paymentData.order_id_db,
+            showPaymentStatus: true 
+          } 
+        });
       } else {
         const errorData = await response.json();
         

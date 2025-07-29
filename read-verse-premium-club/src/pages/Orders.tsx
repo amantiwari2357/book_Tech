@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,8 @@ import {
   ClockIcon, 
   XCircleIcon,
   TruckIcon,
-  EyeIcon
+  EyeIcon,
+  RefreshIcon
 } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@/store';
 import { authFetch } from '@/lib/api';
@@ -52,10 +53,12 @@ interface Order {
 
 const Orders: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [checkingPayment, setCheckingPayment] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -63,11 +66,22 @@ const Orders: React.FC = () => {
       return;
     }
     fetchOrders();
-  }, [user, navigate]);
+    
+    // Check if we have a new order from checkout
+    if (location.state?.newOrderId) {
+      const newOrderId = location.state.newOrderId;
+      const showPaymentStatus = location.state.showPaymentStatus;
+      
+      if (showPaymentStatus) {
+        // Check payment status for new order
+        checkPaymentStatus(newOrderId);
+      }
+    }
+  }, [user, navigate, location.state]);
 
   const fetchOrders = async () => {
     try {
-      const response = await authFetch('/orders');
+      const response = await authFetch('/orders'); // Fetches user's orders
       if (response.ok) {
         const data = await response.json();
         setOrders(data);
@@ -82,6 +96,48 @@ const Orders: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkPaymentStatus = async (orderId: string) => {
+    setCheckingPayment(orderId);
+    try {
+      const response = await authFetch(`/orders/payment-status/${orderId}`);
+      if (response.ok) {
+        const paymentData = await response.json();
+        
+        // Update the order in the list
+        setOrders(prevOrders => {
+          const updatedOrders = prevOrders.map(order => 
+            order.orderId === orderId 
+              ? { ...order, ...paymentData }
+              : order
+          );
+          return updatedOrders;
+        });
+        
+        if (paymentData.paymentStatus === 'completed') {
+          toast({
+            title: "Payment Completed!",
+            description: `Order #${orderId} payment has been received.`,
+          });
+        } else {
+          toast({
+            title: "Payment Pending",
+            description: `Order #${orderId} payment is still pending.`,
+          });
+        }
+      } else {
+        throw new Error('Failed to check payment status');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to check payment status. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckingPayment(null);
     }
   };
 
@@ -176,40 +232,52 @@ const Orders: React.FC = () => {
                       Order #{order.orderId}
                     </CardTitle>
                     <p className="text-sm text-gray-600 mt-1">
-                      Placed on {formatDate(order.createdAt)}
+                      {formatDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={getStatusColor(order.status)}>
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedOrder(order)}
+                    <Badge 
+                      variant={order.paymentStatus === 'completed' ? 'default' : 'secondary'}
+                      className={order.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
                     >
-                      <EyeIcon className="h-4 w-4 mr-1" />
-                      View Details
-                    </Button>
+                      {order.paymentStatus === 'completed' ? 'Paid' : 'Pending'}
+                    </Badge>
+                    {order.paymentStatus === 'pending' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => checkPaymentStatus(order.orderId)}
+                        disabled={checkingPayment === order.orderId}
+                      >
+                        {checkingPayment === order.orderId ? (
+                          <RefreshIcon className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshIcon className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {order.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{item.title}</p>
-                        <p className="text-sm text-gray-600">by {item.author}</p>
-                      </div>
-                      <p className="font-bold">${item.price}</p>
-                    </div>
-                  ))}
-                  <Separator />
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-bold text-lg">${order.total}</span>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">Total: ₹{order.total}</p>
+                    <p className="text-sm text-gray-600">
+                      {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                    </p>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <EyeIcon className="h-4 w-4 mr-2" />
+                    View Details
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -222,79 +290,96 @@ const Orders: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold">Order #{selectedOrder.orderId}</h2>
-                  <p className="text-gray-600">Placed on {formatDate(selectedOrder.createdAt)}</p>
-                </div>
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Order Details</h2>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedOrder(null)}
+                  className="text-gray-500 hover:text-gray-700"
                 >
                   <XCircleIcon className="h-6 w-6" />
                 </Button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Order Items */}
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Order ID</p>
+                    <p className="font-semibold">{selectedOrder.orderId}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Date</p>
+                    <p className="font-semibold">{formatDate(selectedOrder.createdAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Status</p>
+                    <Badge className={getStatusColor(selectedOrder.status)}>
+                      {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Payment Status</p>
+                    <Badge 
+                      variant={selectedOrder.paymentStatus === 'completed' ? 'default' : 'secondary'}
+                      className={selectedOrder.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+                    >
+                      {selectedOrder.paymentStatus === 'completed' ? 'Paid' : 'Pending'}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <Separator />
+                
                 <div>
-                  <h3 className="font-semibold mb-3">Order Items</h3>
-                  <div className="space-y-3">
+                  <h3 className="font-semibold mb-2">Order Items</h3>
+                  <div className="space-y-2">
                     {selectedOrder.items.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div key={index} className="flex justify-between items-center">
                         <div>
                           <p className="font-medium">{item.title}</p>
                           <p className="text-sm text-gray-600">by {item.author}</p>
                         </div>
-                        <p className="font-bold">${item.price}</p>
+                        <p className="font-bold">₹{item.price}</p>
                       </div>
                     ))}
                   </div>
-                  <Separator className="my-4" />
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-bold text-lg">${selectedOrder.total}</span>
-                  </div>
                 </div>
-
-                {/* Order Details */}
-                <div>
-                  <h3 className="font-semibold mb-3">Order Details</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-gray-600">Status</p>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(selectedOrder.status)}
-                        <Badge className={getStatusColor(selectedOrder.status)}>
-                          {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Payment Status</p>
-                      <Badge className={selectedOrder.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                        {selectedOrder.paymentStatus.charAt(0).toUpperCase() + selectedOrder.paymentStatus.slice(1)}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Payment Method</p>
-                      <p className="font-medium">{selectedOrder.paymentMethod.type}</p>
-                    </div>
-                  </div>
-
-                  <Separator className="my-4" />
-
-                  <h3 className="font-semibold mb-3">Shipping Address</h3>
-                  <div className="space-y-1 text-sm">
-                    <p className="font-medium">{selectedOrder.shippingAddress.fullName}</p>
-                    <p>{selectedOrder.shippingAddress.address}</p>
-                    <p>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zipCode}</p>
-                    <p>{selectedOrder.shippingAddress.country}</p>
-                    <p>{selectedOrder.shippingAddress.email}</p>
-                    <p>{selectedOrder.shippingAddress.phone}</p>
-                  </div>
+                
+                <Separator />
+                
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-bold text-lg">₹{selectedOrder.total}</span>
                 </div>
+                
+                {selectedOrder.paymentStatus === 'pending' && (
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      Payment is pending. Please complete your payment to proceed with the order.
+                    </p>
+                    <Button
+                      className="mt-2"
+                      onClick={() => {
+                        checkPaymentStatus(selectedOrder.orderId);
+                        setSelectedOrder(null);
+                      }}
+                      disabled={checkingPayment === selectedOrder.orderId}
+                    >
+                      {checkingPayment === selectedOrder.orderId ? (
+                        <>
+                          <RefreshIcon className="h-4 w-4 mr-2 animate-spin" />
+                          Checking...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshIcon className="h-4 w-4 mr-2" />
+                          Check Payment Status
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
