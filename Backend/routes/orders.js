@@ -428,24 +428,10 @@ router.post('/create-payment', auth, async (req, res) => {
       }
     }
     
-    console.log('💰 Creating Razorpay order...');
+    console.log('💰 Creating Razorpay payment link...');
     
     // Calculate amount in paise (Razorpay expects amount in smallest currency unit)
     const amountInPaise = Math.round(total * 1.18 * 100); // Including 18% tax
-    
-    // Create Razorpay order
-    const razorpayOrder = await razorpay.orders.create({
-      amount: amountInPaise,
-      currency: 'INR',
-      receipt: 'booktech_' + Date.now(),
-      notes: {
-        userId: req.user.id,
-        items: JSON.stringify(items),
-        shippingAddress: JSON.stringify(shippingAddress)
-      }
-    });
-    
-    console.log('✅ Razorpay order created:', razorpayOrder.id);
     
     // Create order in database with pending status
     const orderId = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
@@ -457,8 +443,7 @@ router.post('/create-payment', auth, async (req, res) => {
       shippingAddress: validatedShippingAddress,
       paymentMethod: paymentMethod,
       status: 'pending',
-      paymentStatus: 'pending',
-      razorpayOrderId: razorpayOrder.id
+      paymentStatus: 'pending'
     });
     
     console.log('💾 Saving order to database...');
@@ -466,39 +451,77 @@ router.post('/create-payment', auth, async (req, res) => {
     await order.save();
     console.log('✅ Order saved successfully');
     
-    // Create payment link
-    const paymentLink = `https://checkout.razorpay.com/v1/pay/${razorpayOrder.id}?key=${process.env.RAZORPAY_KEY_ID}`;
-    
-    // Send payment email
-    if (transporter) { // Use the transporter we created earlier
-      console.log('📧 Sending payment email...');
-              await sendPaymentEmail(
+    // Create payment link using Razorpay Payment Links API
+    try {
+      console.log('🔗 Creating payment link with Razorpay...');
+      console.log('💰 Amount in paise:', amountInPaise);
+      console.log('👤 Customer:', { name: req.user.name, email: req.user.email });
+      
+      const paymentLink = await razorpay.paymentLink.create({
+        amount: amountInPaise,
+        currency: 'INR',
+        description: `Payment for order: ${orderId}`,
+        customer: {
+          name: req.user.name,
+          email: req.user.email,
+          contact: validatedShippingAddress.phone || '',
+        },
+        notify: { sms: true, email: true },
+        callback_url: `${process.env.FRONTEND_URL || 'https://book-tech.vercel.app'}/payment-success`,
+        callback_method: 'get',
+      });
+
+      console.log('✅ Payment link created successfully:', paymentLink.short_url);
+
+      // Save paymentLinkId to order
+      order.razorpayOrderId = paymentLink.id;
+      await order.save();
+
+      // Send payment email
+      if (transporter) {
+        console.log('📧 Sending payment email...');
+        await sendPaymentEmail(
           req.user.email,
           req.user.name,
           orderId,
-          paymentLink,
+          paymentLink.short_url,
           {
             total: (total * 1.18).toFixed(2),
             items: validatedItems
           }
         );
-      console.log('✅ Payment email sent');
-    } else {
-      console.log('⚠️  No email transporter available');
+        console.log('✅ Payment email sent');
+      } else {
+        console.log('⚠️  No email transporter available');
+      }
+
+      const response = {
+        payment_link: paymentLink.short_url,
+        paymentLinkId: paymentLink.id,
+        order_id_db: orderId
+      };
+
+      console.log('📤 Sending response:', response);
+      res.json(response);
+    } catch (paymentError) {
+      console.error('❌ Payment link creation failed:', paymentError);
+      console.error('❌ Payment error details:', {
+        message: paymentError.message,
+        code: paymentError.code,
+        statusCode: paymentError.statusCode,
+        error: paymentError.error
+      });
+      
+      // If payment link creation fails, still save the order but mark it as failed
+      order.paymentStatus = 'failed';
+      await order.save();
+      
+      res.status(500).json({ 
+        message: 'Failed to create payment link',
+        error: paymentError.message,
+        details: paymentError.error || paymentError
+      });
     }
-    
-    const response = {
-      key_id: process.env.RAZORPAY_KEY_ID,
-      amount: amountInPaise,
-      currency: 'INR',
-      order_id: razorpayOrder.id,
-      receipt: razorpayOrder.receipt,
-      payment_link: paymentLink,
-      order_id_db: orderId
-    };
-    
-    console.log('📤 Sending response:', response);
-    res.json(response);
   } catch (error) {
     console.error('❌ Error creating payment order:', error);
     console.error('❌ Error stack:', error.stack);
@@ -579,6 +602,18 @@ router.get('/', auth, async (req, res) => {
 // Create new order from cart
 router.post('/', auth, async (req, res) => {
   try {
+    // Check if Razorpay is configured
+    if (!razorpay) {
+      console.warn('⚠️  Razorpay not configured, using demo mode');
+      return res.status(503).json({ 
+        message: 'Payment gateway is not configured. Please contact support.',
+        demo_mode: true
+      });
+    }
+
+    console.log('🛒 Creating payment order...');
+    console.log('📦 Request body:', req.body);
+    
     const { items, total, shippingAddress, paymentMethod } = req.body;
     
     // Validate required fields

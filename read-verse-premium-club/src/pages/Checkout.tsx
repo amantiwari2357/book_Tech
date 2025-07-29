@@ -398,7 +398,7 @@ const Checkout: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
       <Helmet>
         <title>Checkout - BookTech</title>
         <meta name="description" content="Complete your book purchase with secure checkout" />
@@ -408,22 +408,22 @@ const Checkout: React.FC = () => {
         <Button variant="ghost" onClick={() => navigate(-1)} className="mr-4">
           <ArrowLeftIcon className="h-4 w-4 mr-2" />
           Back
-        </Button>
+            </Button>
         <h1 className="text-2xl font-bold">Checkout</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Checkout Form */}
-        <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
           {/* Shipping Address */}
-          <Card>
-            <CardHeader>
+            <Card>
+              <CardHeader>
               <CardTitle className="flex items-center">
                 <MapPinIcon className="h-5 w-5 mr-2" />
                 Shipping Address
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </CardHeader>
+              <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="fullName">Full Name</Label>
@@ -433,7 +433,7 @@ const Checkout: React.FC = () => {
                     onChange={(e) => handleAddressChange('fullName', e.target.value)}
                     placeholder="Enter your full name"
                   />
-                </div>
+                            </div>
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -443,8 +443,8 @@ const Checkout: React.FC = () => {
                     onChange={(e) => handleAddressChange('email', e.target.value)}
                     placeholder="Enter your email"
                   />
-                </div>
-                <div>
+                        </div>
+                        <div>
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
@@ -452,7 +452,7 @@ const Checkout: React.FC = () => {
                     onChange={(e) => handleAddressChange('phone', e.target.value)}
                     placeholder="Enter your phone number"
                   />
-                </div>
+                          </div>
                 <div>
                   <Label htmlFor="country">Country</Label>
                   <Input
@@ -461,8 +461,8 @@ const Checkout: React.FC = () => {
                     onChange={(e) => handleAddressChange('country', e.target.value)}
                     placeholder="Enter your country"
                   />
-                </div>
-              </div>
+                        </div>
+                      </div>
               <div>
                 <Label htmlFor="address">Address</Label>
                 <Input
@@ -481,7 +481,7 @@ const Checkout: React.FC = () => {
                     onChange={(e) => handleAddressChange('city', e.target.value)}
                     placeholder="Enter your city"
                   />
-                </div>
+                        </div>
                 <div>
                   <Label htmlFor="state">State</Label>
                   <Input
@@ -490,7 +490,7 @@ const Checkout: React.FC = () => {
                     onChange={(e) => handleAddressChange('state', e.target.value)}
                     placeholder="Enter your state"
                   />
-                </div>
+                      </div>
                 <div>
                   <Label htmlFor="zipCode">ZIP Code</Label>
                   <Input
@@ -499,19 +499,19 @@ const Checkout: React.FC = () => {
                     onChange={(e) => handleAddressChange('zipCode', e.target.value)}
                     placeholder="Enter ZIP code"
                   />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    </div>
+                  </div>
+              </CardContent>
+            </Card>
 
-          {/* Payment Method */}
-          <Card>
-            <CardHeader>
+            {/* Payment Method */}
+            <Card>
+              <CardHeader>
               <CardTitle className="flex items-center">
                 <CreditCardIcon className="h-5 w-5 mr-2" />
                 Payment Method
               </CardTitle>
-            </CardHeader>
+              </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Select Payment Method</Label>
@@ -609,7 +609,7 @@ const Checkout: React.FC = () => {
                     onChange={(e) => handlePaymentChange('upiId', e.target.value)}
                     placeholder="username@upi"
                   />
-                </div>
+                    </div>
               )}
 
               {paymentMethod.type === 'netbanking' && (
@@ -623,17 +623,17 @@ const Checkout: React.FC = () => {
                   />
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Order Summary */}
+          {/* Order Summary */}
         <div className="lg:col-span-1">
           <Card>
-            <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              <CardHeader>
+                <CardTitle>Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
               <div className="space-y-2">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex justify-between items-center">
@@ -644,11 +644,11 @@ const Checkout: React.FC = () => {
                     <p className="font-bold">${item.price}</p>
                   </div>
                 ))}
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-2">
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span>${total}</span>
@@ -660,15 +660,15 @@ const Checkout: React.FC = () => {
                 <div className="flex justify-between">
                   <span>Shipping</span>
                   <span>Free</span>
-                </div>
+                          </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
                   <span>${(total * 1.18).toFixed(2)}</span>
-                </div>
-              </div>
+                      </div>
+                    </div>
 
-              <Button 
+                    <Button
                 onClick={paymentMethod.type === 'upi' ? initializeRazorpayPayment : handlePlaceOrder}
                 disabled={isProcessing || paymentLoading}
                 className="w-full"
@@ -679,9 +679,9 @@ const Checkout: React.FC = () => {
                     ? `Pay ₹${(total * 1.18).toFixed(2)} via Razorpay` 
                     : `Place Order - $${(total * 1.18).toFixed(2)}`
                 }
-              </Button>
-            </CardContent>
-          </Card>
+                </Button>
+              </CardContent>
+            </Card>
         </div>
       </div>
     </div>
