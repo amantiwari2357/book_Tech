@@ -13,7 +13,7 @@ import {
   XCircleIcon,
   TruckIcon,
   EyeIcon,
-  RefreshIcon
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@/store';
 import { authFetch } from '@/lib/api';
@@ -253,9 +253,9 @@ const Orders: React.FC = () => {
                         disabled={checkingPayment === order.orderId}
                       >
                         {checkingPayment === order.orderId ? (
-                          <RefreshIcon className="h-4 w-4 animate-spin" />
+                          <ArrowPathIcon className="h-4 w-4 animate-spin" />
                         ) : (
-                          <RefreshIcon className="h-4 w-4" />
+                          <ArrowPathIcon className="h-4 w-4" />
                         )}
                       </Button>
                     )}
@@ -368,12 +368,12 @@ const Orders: React.FC = () => {
                     >
                       {checkingPayment === selectedOrder.orderId ? (
                         <>
-                          <RefreshIcon className="h-4 w-4 mr-2 animate-spin" />
+                          <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
                           Checking...
                         </>
                       ) : (
                         <>
-                          <RefreshIcon className="h-4 w-4 mr-2" />
+                          <ArrowPathIcon className="h-4 w-4 mr-2" />
                           Check Payment Status
                         </>
                       )}
