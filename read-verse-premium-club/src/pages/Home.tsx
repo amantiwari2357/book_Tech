@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import BookGrid from '@/components/Books/BookGrid';
 import PricingSection from '@/components/Subscription/PricingSection';
+import SocialShare from '@/components/ui/social-share';
 import { ArrowRightIcon, BookOpenIcon, StarIcon, UsersIcon, XMarkIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { setFeaturedBooks, fetchBooks } from '@/store/slices/booksSlice';
@@ -349,6 +350,19 @@ const Home: React.FC = () => {
                 <Badge className="ml-2 bg-yellow-500 text-white">Limited</Badge>
               )}
             </Button>
+          </div>
+          
+          {/* Social Share Section */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-primary-foreground/80 mb-4">
+              Share BookTech with your friends and family
+            </p>
+            <SocialShare 
+              title="BookTech - Your Premium Digital Library"
+              description="Discover thousands of premium books and enjoy seamless reading experiences."
+              hashtags={['BookTech', 'DigitalLibrary', 'Reading', 'Books']}
+              className="justify-center"
+            />
           </div>
         </div>
       </section>
