@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,33 @@ interface BookCardProps {
 }
 
 const BookCard: React.FC<BookCardProps> = ({ book, onAddToCart, onRead }) => {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      {
+        rootMargin: '50px',
+        threshold: 0.1,
+      }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onAddToCart) {
@@ -54,9 +81,9 @@ const BookCard: React.FC<BookCardProps> = ({ book, onAddToCart, onRead }) => {
   const optimizedImageUrl = book.coverImage ? getOptimizedImageUrl(book.coverImage) : null;
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200">
-      <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-        {optimizedImageUrl ? (
+    <Card ref={cardRef} className="group hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-200">
+      <div className="aspect-ratio-container bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+        {isInView && optimizedImageUrl ? (
           <picture>
             {/* WebP format for modern browsers */}
             <source srcSet={optimizedImageUrl} type="image/webp" />
@@ -64,12 +91,16 @@ const BookCard: React.FC<BookCardProps> = ({ book, onAddToCart, onRead }) => {
             <source srcSet={optimizedImageUrl.replace('.webp', '.avif')} type="image/avif" />
             {/* Fallback to original format */}
             <img
+              ref={imageRef}
               src={book.coverImage}
               alt={book.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                isImageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
               loading="lazy"
               decoding="async"
               fetchPriority="low"
+              onLoad={() => setIsImageLoaded(true)}
               onError={(e) => {
                 console.log('🔍 Image failed to load for:', book.title);
                 (e.target as HTMLImageElement).style.display = 'none';
