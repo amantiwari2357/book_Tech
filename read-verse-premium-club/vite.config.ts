@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 
 // https://vitejs.dev/config/
@@ -20,20 +20,12 @@ export default defineConfig({
     },
   },
   build: {
-    // Optimize build for better performance
     target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          ui: ['@/components/ui'],
           icons: ['lucide-react', '@heroicons/react'],
         },
       },
@@ -44,3 +36,5 @@ export default defineConfig({
     include: ['react', 'react-dom', 'lucide-react'],
   },
 })
+
+
