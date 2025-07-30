@@ -1,12 +1,13 @@
 import React, { Suspense } from 'react';
 import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
-import { store } from "@/store";
+import { store, persistor } from "@/store";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
 import CartSidebar from "@/components/Cart/CartSidebar";
@@ -35,36 +36,38 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <TooltipProvider>
-            <Router>
-              <div className="min-h-screen flex flex-col">
-                <Header />
-                <main className="flex-1">
-                  <Suspense fallback={<PageLoader />}>
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/signup" element={<SignUp />} />
-                      <Route path="/browse" element={<Browse />} />
-                      <Route path="/book/:id" element={<BookDetails />} />
-                      <Route path="/reader/:id" element={<Reader />} />
-                      <Route path="/checkout" element={<Checkout />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                </main>
-                <Footer />
-                <CartSidebar />
-              </div>
-              <Toaster />
-              <Sonner />
-            </Router>
-          </TooltipProvider>
-        </HelmetProvider>
-      </QueryClientProvider>
+      <PersistGate loading={null} persistor={persistor}>
+        <QueryClientProvider client={queryClient}>
+          <HelmetProvider>
+            <TooltipProvider>
+              <Router>
+                <div className="min-h-screen flex flex-col">
+                  <Header />
+                  <main className="flex-1">
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<SignUp />} />
+                        <Route path="/browse" element={<Browse />} />
+                        <Route path="/book/:id" element={<BookDetails />} />
+                        <Route path="/reader/:id" element={<Reader />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
+                  </main>
+                  <Footer />
+                  <CartSidebar />
+                </div>
+                <Toaster />
+                <Sonner />
+              </Router>
+            </TooltipProvider>
+          </HelmetProvider>
+        </QueryClientProvider>
+      </PersistGate>
     </Provider>
   );
 }

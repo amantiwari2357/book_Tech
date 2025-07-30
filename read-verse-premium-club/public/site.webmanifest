@@ -1,12 +1,17 @@
 {
-  "name": "BookTech - Premium Digital Library Platform",
+  "name": "BookTech - Your Digital Library",
   "short_name": "BookTech",
-  "description": "Discover thousands of premium books, enjoy seamless reading experiences, and unlock knowledge with our advanced digital platform.",
+  "description": "Discover, read, and manage your digital library with BookTech's premium reading platform",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#3b82f6",
   "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    },
     {
       "src": "/favicon-16x16.png",
       "sizes": "16x16",
@@ -15,11 +20,6 @@
     {
       "src": "/favicon-32x32.png",
       "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
       "type": "image/png"
     }
   ]
