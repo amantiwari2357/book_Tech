@@ -60,12 +60,16 @@ const BookCard: React.FC<BookCardProps> = ({ book, onAddToCart, onRead }) => {
           <picture>
             {/* WebP format for modern browsers */}
             <source srcSet={optimizedImageUrl} type="image/webp" />
+            {/* AVIF format for even better compression */}
+            <source srcSet={optimizedImageUrl.replace('.webp', '.avif')} type="image/avif" />
             {/* Fallback to original format */}
             <img
               src={book.coverImage}
               alt={book.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
+              decoding="async"
+              fetchPriority="low"
               onError={(e) => {
                 console.log('🔍 Image failed to load for:', book.title);
                 (e.target as HTMLImageElement).style.display = 'none';

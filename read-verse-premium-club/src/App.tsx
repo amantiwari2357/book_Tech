@@ -1,44 +1,35 @@
+import React, { Suspense } from 'react';
 import { Provider } from 'react-redux';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { store } from "@/store";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
 import CartSidebar from "@/components/Cart/CartSidebar";
-import Home from "./pages/Home";
-import Browse from "./pages/Browse";
-import BookDetails from "./pages/BookDetails";
-import Subscriptions from "./pages/Subscriptions";
-import Reader from "./pages/Reader";
-import Upload from "./pages/Upload";
-import NotFound from "./pages/NotFound";
-import Login from './pages/Auth/Login';
-import SignUp from './pages/Auth/SignUp';
-import AuthorDashboard from './pages/AuthorDashboard';
-import CustomerDashboard from './pages/CustomerDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import ForgotPassword from './pages/Auth/ForgotPassword';
-import ResetPassword from './pages/Auth/ResetPassword';
-import Notifications from './pages/Notifications';
-import EditProfile from './pages/EditProfile';
-import PaymentSuccess from './pages/PaymentSuccess';
-import { useEffect } from 'react';
-import { useAppDispatch } from '@/store';
-import { setUser } from '@/store/slices/authSlice';
-import { getToken, authFetch } from '@/lib/api';
-import AdminPlanManagement from '@/pages/AdminPlanManagement';
-import AdminBookApprovals from './pages/AdminBookApprovals';
-import AdminBookManagement from './pages/AdminBookManagement';
-import BookDesign from './pages/BookDesign';
-import BookDesignReader from './pages/BookDesignReader';
-import AdminBookDesignApprovals from './pages/AdminBookDesignApprovals';
-import AuthRedirect from '@/components/AuthRedirect';
-import Orders from './pages/Orders';
-import Checkout from './pages/Checkout';
+import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from '@/components/ui/loading-spinner';
+
+// Lazy load components for better performance
+const Home = React.lazy(() => import('@/pages/Home'));
+const Login = React.lazy(() => import('@/pages/Auth/Login'));
+const SignUp = React.lazy(() => import('@/pages/Auth/SignUp'));
+const Browse = React.lazy(() => import('@/pages/Browse'));
+const BookDetails = React.lazy(() => import('@/pages/BookDetails'));
+const Reader = React.lazy(() => import('@/pages/Reader'));
+const Checkout = React.lazy(() => import('@/pages/Checkout'));
+const Profile = React.lazy(() => import('@/pages/Profile'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
+
+// Loading component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <LoadingSpinner size="lg" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -115,16 +106,41 @@ const AppContent = () => {
   );
 };
 
-const App = () => (
-  <Provider store={store}>
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </HelmetProvider>
-    </QueryClientProvider>
-  </Provider>
-);
+function App() {
+  return (
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <TooltipProvider>
+            <Router>
+              <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-1">
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/signup" element={<SignUp />} />
+                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/book/:id" element={<BookDetails />} />
+                      <Route path="/reader/:id" element={<Reader />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </main>
+                <Footer />
+                <CartSidebar />
+              </div>
+              <Toaster />
+              <Sonner />
+            </Router>
+          </TooltipProvider>
+        </HelmetProvider>
+      </QueryClientProvider>
+    </Provider>
+  );
+}
 
 export default App;
