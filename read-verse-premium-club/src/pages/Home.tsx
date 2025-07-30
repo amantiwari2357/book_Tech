@@ -310,7 +310,8 @@ const Home: React.FC = () => {
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
             Discover thousands of premium books, enjoy seamless reading experiences, 
-            and unlock knowledge with our advanced digital platform.
+            and unlock knowledge with our advanced digital platform. From classic literature 
+            to contemporary bestsellers, our extensive collection caters to every reader's taste.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
@@ -352,44 +353,58 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Stats Section - Only show if there are books */}
-      {books.length > 0 && (
-        <section ref={statsRef} className={`py-12 sm:py-16 bg-muted/30 ${statsVisible ? 'scroll-animate animate-in' : 'scroll-animate'}`}>
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-center">
-              <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-                <BookOpenIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
-                <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.filter(b => b.isPremium).length}+</h3>
-                <p className="text-muted-foreground">Premium Books</p>
+      {/* Stats Section */}
+      <section ref={statsRef} className={`py-16 bg-background ${statsVisible ? 'fade-in-up animate-in' : 'fade-in-up'}`}>
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-12">
+            Why Choose BookTech?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpenIcon className="h-8 w-8 text-primary" />
               </div>
-              <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-                <UsersIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
-                <h3 className="text-2xl sm:text-3xl font-bold text-primary">{books.length * 5}+</h3>
-                <p className="text-muted-foreground">Happy Readers</p>
+              <h3 className="text-xl font-semibold mb-2">10,000+ Books</h3>
+              <p className="text-muted-foreground">
+                Access a vast collection of books across all genres, from fiction to non-fiction, 
+                academic to entertainment. Our library is constantly growing with new releases and classics.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UsersIcon className="h-8 w-8 text-primary" />
               </div>
-              <div className={`space-y-2 mobile-card p-6 rounded-lg ${statsVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-                <StarIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto" />
-                <h3 className="text-2xl sm:text-3xl font-bold text-primary">
-                  {books.length > 0 ? (books.reduce((sum, book) => sum + (book.rating || 0), 0) / books.length).toFixed(1) : '4.8'}/5
-                </h3>
-                <p className="text-muted-foreground">Average Rating</p>
+              <h3 className="text-xl font-semibold mb-2">50,000+ Readers</h3>
+              <p className="text-muted-foreground">
+                Join our thriving community of readers who trust BookTech for their digital reading needs. 
+                Connect with fellow book lovers and discover new favorites.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <StarIcon className="h-8 w-8 text-primary" />
               </div>
+              <h3 className="text-xl font-semibold mb-2">Premium Experience</h3>
+              <p className="text-muted-foreground">
+                Enjoy an ad-free reading experience with advanced features like offline reading, 
+                custom bookmarks, and personalized recommendations.
+              </p>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Featured Books - Only show if there are featured books */}
       {featuredBooks.length > 0 && (
-        <section ref={featuredRef} className={`py-12 sm:py-16 ${featuredVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`}>
+        <section ref={featuredRef} className={`py-12 sm:py-16 bg-background ${featuredVisible ? 'slide-in-left animate-in' : 'slide-in-left'}`}>
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-2 mobile-text-gradient">Featured Books</h2>
-                <p className="text-muted-foreground">Discover our most popular and trending titles</p>
+                <p className="text-muted-foreground">Discover our most popular and trending titles, carefully curated for your reading pleasure</p>
               </div>
-              <Button variant="outline" className="mobile-button">
-                View All
+              <Button variant="outline" className="mobile-button" onClick={() => navigate('/browse')}>
+                View All Books
                 <ArrowRightIcon className="h-4 w-4 ml-2" />
               </Button>
             </div>
@@ -445,6 +460,7 @@ const Home: React.FC = () => {
                         <Button 
                           size="sm" 
                           className="flex items-center gap-1 h-6 px-2 text-xs"
+                          onClick={() => navigate(`/reader/${book.id}`)}
                         >
                           <BookOpenIcon className="h-3 w-3" />
                           Read
@@ -458,6 +474,58 @@ const Home: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Features Section */}
+      <section ref={featuresRef} className={`py-16 bg-muted/30 ${featuresVisible ? 'fade-in-up animate-in' : 'fade-in-up'}`}>
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-12">
+            Advanced Reading Features
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <BookOpenIcon className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Offline Reading</h3>
+              <p className="text-muted-foreground mb-4">
+                Download your favorite books and read them anywhere, even without an internet connection. 
+                Perfect for travel, commuting, or when you want to disconnect.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => navigate('/subscriptions')}>
+                Learn More
+              </Button>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <StarIcon className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Personalized Recommendations</h3>
+              <p className="text-muted-foreground mb-4">
+                Our AI-powered recommendation system learns your reading preferences and suggests 
+                books you'll love. Discover new authors and genres tailored to your taste.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => navigate('/browse')}>
+                Browse Books
+              </Button>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <UsersIcon className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Reading Communities</h3>
+              <p className="text-muted-foreground mb-4">
+                Join reading groups, participate in book discussions, and connect with fellow readers. 
+                Share your thoughts and discover books through community recommendations.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => navigate('/categories')}>
+                Explore Categories
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Recommended for You - Only show if there are recommended books */}
       {recommendedBooks.length > 0 && (
@@ -762,75 +830,107 @@ const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Features Section - Always show */}
-      <section ref={featuresRef} className={`py-12 sm:py-16 bg-muted/30 ${featuresVisible ? 'rotate-in animate-in' : 'rotate-in'}`}>
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 mobile-text-gradient">Why Choose BookTech?</h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Experience the future of digital reading with our innovative platform
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                <BookOpenIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold">Advanced Reader</h3>
-              <p className="text-muted-foreground">
-                Enjoy customizable reading experience with adjustable fonts, themes, and bookmarks
-              </p>
-            </div>
-            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <div className="bg-accent/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                <StarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold">Premium Content</h3>
-              <p className="text-muted-foreground">
-                Access exclusive books and latest releases from top authors worldwide
-              </p>
-            </div>
-            <div className={`text-center space-y-4 mobile-card p-6 rounded-lg ${featuresVisible ? 'scroll-animate-stagger animate-in' : 'scroll-animate-stagger'}`}>
-              <div className="bg-secondary/50 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
-                <UsersIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold">Community</h3>
-              <p className="text-muted-foreground">
-                Join thousands of readers, share reviews, and discover new favorites
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Pricing Section - Always show */}
       <PricingSection />
 
-      {/* CTA Section - Always show */}
-      <section ref={ctaRef} className={`py-12 sm:py-16 bg-gradient-hero text-primary-foreground ${ctaVisible ? 'fade-in-bounce animate-in' : 'fade-in-bounce'}`}>
+      {/* Call to Action Section */}
+      <section ref={ctaRef} className={`py-16 bg-gradient-hero text-primary-foreground ${ctaVisible ? 'fade-in-up animate-in' : 'fade-in-up'}`}>
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-6">Ready to Start Reading?</h2>
-          <p className="text-lg sm:text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Join thousands of readers and discover amazing books today.
+          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-6">
+            Ready to Start Your Reading Journey?
+          </h2>
+          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
+            Join thousands of readers who have already discovered the joy of digital reading. 
+            Start with our free collection or upgrade to premium for unlimited access to our entire library.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
               size="lg"
-              className="text-lg px-8 py-4 mobile-button"
-              onClick={handleStartReading}
+              className="text-lg px-8 py-4"
+              onClick={() => navigate('/browse')}
             >
-              Start Reading Now
+              Start Reading Free
               <ArrowRightIcon className="h-5 w-5 ml-2" />
             </Button>
             <Button
               variant="outline"
               size="lg"
-              className="text-lg px-8 py-4 mobile-button"
-              onClick={handleBrowseLibrary}
+              className="text-lg px-8 py-4 bg-white text-primary border-2 border-white hover:bg-white/90"
+              onClick={() => navigate('/subscriptions')}
             >
-              Browse Library
-              <ArrowRightIcon className="h-5 w-5 ml-2" />
+              View Premium Plans
+              <ArrowRightIcon className="h-4 w-4 ml-2" />
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Content Section */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div>
+              <h3 className="text-2xl font-serif font-bold mb-6">
+                Discover Your Next Favorite Book
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Our extensive library includes everything from timeless classics to contemporary bestsellers. 
+                Whether you're into fiction, non-fiction, science fiction, romance, or academic texts, 
+                we have something for every reader.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Browse by genre, author, or popularity</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Get personalized recommendations</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Read reviews from fellow readers</span>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                className="mt-6"
+                onClick={() => navigate('/categories')}
+              >
+                Explore Categories
+              </Button>
+            </div>
+            
+            <div>
+              <h3 className="text-2xl font-serif font-bold mb-6">
+                Advanced Reading Features
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Experience reading like never before with our advanced features designed to enhance 
+                your reading experience and help you discover new content.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-accent rounded-full"></div>
+                  <span>Customizable reading settings</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-accent rounded-full"></div>
+                  <span>Offline reading capability</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-accent rounded-full"></div>
+                  <span>Progress tracking and bookmarks</span>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                className="mt-6"
+                onClick={() => navigate('/subscriptions')}
+              >
+                Learn More
+              </Button>
+            </div>
           </div>
         </div>
       </section>
