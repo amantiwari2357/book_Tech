@@ -225,20 +225,20 @@ const CustomerDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header with Real-time Notification Bell */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Dashboard</h1>
-              <p className="text-gray-600 mt-2">Welcome back, {user.name}!</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">My Dashboard</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Welcome back, {user.name}!</p>
             </div>
             <div className="relative">
-              <Button variant="outline" size="sm" className="relative">
-                <BellIcon className="w-5 h-5" />
+              <Button variant="outline" size="sm" className="relative w-full sm:w-auto">
+                <BellIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 {unreadCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                  <Badge className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-xs">
                     {unreadCount}
                   </Badge>
                 )}
@@ -248,95 +248,95 @@ const CustomerDashboard: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
           <Card className="transform hover:scale-105 transition-transform duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Books Read</CardTitle>
-              <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Books Read</CardTitle>
+              <BookOpenIcon className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{readingStats?.booksRead || 0}</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{readingStats?.booksRead || 0}</div>
               <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
           </Card>
 
           <Card className="transform hover:scale-105 transition-transform duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
-              <ShoppingCartIcon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Active Orders</CardTitle>
+              <ShoppingCartIcon className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{orders.filter(o => o.orderStatus !== 'delivered' && o.orderStatus !== 'cancelled').length}</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{orders.filter(o => o.orderStatus !== 'delivered' && o.orderStatus !== 'cancelled').length}</div>
               <p className="text-xs text-muted-foreground">In progress</p>
             </CardContent>
           </Card>
 
           <Card className="transform hover:scale-105 transition-transform duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Reading Time</CardTitle>
-              <ClockIcon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Reading Time</CardTitle>
+              <ClockIcon className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{readingStats?.readingTime || 0}h</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{readingStats?.readingTime || 0}h</div>
               <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
           </Card>
 
           <Card className="transform hover:scale-105 transition-transform duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Favorites</CardTitle>
-              <HeartIcon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Favorites</CardTitle>
+              <HeartIcon className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{favorites.length}</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{favorites.length}</div>
               <p className="text-xs text-muted-foreground">Saved books</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="reading">Reading</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="favorites">Favorites</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 h-auto">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
+            <TabsTrigger value="orders" className="text-xs sm:text-sm py-2">Orders</TabsTrigger>
+            <TabsTrigger value="reading" className="text-xs sm:text-sm py-2">Reading</TabsTrigger>
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm py-2">Notifications</TabsTrigger>
+            <TabsTrigger value="favorites" className="text-xs sm:text-sm py-2">Favorites</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Currently Reading */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BookOpenIcon className="w-5 h-5 mr-2" />
+                  <CardTitle className="flex items-center text-sm sm:text-base">
+                    <BookOpenIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Currently Reading
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {currentlyReading.map((book) => (
-                      <div key={book._id} className="flex items-center space-x-4 p-3 border rounded-lg">
-                        <div className="w-12 h-16 bg-gray-200 rounded"></div>
-                        <div className="flex-1">
-                          <h3 className="font-medium">{book.title}</h3>
-                          <p className="text-sm text-gray-500">{book.author}</p>
-                          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div key={book._id} className="flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 border rounded-lg">
+                        <div className="w-10 h-12 sm:w-12 sm:h-16 bg-gray-200 rounded flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm sm:text-base truncate">{book.title}</h3>
+                          <p className="text-xs sm:text-sm text-gray-500 truncate">{book.author}</p>
+                          <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 mt-1 sm:mt-2">
                             <div 
-                              className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                              className="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all duration-500" 
                               style={{ width: `${book.progress || 0}%` }}
                             ></div>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{book.progress || 0}% completed</p>
                         </div>
-                        <Button size="sm">
-                          <EyeIcon className="w-4 h-4" />
+                        <Button size="sm" className="flex-shrink-0">
+                          <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                       </div>
                     ))}
                     {currentlyReading.length === 0 && (
-                      <p className="text-gray-500 text-center py-4">No books currently reading</p>
+                      <p className="text-gray-500 text-center py-4 text-sm sm:text-base">No books currently reading</p>
                     )}
                   </div>
                 </CardContent>
@@ -345,38 +345,38 @@ const CustomerDashboard: React.FC = () => {
               {/* Recent Notifications */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BellIcon className="w-5 h-5 mr-2" />
+                  <CardTitle className="flex items-center text-sm sm:text-base">
+                    <BellIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Recent Notifications
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {notifications.slice(0, 3).map((notification) => {
                       const Icon = getNotificationIcon(notification.type);
                       return (
                         <div 
                           key={notification._id} 
-                          className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                          className={`flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg cursor-pointer transition-colors ${
                             notification.isRead ? 'bg-gray-50' : 'bg-blue-50'
                           }`}
                           onClick={() => markNotificationAsRead(notification._id)}
                         >
-                          <Icon className="w-4 h-4 text-blue-600" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{notification.message}</p>
+                          <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs sm:text-sm font-medium truncate">{notification.message}</p>
                             <p className="text-xs text-gray-500">
                               {new Date(notification.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                           {!notification.isRead && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
                           )}
                         </div>
                       );
                     })}
                     {notifications.length === 0 && (
-                      <p className="text-gray-500 text-center py-4">No notifications</p>
+                      <p className="text-gray-500 text-center py-4 text-sm sm:text-base">No notifications</p>
                     )}
                   </div>
                 </CardContent>
@@ -387,15 +387,15 @@ const CustomerDashboard: React.FC = () => {
             {readingStats && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Monthly Reading Progress</CardTitle>
+                  <CardTitle className="text-sm sm:text-base">Monthly Reading Progress</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {readingStats.monthlyProgress?.map((month, index) => (
-                      <div key={index} className="flex items-center space-x-4">
-                        <div className="w-20 text-sm font-medium">{month.month}</div>
+                      <div key={index} className="flex items-center space-x-3 sm:space-x-4">
+                        <div className="w-16 sm:w-20 text-xs sm:text-sm font-medium">{month.month}</div>
                         <div className="flex-1">
-                          <div className="flex justify-between text-sm mb-1">
+                          <div className="flex justify-between text-xs sm:text-sm mb-1">
                             <span>{month.booksRead} books</span>
                             <span>{month.pagesRead} pages</span>
                           </div>
@@ -409,25 +409,25 @@ const CustomerDashboard: React.FC = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="orders" className="space-y-6">
+          <TabsContent value="orders" className="space-y-4 sm:space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <ShoppingCartIcon className="w-5 h-5 mr-2" />
+                <CardTitle className="flex items-center text-sm sm:text-base">
+                  <ShoppingCartIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Order History
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {orders.map((order) => (
-                    <div key={order._id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-16 h-20 bg-gray-200 rounded"></div>
-                          <div>
-                            <h3 className="font-medium">{order.book.title}</h3>
-                            <p className="text-sm text-gray-500">by {order.book.author}</p>
-                            <p className="text-sm text-gray-500">₹{order.amount}</p>
+                    <div key={order._id} className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 sm:space-y-4 lg:space-y-0">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                          <div className="w-12 h-16 sm:w-16 sm:h-20 bg-gray-200 rounded flex-shrink-0"></div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-medium text-sm sm:text-base truncate">{order.book.title}</h3>
+                            <p className="text-xs sm:text-sm text-gray-500 truncate">by {order.book.author}</p>
+                            <p className="text-xs sm:text-sm text-gray-500">₹{order.amount}</p>
                             <p className="text-xs text-gray-400">
                               Ordered: {new Date(order.createdAt).toLocaleDateString()}
                             </p>
@@ -435,7 +435,7 @@ const CustomerDashboard: React.FC = () => {
                         </div>
                         
                         <div className="flex flex-col space-y-2">
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 flex-wrap">
                             {getOrderStatusBadge(order.orderStatus)}
                             {getOrderStatusBadge(order.paymentStatus)}
                           </div>
@@ -443,14 +443,14 @@ const CustomerDashboard: React.FC = () => {
                           {/* Animated Progress Bar */}
                           <div className="w-full">
                             <div className="flex justify-between text-xs text-gray-500 mb-1">
-                              <span>Order Placed</span>
-                              <span>Confirmed</span>
-                              <span>Shipped</span>
-                              <span>Delivered</span>
+                              <span className="text-xs">Order Placed</span>
+                              <span className="text-xs">Confirmed</span>
+                              <span className="text-xs">Shipped</span>
+                              <span className="text-xs">Delivered</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
                               <div 
-                                className="bg-blue-600 h-2 rounded-full transition-all duration-1000 ease-out" 
+                                className="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all duration-1000 ease-out" 
                                 style={{ width: `${getOrderProgress(order.orderStatus)}%` }}
                               ></div>
                             </div>
@@ -471,20 +471,20 @@ const CustomerDashboard: React.FC = () => {
                       </div>
                       
                       {/* Order Actions */}
-                      <div className="flex space-x-2 mt-4">
-                        <Button variant="outline" size="sm">
-                          <EyeIcon className="w-4 h-4 mr-1" />
+                      <div className="flex flex-wrap gap-2 mt-3 sm:mt-4">
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           View Details
                         </Button>
                         {order.orderStatus === 'shipped' && (
-                          <Button variant="outline" size="sm">
-                            <TruckIcon className="w-4 h-4 mr-1" />
+                          <Button variant="outline" size="sm" className="text-xs">
+                            <TruckIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             Track Package
                           </Button>
                         )}
                         {order.orderStatus === 'delivered' && (
-                          <Button variant="outline" size="sm">
-                            <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
+                          <Button variant="outline" size="sm" className="text-xs">
+                            <ArrowDownTrayIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             Download
                           </Button>
                         )}
@@ -492,37 +492,37 @@ const CustomerDashboard: React.FC = () => {
                     </div>
                   ))}
                   {orders.length === 0 && (
-                    <p className="text-gray-500 text-center py-8">No orders yet</p>
+                    <p className="text-gray-500 text-center py-8 text-sm sm:text-base">No orders yet</p>
                   )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="reading" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <TabsContent value="reading" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Reading Stats */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Reading Statistics</CardTitle>
+                  <CardTitle className="text-sm sm:text-base">Reading Statistics</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div className="flex justify-between items-center">
-                      <span>Books Read</span>
-                      <span className="font-bold">{readingStats?.booksRead || 0}</span>
+                      <span className="text-sm sm:text-base">Books Read</span>
+                      <span className="font-bold text-sm sm:text-base">{readingStats?.booksRead || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>Pages Read</span>
-                      <span className="font-bold">{readingStats?.pagesRead || 0}</span>
+                      <span className="text-sm sm:text-base">Pages Read</span>
+                      <span className="font-bold text-sm sm:text-base">{readingStats?.pagesRead || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>Reading Time</span>
-                      <span className="font-bold">{readingStats?.readingTime || 0}h</span>
+                      <span className="text-sm sm:text-base">Reading Time</span>
+                      <span className="font-bold text-sm sm:text-base">{readingStats?.readingTime || 0}h</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>Current Streak</span>
-                      <span className="font-bold">{readingStats?.currentStreak || 0} days</span>
+                      <span className="text-sm sm:text-base">Current Streak</span>
+                      <span className="font-bold text-sm sm:text-base">{readingStats?.currentStreak || 0} days</span>
                     </div>
                   </div>
                 </CardContent>
@@ -531,16 +531,16 @@ const CustomerDashboard: React.FC = () => {
               {/* Favorite Genres */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Favorite Genres</CardTitle>
+                  <CardTitle className="text-sm sm:text-base">Favorite Genres</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {readingStats?.favoriteGenres?.map((genre, index) => (
                       <div key={index} className="flex justify-between items-center">
-                        <span>{genre}</span>
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <span className="text-sm sm:text-base">{genre}</span>
+                        <div className="w-20 sm:w-24 bg-gray-200 rounded-full h-1.5 sm:h-2">
                           <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                            className="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all duration-500" 
                             style={{ width: `${Math.random() * 100}%` }}
                           ></div>
                         </div>
@@ -552,82 +552,82 @@ const CustomerDashboard: React.FC = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-6">
+          <TabsContent value="notifications" className="space-y-4 sm:space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between text-sm sm:text-base">
                   <span>All Notifications</span>
                   {unreadCount > 0 && (
-                    <Badge variant="secondary">{unreadCount} unread</Badge>
+                    <Badge variant="secondary" className="text-xs">{unreadCount} unread</Badge>
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {notifications.map((notification) => {
                     const Icon = getNotificationIcon(notification.type);
                     return (
                       <div 
                         key={notification._id} 
-                        className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                        className={`flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 rounded-lg cursor-pointer transition-all hover:shadow-md ${
                           notification.isRead ? 'bg-gray-50' : 'bg-blue-50 border-l-4 border-blue-500'
                         }`}
                         onClick={() => markNotificationAsRead(notification._id)}
                       >
-                        <Icon className="w-5 h-5 text-blue-600" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{notification.message}</p>
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs sm:text-sm font-medium">{notification.message}</p>
                           <p className="text-xs text-gray-500">
                             {new Date(notification.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                         {!notification.isRead && (
-                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full flex-shrink-0"></div>
                         )}
                       </div>
                     );
                   })}
                   {notifications.length === 0 && (
-                    <p className="text-gray-500 text-center py-8">No notifications</p>
+                    <p className="text-gray-500 text-center py-8 text-sm sm:text-base">No notifications</p>
                   )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="favorites" className="space-y-6">
+          <TabsContent value="favorites" className="space-y-4 sm:space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <HeartIcon className="w-5 h-5 mr-2" />
+                <CardTitle className="flex items-center text-sm sm:text-base">
+                  <HeartIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   My Favorites
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {favorites.map((book) => (
-                    <div key={book._id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="w-full h-32 bg-gray-200 rounded mb-3"></div>
-                      <h3 className="font-medium">{book.title}</h3>
-                      <p className="text-sm text-gray-500">{book.author}</p>
+                    <div key={book._id} className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+                      <div className="w-full h-24 sm:h-32 bg-gray-200 rounded mb-2 sm:mb-3"></div>
+                      <h3 className="font-medium text-sm sm:text-base truncate">{book.title}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">{book.author}</p>
                       <div className="flex items-center space-x-2 mt-2">
-                        <StarIcon className="w-4 h-4 text-yellow-500" />
-                        <span className="text-sm">{book.rating || 0}</span>
+                        <StarIcon className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
+                        <span className="text-xs sm:text-sm">{book.rating || 0}</span>
                       </div>
-                      <div className="flex space-x-2 mt-3">
-                        <Button variant="outline" size="sm">
-                          <EyeIcon className="w-4 h-4 mr-1" />
+                      <div className="flex flex-wrap gap-2 mt-2 sm:mt-3">
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           Read
                         </Button>
-                        <Button variant="outline" size="sm">
-                          <ShareIcon className="w-4 h-4 mr-1" />
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <ShareIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           Share
                         </Button>
                       </div>
                     </div>
                   ))}
                   {favorites.length === 0 && (
-                    <p className="text-gray-500 text-center py-8 col-span-full">No favorite books yet</p>
+                    <p className="text-gray-500 text-center py-8 col-span-full text-sm sm:text-base">No favorite books yet</p>
                   )}
                 </div>
               </CardContent>

@@ -146,6 +146,65 @@ const EBookReader: React.FC<EBookReaderProps> = ({
     setGoToPage('');
   };
 
+  // Update reading progress
+  const updateReadingProgress = async (progress: number) => {
+    try {
+      await authFetch('/users/progress', {
+        method: 'POST',
+        body: JSON.stringify({
+          bookId: bookId,
+          progress: progress,
+          readingTime: Math.floor((Date.now() - startTime) / 1000 / 60) // minutes
+        })
+      });
+    } catch (error) {
+      console.error('Failed to update reading progress:', error);
+    }
+  };
+
+  // Update reading stats
+  const updateReadingStats = async () => {
+    try {
+      const readingTime = Math.floor((Date.now() - startTime) / 1000 / 60); // minutes
+      if (readingTime > 0) {
+        await authFetch('/users/reading-stats', {
+          method: 'POST',
+          body: JSON.stringify({
+            bookId: bookId,
+            readingTime: readingTime,
+            pagesRead: Math.floor(readingTime * 2) // Estimate pages read
+          })
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update reading stats:', error);
+    }
+  };
+
+  // Track reading progress
+  useEffect(() => {
+    const progressInterval = setInterval(() => {
+      if (currentPage > 0 && totalPages > 0) {
+        const progress = Math.round((currentPage / totalPages) * 100);
+        updateReadingProgress(progress);
+      }
+    }, 30000); // Update every 30 seconds
+
+    return () => {
+      clearInterval(progressInterval);
+      // Update final stats when component unmounts
+      updateReadingStats();
+    };
+  }, [currentPage, totalPages]);
+
+  // Update progress when page changes
+  useEffect(() => {
+    if (currentPage > 0 && totalPages > 0) {
+      const progress = Math.round((currentPage / totalPages) * 100);
+      updateReadingProgress(progress);
+    }
+  }, [currentPage]);
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
       <div className="bg-background text-foreground transition-colors flex">
