@@ -13,8 +13,8 @@ import {
   StarIcon,
   HeartIcon,
   EyeIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   CalendarIcon,
   UserIcon,
   GlobeAltIcon,
@@ -22,7 +22,7 @@ import {
   ComputerDesktopIcon,
   FireIcon,
   TrophyIcon,
-  TargetIcon,
+  TagIcon,
   LightBulbIcon,
   AcademicCapIcon,
   BookmarkIcon,
@@ -32,8 +32,6 @@ import {
   CalendarDaysIcon,
   ChartPieIcon,
   Bars3Icon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   MinusIcon
 } from '@heroicons/react/24/outline';
 import { authFetch } from '@/lib/api';
@@ -338,7 +336,7 @@ const Analytics: React.FC = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <TargetIcon className="w-5 h-5" />
+                                            <TagIcon className="w-5 h-5" />
                     <span>Reading Goals</span>
                   </CardTitle>
                 </CardHeader>
