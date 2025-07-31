@@ -22,7 +22,6 @@ import {
   UserIcon,
   CalendarIcon,
   TagIcon,
-  PriorityHighIcon,
   DocumentTextIcon,
   BookOpenIcon,
   CogIcon,
@@ -33,12 +32,12 @@ import {
   DevicePhoneMobileIcon,
   ComputerDesktopIcon,
   MagnifyingGlassIcon,
-  FilterIcon,
-  SortAscendingIcon,
+  FunnelIcon,
+  Bars3Icon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
-  ReplyIcon,
+  ArrowUturnLeftIcon,
   ArchiveBoxIcon,
   StarIcon
 } from '@heroicons/react/24/outline';
@@ -219,7 +218,7 @@ const CustomerSupport: React.FC = () => {
 
     return (
       <Badge className={config[priority]}>
-        <PriorityHighIcon className="w-3 h-3 mr-1" />
+        <ExclamationTriangleIcon className="w-3 h-3 mr-1" />
         {priority}
       </Badge>
     );
@@ -492,7 +491,7 @@ const CustomerSupport: React.FC = () => {
                                 View
                               </Button>
                               <Button variant="outline" size="sm">
-                                <ReplyIcon className="w-4 h-4 mr-2" />
+                                <ArrowUturnLeftIcon className="w-4 h-4 mr-2" />
                                 Reply
                               </Button>
                             </div>
