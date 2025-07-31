@@ -11,7 +11,7 @@ import {
   XCircleIcon, 
   TruckIcon,
   EyeIcon,
-  DownloadIcon,
+  ArrowDownTrayIcon,
   StarIcon
 } from '@heroicons/react/24/outline';
 import { authFetch } from '@/lib/api';
@@ -299,7 +299,7 @@ const Orders: React.FC = () => {
                                     </div>
                                     {order.status === 'delivered' && (
                                       <Button size="sm" variant="outline">
-                                        <DownloadIcon className="w-4 h-4 mr-2" />
+                                        <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
                                         Download
                                       </Button>
                                     )}
@@ -338,7 +338,7 @@ const Orders: React.FC = () => {
                               
                               {order.status === 'delivered' && (
                                 <Button size="sm">
-                                  <DownloadIcon className="w-4 h-4 mr-2" />
+                                  <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
                                   Download All
                                 </Button>
                               )}

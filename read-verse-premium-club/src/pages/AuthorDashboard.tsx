@@ -8,66 +8,58 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
-  BookOpenIcon, 
-  PencilIcon, 
-  ChartBarIcon, 
-  ArrowUpTrayIcon,
-  PlusIcon,
-  EyeIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  BellIcon
+  BookOpenIcon, PencilIcon, ChartBarIcon, ArrowUpTrayIcon, 
+  PlusIcon, EyeIcon, ClockIcon, CheckCircleIcon, XCircleIcon, BellIcon,
+  UsersIcon, CurrencyDollarIcon, TrendingUpIcon, CalendarIcon,
+  StarIcon, HeartIcon, ShoppingCartIcon, DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { authFetch } from '@/lib/api';
 
 interface Book {
   _id: string;
   title: string;
-  author: string;
   description: string;
   price: number;
-  coverImage: string;
   category: string;
-  genre: string;
-  tags: string[];
-  isPremium: boolean;
-  readingType: string;
-  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  coverImage?: string;
+  isApproved: boolean;
   createdAt: string;
-  updatedAt: string;
+  sales: number;
+  earnings: number;
+  rating: number;
+  totalReviews: number;
 }
 
 interface BookDesign {
   _id: string;
   title: string;
-  author: string;
-  coverDesign: {
-    backgroundColor: string;
-    titleFont: string;
-    titleColor: string;
-    subtitleFont: string;
-    subtitleColor: string;
-    coverImage?: string;
-  };
-  contentDesign: {
-    fontFamily: string;
-    fontSize: number;
-    lineHeight: number;
-    textColor: string;
-    backgroundColor: string;
-    chapterHeadingFont: string;
-    chapterHeadingColor: string;
-  };
-  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  description: string;
+  coverDesign: string;
+  contentDesign: string;
+  isApproved: boolean;
   createdAt: string;
+}
+
+interface Analytics {
+  totalBooks: number;
+  approvedBooks: number;
+  pendingBooks: number;
+  totalSales: number;
+  totalEarnings: number;
+  totalViews: number;
+  totalReviews: number;
+  averageRating: number;
+  monthlySales: Array<{ month: string; sales: number; earnings: number }>;
+  topBooks: Array<{ title: string; sales: number; earnings: number }>;
 }
 
 const AuthorDashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
   const [books, setBooks] = useState<Book[]>([]);
   const [bookDesigns, setBookDesigns] = useState<BookDesign[]>([]);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -78,51 +70,37 @@ const AuthorDashboard: React.FC = () => {
   const [bookForm, setBookForm] = useState({
     title: '',
     description: '',
-    price: '',
+    price: 0,
     category: '',
-    genre: '',
-    tags: '',
-    isPremium: false,
-    readingType: 'soft',
-    coverImage: ''
+    coverImage: '',
+    content: ''
   });
 
   // Book design form state
   const [designForm, setDesignForm] = useState({
     title: '',
-    author: user?.name || '',
-    coverDesign: {
-      backgroundColor: '#ffffff',
-      titleFont: 'Arial',
-      titleColor: '#000000',
-      subtitleFont: 'Arial',
-      subtitleColor: '#666666',
-      coverImage: ''
-    },
-    contentDesign: {
-      fontFamily: 'Arial',
-      fontSize: 16,
-      lineHeight: 1.5,
-      textColor: '#000000',
-      backgroundColor: '#ffffff',
-      chapterHeadingFont: 'Arial',
-      chapterHeadingColor: '#000000'
-    }
+    description: '',
+    coverDesign: '',
+    contentDesign: '',
+    fontFamily: 'Arial',
+    fontSize: '16px',
+    colorScheme: 'default'
   });
 
   useEffect(() => {
     if (user?.role === 'author') {
       fetchBooks();
       fetchBookDesigns();
+      fetchAnalytics();
       fetchNotifications();
     }
   }, [user]);
 
   const fetchBooks = async () => {
     try {
-      const res = await authFetch('/books/my-books');
-      if (res.ok) {
-        const data = await res.json();
+      const response = await authFetch('/books/my-books');
+      if (response.ok) {
+        const data = await response.json();
         setBooks(data);
       }
     } catch (error) {
@@ -132,9 +110,9 @@ const AuthorDashboard: React.FC = () => {
 
   const fetchBookDesigns = async () => {
     try {
-      const res = await authFetch('/book-designs/my-designs');
-      if (res.ok) {
-        const data = await res.json();
+      const response = await authFetch('/book-designs/my-designs');
+      if (response.ok) {
+        const data = await response.json();
         setBookDesigns(data);
       }
     } catch (error) {
@@ -142,11 +120,23 @@ const AuthorDashboard: React.FC = () => {
     }
   };
 
+  const fetchAnalytics = async () => {
+    try {
+      const response = await authFetch('/authors/analytics');
+      if (response.ok) {
+        const data = await response.json();
+        setAnalytics(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+    }
+  };
+
   const fetchNotifications = async () => {
     try {
-      const res = await authFetch('/notifications');
-      if (res.ok) {
-        const data = await res.json();
+      const response = await authFetch('/notifications');
+      if (response.ok) {
+        const data = await response.json();
         setNotifications(data);
       }
     } catch (error) {
@@ -157,33 +147,30 @@ const AuthorDashboard: React.FC = () => {
   const handleBookUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
     try {
       const bookData = {
         ...bookForm,
-        price: parseFloat(bookForm.price),
-        tags: bookForm.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+        authorRef: user?.id,
+        isApproved: false
       };
-
-      const res = await authFetch('/books', {
-        method: 'POST',
-        body: JSON.stringify(bookData)
+      
+      const res = await authFetch('/books', { 
+        method: 'POST', 
+        body: JSON.stringify(bookData) 
       });
-
+      
       if (res.ok) {
-        setShowUploadModal(false);
         setBookForm({
           title: '',
           description: '',
-          price: '',
+          price: 0,
           category: '',
-          genre: '',
-          tags: '',
-          isPremium: false,
-          readingType: 'soft',
-          coverImage: ''
+          coverImage: '',
+          content: ''
         });
+        setShowUploadModal(false);
         fetchBooks();
+        
         // Send notification to admin
         await authFetch('/notifications/admin', {
           method: 'POST',
@@ -204,37 +191,25 @@ const AuthorDashboard: React.FC = () => {
   const handleBookDesignCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
     try {
-      const res = await authFetch('/book-designs', {
-        method: 'POST',
-        body: JSON.stringify(designForm)
+      const res = await authFetch('/book-designs', { 
+        method: 'POST', 
+        body: JSON.stringify(designForm) 
       });
-
+      
       if (res.ok) {
-        setShowDesignModal(false);
         setDesignForm({
           title: '',
-          author: user?.name || '',
-          coverDesign: {
-            backgroundColor: '#ffffff',
-            titleFont: 'Arial',
-            titleColor: '#000000',
-            subtitleFont: 'Arial',
-            subtitleColor: '#666666',
-            coverImage: ''
-          },
-          contentDesign: {
-            fontFamily: 'Arial',
-            fontSize: 16,
-            lineHeight: 1.5,
-            textColor: '#000000',
-            backgroundColor: '#ffffff',
-            chapterHeadingFont: 'Arial',
-            chapterHeadingColor: '#000000'
-          }
+          description: '',
+          coverDesign: '',
+          contentDesign: '',
+          fontFamily: 'Arial',
+          fontSize: '16px',
+          colorScheme: 'default'
         });
+        setShowDesignModal(false);
         fetchBookDesigns();
+        
         // Send notification to admin
         await authFetch('/notifications/admin', {
           method: 'POST',
@@ -252,23 +227,19 @@ const AuthorDashboard: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      draft: { color: 'bg-gray-100 text-gray-800', icon: ClockIcon },
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: ClockIcon },
-      approved: { color: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
-      rejected: { color: 'bg-red-100 text-red-800', icon: XCircleIcon }
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig];
-    const Icon = config.icon;
-    
-    return (
-      <Badge className={config.color}>
-        <Icon className="w-3 h-3 mr-1" />
-        {status}
-      </Badge>
-    );
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(price);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   if (!user || user.role !== 'author') {
@@ -276,231 +247,292 @@ const AuthorDashboard: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You don't have permission to access this page.</p>
+          <p className="text-gray-600">Only authors can access this dashboard.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Author Dashboard</h1>
-              <p className="text-gray-600 mt-2">Welcome back, {user.name}!</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button onClick={() => setShowUploadModal(true)}>
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Upload Book
-              </Button>
-              <Button onClick={() => setShowDesignModal(true)} variant="outline">
-                <PencilIcon className="w-4 h-4 mr-2" />
-                Create Design
-              </Button>
-            </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Author Dashboard</h1>
+          <p className="text-gray-600">Manage your books, track performance, and create new content</p>
+        </div>
+
+        {/* Analytics Cards */}
+        {analytics && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Books</p>
+                    <p className="text-2xl font-bold text-gray-900">{analytics.totalBooks}</p>
+                  </div>
+                  <BookOpenIcon className="w-8 h-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Sales</p>
+                    <p className="text-2xl font-bold text-green-600">{analytics.totalSales}</p>
+                  </div>
+                  <ShoppingCartIcon className="w-8 h-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Earnings</p>
+                    <p className="text-2xl font-bold text-purple-600">{formatPrice(analytics.totalEarnings)}</p>
+                  </div>
+                  <CurrencyDollarIcon className="w-8 h-8 text-purple-500" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Average Rating</p>
+                    <p className="text-2xl font-bold text-yellow-600">{analytics.averageRating.toFixed(1)}</p>
+                  </div>
+                  <StarIcon className="w-8 h-8 text-yellow-500" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
+        )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Published Books</CardTitle>
-              <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{books.filter(b => b.status === 'approved').length}</div>
-              <p className="text-xs text-muted-foreground">Total published</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-              <ClockIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{books.filter(b => b.status === 'pending').length}</div>
-              <p className="text-xs text-muted-foreground">Awaiting review</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Book Designs</CardTitle>
-              <PencilIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{bookDesigns.length}</div>
-              <p className="text-xs text-muted-foreground">Total designs</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-              <BellIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{notifications.length}</div>
-              <p className="text-xs text-muted-foreground">Unread messages</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content Tabs */}
+        {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="books">My Books</TabsTrigger>
             <TabsTrigger value="designs">Book Designs</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
 
+          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Books */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Books</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpenIcon className="w-5 h-5" />
+                    Recent Books
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {books.slice(0, 3).map((book) => (
-                      <div key={book._id} className="flex items-center space-x-4">
-                        <div className="w-12 h-16 bg-gray-200 rounded"></div>
+                    {books.slice(0, 5).map((book) => (
+                      <div key={book._id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                        {book.coverImage ? (
+                          <img src={book.coverImage} alt={book.title} className="w-12 h-16 object-cover rounded" />
+                        ) : (
+                          <div className="w-12 h-16 bg-gray-200 rounded flex items-center justify-center">
+                            <BookOpenIcon className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
                         <div className="flex-1">
-                          <h3 className="font-medium">{book.title}</h3>
+                          <h4 className="font-medium text-gray-900">{book.title}</h4>
                           <p className="text-sm text-gray-500">{book.category}</p>
                           <div className="flex items-center space-x-2 mt-1">
-                            {getStatusBadge(book.status)}
+                            <Badge variant={book.isApproved ? 'default' : 'secondary'}>
+                              {book.isApproved ? 'Approved' : 'Pending'}
+                            </Badge>
+                            <span className="text-sm text-gray-500">{formatPrice(book.price)}</span>
                           </div>
                         </div>
                       </div>
                     ))}
-                    {books.length === 0 && (
-                      <p className="text-gray-500 text-center py-4">No books uploaded yet</p>
-                    )}
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Quick Actions */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Notifications</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <PlusIcon className="w-5 h-5" />
+                    Quick Actions
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {notifications.slice(0, 3).map((notification) => (
-                      <div key={notification._id} className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <div>
-                          <p className="text-sm font-medium">{notification.message}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(notification.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                    {notifications.length === 0 && (
-                      <p className="text-gray-500 text-center py-4">No notifications</p>
-                    )}
-                  </div>
+                <CardContent className="space-y-4">
+                  <Button onClick={() => setShowUploadModal(true)} className="w-full">
+                    <ArrowUpTrayIcon className="w-4 h-4 mr-2" />
+                    Upload New Book
+                  </Button>
+                  <Button onClick={() => setShowDesignModal(true)} variant="outline" className="w-full">
+                    <PencilIcon className="w-4 h-4 mr-2" />
+                    Create Book Design
+                  </Button>
+                  <Button variant="outline" className="w-full">
+                    <ChartBarIcon className="w-4 h-4 mr-2" />
+                    View Analytics
+                  </Button>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
+          {/* Books Tab */}
           <TabsContent value="books" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>My Books</CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle>My Books</CardTitle>
+                  <Button onClick={() => setShowUploadModal(true)}>
+                    <PlusIcon className="w-4 h-4 mr-2" />
+                    Add New Book
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {books.map((book) => (
-                    <div key={book._id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-20 bg-gray-200 rounded"></div>
-                        <div>
-                          <h3 className="font-medium">{book.title}</h3>
-                          <p className="text-sm text-gray-500">{book.category} • {book.genre}</p>
-                          <p className="text-sm text-gray-500">₹{book.price}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {getStatusBadge(book.status)}
-                        <Button variant="outline" size="sm">
-                          <EyeIcon className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {books.length === 0 && (
-                    <p className="text-gray-500 text-center py-8">No books uploaded yet</p>
-                  )}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Book</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Sales</TableHead>
+                      <TableHead>Earnings</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {books.map((book) => (
+                      <TableRow key={book._id}>
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            {book.coverImage ? (
+                              <img src={book.coverImage} alt={book.title} className="w-10 h-12 object-cover rounded" />
+                            ) : (
+                              <div className="w-10 h-12 bg-gray-200 rounded flex items-center justify-center">
+                                <BookOpenIcon className="w-5 h-5 text-gray-400" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium">{book.title}</div>
+                              <div className="text-sm text-gray-500">{formatDate(book.createdAt)}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{book.category}</TableCell>
+                        <TableCell>{formatPrice(book.price)}</TableCell>
+                        <TableCell>
+                          <Badge variant={book.isApproved ? 'default' : 'secondary'}>
+                            {book.isApproved ? 'Approved' : 'Pending'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{book.sales}</TableCell>
+                        <TableCell>{formatPrice(book.earnings)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <StarIcon className="w-4 h-4 text-yellow-500 mr-1" />
+                            {book.rating.toFixed(1)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="outline">
+                            <EyeIcon className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="designs" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Book Designs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {bookDesigns.map((design) => (
-                    <div key={design._id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-20 bg-gray-200 rounded"></div>
-                        <div>
-                          <h3 className="font-medium">{design.title}</h3>
-                          <p className="text-sm text-gray-500">Font: {design.contentDesign.fontFamily}</p>
-                          <p className="text-sm text-gray-500">Size: {design.contentDesign.fontSize}px</p>
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            {analytics && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Monthly Sales Chart */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Monthly Sales</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.monthlySales.map((month, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <span className="font-medium">{month.month}</span>
+                          <div className="text-right">
+                            <div className="font-semibold">{month.sales} sales</div>
+                            <div className="text-sm text-gray-500">{formatPrice(month.earnings)}</div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {getStatusBadge(design.status)}
-                        <Button variant="outline" size="sm">
-                          <EyeIcon className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                  {bookDesigns.length === 0 && (
-                    <p className="text-gray-500 text-center py-8">No book designs created yet</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+
+                {/* Top Performing Books */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Performing Books</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.topBooks.map((book, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <div className="flex items-center space-x-3">
+                            <span className="font-bold text-lg">{index + 1}</span>
+                            <div>
+                              <div className="font-medium">{book.title}</div>
+                              <div className="text-sm text-gray-500">{book.sales} sales</div>
+                            </div>
+                          </div>
+                          <div className="text-right font-semibold">
+                            {formatPrice(book.earnings)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </TabsContent>
 
+          {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>All Notifications</CardTitle>
+                <CardTitle>Notifications</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {notifications.map((notification) => (
-                    <div key={notification._id} className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div key={notification._id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                      <BellIcon className="w-5 h-5 text-blue-500" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{notification.message}</p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(notification.createdAt).toLocaleDateString()}
-                        </p>
+                        <p className="font-medium">{notification.message}</p>
+                        <p className="text-sm text-gray-500">{formatDate(notification.createdAt)}</p>
                       </div>
+                      {!notification.isRead && (
+                        <Badge variant="secondary">New</Badge>
+                      )}
                     </div>
                   ))}
-                  {notifications.length === 0 && (
-                    <p className="text-gray-500 text-center py-8">No notifications</p>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -509,11 +541,17 @@ const AuthorDashboard: React.FC = () => {
 
         {/* Upload Book Modal */}
         {showUploadModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <h2 className="text-2xl font-bold mb-4">Upload New Book</h2>
-              <form onSubmit={handleBookUpload} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-2xl font-bold">Upload New Book</h2>
+                  <Button variant="ghost" size="sm" onClick={() => setShowUploadModal(false)}>
+                    <XCircleIcon className="w-6 h-6" />
+                  </Button>
+                </div>
+                
+                <form onSubmit={handleBookUpload} className="space-y-4">
                   <div>
                     <Label htmlFor="title">Book Title</Label>
                     <Input
@@ -523,116 +561,93 @@ const AuthorDashboard: React.FC = () => {
                       required
                     />
                   </div>
+                  
                   <div>
-                    <Label htmlFor="price">Price (₹)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={bookForm.price}
-                      onChange={(e) => setBookForm({...bookForm, price: e.target.value})}
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={bookForm.description}
+                      onChange={(e) => setBookForm({...bookForm, description: e.target.value})}
                       required
                     />
                   </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={bookForm.description}
-                    onChange={(e) => setBookForm({...bookForm, description: e.target.value})}
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="price">Price</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        value={bookForm.price}
+                        onChange={(e) => setBookForm({...bookForm, price: parseFloat(e.target.value)})}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="category">Category</Label>
+                      <Select value={bookForm.category} onValueChange={(value) => setBookForm({...bookForm, category: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fiction">Fiction</SelectItem>
+                          <SelectItem value="non-fiction">Non-Fiction</SelectItem>
+                          <SelectItem value="mystery">Mystery</SelectItem>
+                          <SelectItem value="romance">Romance</SelectItem>
+                          <SelectItem value="sci-fi">Science Fiction</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
                   <div>
-                    <Label htmlFor="category">Category</Label>
+                    <Label htmlFor="coverImage">Cover Image URL</Label>
                     <Input
-                      id="category"
-                      value={bookForm.category}
-                      onChange={(e) => setBookForm({...bookForm, category: e.target.value})}
+                      id="coverImage"
+                      value={bookForm.coverImage}
+                      onChange={(e) => setBookForm({...bookForm, coverImage: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="content">Book Content</Label>
+                    <Textarea
+                      id="content"
+                      value={bookForm.content}
+                      onChange={(e) => setBookForm({...bookForm, content: e.target.value})}
+                      rows={6}
                       required
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="genre">Genre</Label>
-                    <Input
-                      id="genre"
-                      value={bookForm.genre}
-                      onChange={(e) => setBookForm({...bookForm, genre: e.target.value})}
-                      required
-                    />
+                  
+                  <div className="flex justify-end space-x-4">
+                    <Button type="button" variant="outline" onClick={() => setShowUploadModal(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? 'Uploading...' : 'Upload Book'}
+                    </Button>
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="tags">Tags (comma separated)</Label>
-                  <Input
-                    id="tags"
-                    value={bookForm.tags}
-                    onChange={(e) => setBookForm({...bookForm, tags: e.target.value})}
-                    placeholder="fiction, adventure, fantasy"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="coverImage">Cover Image URL</Label>
-                  <Input
-                    id="coverImage"
-                    value={bookForm.coverImage}
-                    onChange={(e) => setBookForm({...bookForm, coverImage: e.target.value})}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="readingType">Reading Type</Label>
-                    <Select
-                      value={bookForm.readingType}
-                      onValueChange={(value) => setBookForm({...bookForm, readingType: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="soft">Soft Copy (Read Online)</SelectItem>
-                        <SelectItem value="hard">Hard Copy (Delivery Available)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isPremium"
-                      checked={bookForm.isPremium}
-                      onChange={(e) => setBookForm({...bookForm, isPremium: e.target.checked})}
-                    />
-                    <Label htmlFor="isPremium">Premium Book</Label>
-                  </div>
-                </div>
-
-                <div className="flex space-x-4">
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Uploading...' : 'Upload Book'}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowUploadModal(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
           </div>
         )}
 
         {/* Create Book Design Modal */}
         {showDesignModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <h2 className="text-2xl font-bold mb-4">Create Book Design</h2>
-              <form onSubmit={handleBookDesignCreate} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-2xl font-bold">Create Book Design</h2>
+                  <Button variant="ghost" size="sm" onClick={() => setShowDesignModal(false)}>
+                    <XCircleIcon className="w-6 h-6" />
+                  </Button>
+                </div>
+                
+                <form onSubmit={handleBookDesignCreate} className="space-y-4">
                   <div>
                     <Label htmlFor="designTitle">Design Title</Label>
                     <Input
@@ -642,179 +657,96 @@ const AuthorDashboard: React.FC = () => {
                       required
                     />
                   </div>
+                  
                   <div>
-                    <Label htmlFor="designAuthor">Author</Label>
-                    <Input
-                      id="designAuthor"
-                      value={designForm.author}
-                      onChange={(e) => setDesignForm({...designForm, author: e.target.value})}
+                    <Label htmlFor="designDescription">Description</Label>
+                    <Textarea
+                      id="designDescription"
+                      value={designForm.description}
+                      onChange={(e) => setDesignForm({...designForm, description: e.target.value})}
                       required
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Cover Design */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Cover Design</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label htmlFor="coverBgColor">Background Color</Label>
-                        <Input
-                          id="coverBgColor"
-                          type="color"
-                          value={designForm.coverDesign.backgroundColor}
-                          onChange={(e) => setDesignForm({
-                            ...designForm,
-                            coverDesign: {...designForm.coverDesign, backgroundColor: e.target.value}
-                          })}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="titleFont">Title Font</Label>
-                        <Select
-                          value={designForm.coverDesign.titleFont}
-                          onValueChange={(value) => setDesignForm({
-                            ...designForm,
-                            coverDesign: {...designForm.coverDesign, titleFont: value}
-                          })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Arial">Arial</SelectItem>
-                            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                            <SelectItem value="Georgia">Georgia</SelectItem>
-                            <SelectItem value="Verdana">Verdana</SelectItem>
-                            <SelectItem value="Helvetica">Helvetica</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="titleColor">Title Color</Label>
-                        <Input
-                          id="titleColor"
-                          type="color"
-                          value={designForm.coverDesign.titleColor}
-                          onChange={(e) => setDesignForm({
-                            ...designForm,
-                            coverDesign: {...designForm.coverDesign, titleColor: e.target.value}
-                          })}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="coverImage">Cover Image URL</Label>
-                        <Input
-                          id="coverImage"
-                          value={designForm.coverDesign.coverImage}
-                          onChange={(e) => setDesignForm({
-                            ...designForm,
-                            coverDesign: {...designForm.coverDesign, coverImage: e.target.value}
-                          })}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Content Design */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Content Design</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label htmlFor="contentFont">Content Font</Label>
-                        <Select
-                          value={designForm.contentDesign.fontFamily}
-                          onValueChange={(value) => setDesignForm({
-                            ...designForm,
-                            contentDesign: {...designForm.contentDesign, fontFamily: value}
-                          })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Arial">Arial</SelectItem>
-                            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                            <SelectItem value="Georgia">Georgia</SelectItem>
-                            <SelectItem value="Verdana">Verdana</SelectItem>
-                            <SelectItem value="Helvetica">Helvetica</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="fontSize">Font Size (px)</Label>
-                        <Input
-                          id="fontSize"
-                          type="number"
-                          value={designForm.contentDesign.fontSize}
-                          onChange={(e) => setDesignForm({
-                            ...designForm,
-                            contentDesign: {...designForm.contentDesign, fontSize: parseInt(e.target.value)}
-                          })}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="lineHeight">Line Height</Label>
-                        <Input
-                          id="lineHeight"
-                          type="number"
-                          step="0.1"
-                          value={designForm.contentDesign.lineHeight}
-                          onChange={(e) => setDesignForm({
-                            ...designForm,
-                            contentDesign: {...designForm.contentDesign, lineHeight: parseFloat(e.target.value)}
-                          })}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="textColor">Text Color</Label>
-                        <Input
-                          id="textColor"
-                          type="color"
-                          value={designForm.contentDesign.textColor}
-                          onChange={(e) => setDesignForm({
-                            ...designForm,
-                            contentDesign: {...designForm.contentDesign, textColor: e.target.value}
-                          })}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="bgColor">Background Color</Label>
-                        <Input
-                          id="bgColor"
-                          type="color"
-                          value={designForm.contentDesign.backgroundColor}
-                          onChange={(e) => setDesignForm({
-                            ...designForm,
-                            contentDesign: {...designForm.contentDesign, backgroundColor: e.target.value}
-                          })}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="flex space-x-4">
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Creating...' : 'Create Design'}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowDesignModal(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="fontFamily">Font Family</Label>
+                      <Select value={designForm.fontFamily} onValueChange={(value) => setDesignForm({...designForm, fontFamily: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Arial">Arial</SelectItem>
+                          <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                          <SelectItem value="Georgia">Georgia</SelectItem>
+                          <SelectItem value="Verdana">Verdana</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="fontSize">Font Size</Label>
+                      <Select value={designForm.fontSize} onValueChange={(value) => setDesignForm({...designForm, fontSize: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="12px">12px</SelectItem>
+                          <SelectItem value="14px">14px</SelectItem>
+                          <SelectItem value="16px">16px</SelectItem>
+                          <SelectItem value="18px">18px</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="colorScheme">Color Scheme</Label>
+                      <Select value={designForm.colorScheme} onValueChange={(value) => setDesignForm({...designForm, colorScheme: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">Default</SelectItem>
+                          <SelectItem value="dark">Dark</SelectItem>
+                          <SelectItem value="sepia">Sepia</SelectItem>
+                          <SelectItem value="high-contrast">High Contrast</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="coverDesign">Cover Design Description</Label>
+                    <Textarea
+                      id="coverDesign"
+                      value={designForm.coverDesign}
+                      onChange={(e) => setDesignForm({...designForm, coverDesign: e.target.value})}
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="contentDesign">Content Design Description</Label>
+                    <Textarea
+                      id="contentDesign"
+                      value={designForm.contentDesign}
+                      onChange={(e) => setDesignForm({...designForm, contentDesign: e.target.value})}
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end space-x-4">
+                    <Button type="button" variant="outline" onClick={() => setShowDesignModal(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? 'Creating...' : 'Create Design'}
+                    </Button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}
