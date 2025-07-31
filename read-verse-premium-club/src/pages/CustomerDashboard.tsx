@@ -29,21 +29,21 @@ import { authFetch } from '@/lib/api';
 
 interface Order {
   _id: string;
-  book: {
-    _id: string;
+  userId: string;
+  items: Array<{
+    bookId: string;
     title: string;
     author: string;
-    coverImage: string;
     price: number;
-  };
-  amount: number;
-  orderStatus: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
-  paymentStatus: 'pending' | 'paid' | 'failed';
+    coverImage?: string;
+  }>;
+  totalAmount: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'completed' | 'failed';
   createdAt: string;
   updatedAt: string;
   trackingNumber?: string;
   estimatedDelivery?: string;
-  deliveryAddress?: string;
 }
 
 interface Notification {
@@ -174,13 +174,15 @@ const CustomerDashboard: React.FC = () => {
   const getOrderStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: ClockIcon },
-      confirmed: { color: 'bg-blue-100 text-blue-800', icon: CheckCircleIcon },
+      processing: { color: 'bg-blue-100 text-blue-800', icon: CheckCircleIcon },
       shipped: { color: 'bg-purple-100 text-purple-800', icon: TruckIcon },
       delivered: { color: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
-      cancelled: { color: 'bg-red-100 text-red-800', icon: XCircleIcon }
+      cancelled: { color: 'bg-red-100 text-red-800', icon: XCircleIcon },
+      completed: { color: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
+      failed: { color: 'bg-red-100 text-red-800', icon: XCircleIcon }
     };
     
-    const config = statusConfig[status as keyof typeof statusConfig];
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
     const Icon = config.icon;
     
     return (
@@ -194,11 +196,12 @@ const CustomerDashboard: React.FC = () => {
   const getOrderProgress = (status: string) => {
     const progressMap = {
       pending: 25,
-      confirmed: 50,
+      processing: 50,
       shipped: 75,
       delivered: 100,
       cancelled: 0
     };
+    
     return progressMap[status as keyof typeof progressMap] || 0;
   };
 
@@ -217,8 +220,29 @@ const CustomerDashboard: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Please Log In</h1>
-          <p className="text-gray-600">You need to be logged in to view this page.</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+          <p className="text-gray-600">Please log in to access your dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-lg p-6">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -266,7 +290,7 @@ const CustomerDashboard: React.FC = () => {
               <ShoppingCartIcon className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{orders.filter(o => o.orderStatus !== 'delivered' && o.orderStatus !== 'cancelled').length}</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length}</div>
               <p className="text-xs text-muted-foreground">In progress</p>
             </CardContent>
           </Card>
@@ -384,23 +408,23 @@ const CustomerDashboard: React.FC = () => {
             </div>
 
             {/* Reading Progress Chart */}
-            {readingStats && (
+            {readingStats && readingStats.monthlyProgress && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm sm:text-base">Monthly Reading Progress</CardTitle>
+                  <CardTitle className="flex items-center text-sm sm:text-base">
+                    <ChartBarIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    Reading Progress
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3 sm:space-y-4">
-                    {readingStats.monthlyProgress?.map((month, index) => (
-                      <div key={index} className="flex items-center space-x-3 sm:space-x-4">
-                        <div className="w-16 sm:w-20 text-xs sm:text-sm font-medium">{month.month}</div>
-                        <div className="flex-1">
-                          <div className="flex justify-between text-xs sm:text-sm mb-1">
-                            <span>{month.booksRead} books</span>
-                            <span>{month.pagesRead} pages</span>
-                          </div>
-                          <Progress value={(month.booksRead / Math.max(...readingStats.monthlyProgress.map(m => m.booksRead))) * 100} />
+                    {readingStats.monthlyProgress.map((month, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between text-xs sm:text-sm">
+                          <span className="font-medium">{month.month}</span>
+                          <span>{month.pagesRead} pages</span>
                         </div>
+                        <Progress value={readingStats.monthlyProgress.length > 0 ? (month.booksRead / Math.max(...readingStats.monthlyProgress.map(m => m.booksRead))) * 100 : 0} />
                       </div>
                     ))}
                   </div>
@@ -425,9 +449,13 @@ const CustomerDashboard: React.FC = () => {
                         <div className="flex items-center space-x-3 sm:space-x-4">
                           <div className="w-12 h-16 sm:w-16 sm:h-20 bg-gray-200 rounded flex-shrink-0"></div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="font-medium text-sm sm:text-base truncate">{order.book.title}</h3>
-                            <p className="text-xs sm:text-sm text-gray-500 truncate">by {order.book.author}</p>
-                            <p className="text-xs sm:text-sm text-gray-500">₹{order.amount}</p>
+                            <h3 className="font-medium text-sm sm:text-base truncate">
+                              {order.items && order.items.length > 0 ? order.items[0].title : 'Unknown Book'}
+                            </h3>
+                            <p className="text-xs sm:text-sm text-gray-500 truncate">
+                              by {order.items && order.items.length > 0 ? order.items[0].author : 'Unknown Author'}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-500">₹{order.totalAmount || 0}</p>
                             <p className="text-xs text-gray-400">
                               Ordered: {new Date(order.createdAt).toLocaleDateString()}
                             </p>
@@ -436,7 +464,7 @@ const CustomerDashboard: React.FC = () => {
                         
                         <div className="flex flex-col space-y-2">
                           <div className="flex items-center space-x-2 flex-wrap">
-                            {getOrderStatusBadge(order.orderStatus)}
+                            {getOrderStatusBadge(order.status)}
                             {getOrderStatusBadge(order.paymentStatus)}
                           </div>
                           
@@ -444,14 +472,14 @@ const CustomerDashboard: React.FC = () => {
                           <div className="w-full">
                             <div className="flex justify-between text-xs text-gray-500 mb-1">
                               <span className="text-xs">Order Placed</span>
-                              <span className="text-xs">Confirmed</span>
+                              <span className="text-xs">Processing</span>
                               <span className="text-xs">Shipped</span>
                               <span className="text-xs">Delivered</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
                               <div 
                                 className="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all duration-1000 ease-out" 
-                                style={{ width: `${getOrderProgress(order.orderStatus)}%` }}
+                                style={{ width: `${getOrderProgress(order.status)}%` }}
                               ></div>
                             </div>
                           </div>
@@ -476,13 +504,13 @@ const CustomerDashboard: React.FC = () => {
                           <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           View Details
                         </Button>
-                        {order.orderStatus === 'shipped' && (
+                        {order.status === 'shipped' && (
                           <Button variant="outline" size="sm" className="text-xs">
                             <TruckIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             Track Package
                           </Button>
                         )}
-                        {order.orderStatus === 'delivered' && (
+                        {order.status === 'delivered' && (
                           <Button variant="outline" size="sm" className="text-xs">
                             <ArrowDownTrayIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             Download
