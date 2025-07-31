@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, DownloadIcon, TrendingUpIcon, EyeIcon, ShoppingCartIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ArrowDownTrayIcon, ArrowTrendingUpIcon, EyeIcon, ShoppingCartIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { authFetch } from '@/lib/api';
 import { format } from 'date-fns';
@@ -82,7 +82,7 @@ const AuthorAnalytics: React.FC = () => {
         params.append('region', filters.region);
       }
 
-      const [salesTrends, downloadsVsOrders, mostViewed, summary, categoryBreakdown] = await Promise.all([
+      const [salesTrendsRes, downloadsVsOrdersRes, mostViewedRes, summaryRes, categoryBreakdownRes] = await Promise.all([
         authFetch(`/analytics/sales-trends?${params}`),
         authFetch(`/analytics/downloads-vs-orders?${params}`),
         authFetch(`/analytics/most-viewed?${params}`),
@@ -90,11 +90,19 @@ const AuthorAnalytics: React.FC = () => {
         authFetch(`/analytics/category-breakdown?${params}`)
       ]);
 
+      const [salesTrends, downloadsVsOrders, mostViewed, summary, categoryBreakdown] = await Promise.all([
+        salesTrendsRes.json(),
+        downloadsVsOrdersRes.json(),
+        mostViewedRes.json(),
+        summaryRes.json(),
+        categoryBreakdownRes.json()
+      ]);
+
       setData({
-        salesTrends: salesTrends.data || [],
-        downloadsVsOrders: downloadsVsOrders.data || [],
-        mostViewed: mostViewed.data || [],
-        summary: summary.data || {
+        salesTrends: salesTrends?.data || [],
+        downloadsVsOrders: downloadsVsOrders?.data || [],
+        mostViewed: mostViewed?.data || [],
+        summary: summary?.data || {
           totalRevenue: 0,
           totalOrders: 0,
           totalDownloads: 0,
@@ -102,7 +110,7 @@ const AuthorAnalytics: React.FC = () => {
           totalBooks: 0,
           averageRevenue: 0
         },
-        categoryBreakdown: categoryBreakdown.data || []
+        categoryBreakdown: categoryBreakdown?.data || []
       });
     } catch (error) {
       console.error('Error fetching analytics data:', error);
@@ -200,11 +208,11 @@ const AuthorAnalytics: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => exportData('excel')}>
-            <DownloadIcon className="h-4 w-4 mr-2" />
+            <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
             Export Excel
           </Button>
           <Button variant="outline" onClick={() => exportData('pdf')}>
-            <DownloadIcon className="h-4 w-4 mr-2" />
+            <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
             Export PDF
           </Button>
         </div>
@@ -297,7 +305,7 @@ const AuthorAnalytics: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <TrendingUpIcon className="h-4 w-4 text-muted-foreground" />
+            <ArrowTrendingUpIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{data?.summary.totalRevenue.toLocaleString()}</div>
@@ -323,7 +331,7 @@ const AuthorAnalytics: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Downloads</CardTitle>
-            <DownloadIcon className="h-4 w-4 text-muted-foreground" />
+            <ArrowDownTrayIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data?.summary.totalDownloads}</div>
