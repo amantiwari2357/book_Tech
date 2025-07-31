@@ -16,8 +16,9 @@
   const razorpayRoutes = require('./routes/razorpay');
   const bookDesignRoutes = require('./routes/bookDesign');
   const cloudinaryRoutes = require('./routes/cloudinary');
+const analyticsRoutes = require('./routes/analytics');
 
-  const app = express();
+const app = express();
   
   // CORS configuration
   const corsOptions = {
@@ -75,7 +76,8 @@
   app.use('/api/orders', ordersRoutes);
   app.use('/api/razorpay', razorpayRoutes);
   app.use('/api/book-designs', bookDesignRoutes);
-  app.use('/api/cloudinary', cloudinaryRoutes);
+app.use('/api/cloudinary', cloudinaryRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
   // Test route
   app.get('/api/test', (req, res) => {
