@@ -53,6 +53,7 @@ router.get('/user-orders', auth, async (req, res) => {
 // Get returns (must come before /:id route)
 router.get('/returns', auth, async (req, res) => {
   try {
+    console.log('GET /returns route hit');
     // For now, return empty array - implement returns logic later
     res.json([]);
   } catch (error) {
@@ -84,9 +85,19 @@ router.post('/returns', auth, async (req, res) => {
 // Get order by ID (with privacy check) - MUST come after specific routes
 router.get('/:id', auth, async (req, res) => {
   try {
+    console.log(`GET /:id route hit with id: ${req.params.id}`);
+    
     // Validate ObjectId format
     if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      console.log(`Invalid ObjectId format: ${req.params.id}`);
       return res.status(400).json({ message: 'Invalid order ID format' });
+    }
+
+    // Additional check for common string routes that might be mistaken for IDs
+    const invalidStrings = ['returns', 'reorder', 'my-orders', 'user-orders'];
+    if (invalidStrings.includes(req.params.id)) {
+      console.log(`Invalid route string: ${req.params.id}`);
+      return res.status(400).json({ message: `Invalid route: ${req.params.id}` });
     }
 
     const order = await Order.findById(req.params.id)

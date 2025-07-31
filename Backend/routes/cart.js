@@ -92,10 +92,16 @@ router.delete('/remove', auth, async (req, res) => {
 // Reorder functionality
 router.post('/reorder', auth, async (req, res) => {
   try {
+    console.log('POST /reorder route hit');
     const { orderId } = req.body;
     
     if (!orderId) {
       return res.status(400).json({ message: 'Order ID is required' });
+    }
+
+    // Validate ObjectId format
+    if (!orderId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid order ID format' });
     }
 
     // Validate ObjectId format
