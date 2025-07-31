@@ -19,7 +19,7 @@ import {
   DownloadIcon,
   ShareIcon,
   BookmarkIcon,
-  TrendingUpIcon,
+  ChartBarIcon,
   CalendarIcon,
   MapPinIcon,
   PhoneIcon,
@@ -207,7 +207,7 @@ const CustomerDashboard: React.FC = () => {
       order_update: TruckIcon,
       payment: ShoppingCartIcon,
       delivery: CheckCircleIcon,
-      promotion: TrendingUpIcon,
+      promotion: ChartBarIcon,
       system: BellIcon
     };
     return iconMap[type as keyof typeof iconMap] || BellIcon;
