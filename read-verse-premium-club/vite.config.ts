@@ -47,6 +47,9 @@ export default defineConfig({
     include: ['react', 'react-dom', 'lucide-react'],
     exclude: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
   },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+  },
 })
 
 

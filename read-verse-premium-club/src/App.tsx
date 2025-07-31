@@ -24,6 +24,45 @@ const Checkout = React.lazy(() => import('@/pages/Checkout'));
 const Profile = React.lazy(() => import('@/pages/Profile'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // Loading component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -31,44 +70,53 @@ const PageLoader = () => (
   </div>
 );
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <QueryClientProvider client={queryClient}>
-          <HelmetProvider>
-            <TooltipProvider>
-              <Router>
-                <div className="min-h-screen flex flex-col">
-                  <Header />
-                  <main className="flex-1">
-                    <Suspense fallback={<PageLoader />}>
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<SignUp />} />
-                        <Route path="/browse" element={<Browse />} />
-                        <Route path="/book/:id" element={<BookDetails />} />
-                        <Route path="/reader/:id" element={<Reader />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </Suspense>
-                  </main>
-                  <Footer />
-                  <CartSidebar />
-                </div>
-                <Toaster />
-                <Sonner />
-              </Router>
-            </TooltipProvider>
-          </HelmetProvider>
-        </QueryClientProvider>
-      </PersistGate>
-    </Provider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <PersistGate loading={<PageLoader />} persistor={persistor}>
+          <QueryClientProvider client={queryClient}>
+            <HelmetProvider>
+              <TooltipProvider>
+                <Router>
+                  <div className="min-h-screen flex flex-col">
+                    <Header />
+                    <main className="flex-1">
+                      <Suspense fallback={<PageLoader />}>
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/signup" element={<SignUp />} />
+                          <Route path="/browse" element={<Browse />} />
+                          <Route path="/book/:id" element={<BookDetails />} />
+                          <Route path="/reader/:id" element={<Reader />} />
+                          <Route path="/checkout" element={<Checkout />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Suspense>
+                    </main>
+                    <Footer />
+                    <CartSidebar />
+                  </div>
+                  <Toaster />
+                  <Sonner />
+                </Router>
+              </TooltipProvider>
+            </HelmetProvider>
+          </QueryClientProvider>
+        </PersistGate>
+      </Provider>
+    </ErrorBoundary>
   );
 }
 
