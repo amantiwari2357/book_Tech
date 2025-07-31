@@ -15,6 +15,7 @@
   const ordersRoutes = require('./routes/orders');
   const razorpayRoutes = require('./routes/razorpay');
   const bookDesignRoutes = require('./routes/bookDesign');
+  const cloudinaryRoutes = require('./routes/cloudinary');
 
   const app = express();
   
@@ -74,6 +75,7 @@
   app.use('/api/orders', ordersRoutes);
   app.use('/api/razorpay', razorpayRoutes);
   app.use('/api/book-designs', bookDesignRoutes);
+  app.use('/api/cloudinary', cloudinaryRoutes);
 
   // Test route
   app.get('/api/test', (req, res) => {

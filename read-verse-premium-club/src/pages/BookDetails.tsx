@@ -350,12 +350,12 @@ const BookDetails: React.FC = () => {
                       {/* Author controls */}
                       {user && book.authorRef === user.id && (
                         <div className="flex gap-2 mt-1">
-                          <Button size="xs" variant="outline" onClick={() => startEditReview(r)}>Edit</Button>
-                          <Button size="xs" variant="destructive" onClick={() => handleDeleteReview(r._id!)} disabled={editLoading}>{editLoading ? 'Deleting...' : 'Delete'}</Button>
+                          <Button size="sm" variant="outline" onClick={() => startEditReview(r)}>Edit</Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDeleteReview(r._id!)} disabled={editLoading}>{editLoading ? 'Deleting...' : 'Delete'}</Button>
                         </div>
                       )}
                       {user && r.user?._id === user.id && (
-                        <Button size="xs" variant="outline" onClick={() => openAppealModal(r._id!)} className="ml-2">Appeal Moderation</Button>
+                        <Button size="sm" variant="outline" onClick={() => openAppealModal(r._id!)} className="ml-2">Appeal Moderation</Button>
                       )}
                     </>
                   )}
