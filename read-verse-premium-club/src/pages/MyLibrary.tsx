@@ -26,8 +26,7 @@ import {
   ExclamationTriangleIcon,
   CloudArrowDownIcon,
   DevicePhoneMobileIcon,
-  ComputerDesktopIcon,
-  TabletIcon
+  ComputerDesktopIcon
 } from '@heroicons/react/24/outline';
 import { authFetch } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
