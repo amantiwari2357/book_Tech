@@ -15,9 +15,8 @@ import {
   CalendarIcon,
   ArrowLeftIcon,
   MagnifyingGlassIcon,
-  FilterIcon,
-  SortAscendingIcon,
-  BookmarkIcon,
+  FunnelIcon,
+  Bars3Icon,
   DocumentTextIcon,
   PlayIcon,
   PauseIcon,
@@ -394,7 +393,7 @@ const MyLibrary: React.FC = () => {
                 Desktop
               </Button>
               <Button variant="outline" size="sm">
-                <TabletIcon className="w-4 h-4 mr-2" />
+                <DevicePhoneMobileIcon className="w-4 h-4 mr-2" />
                 Tablet
               </Button>
             </div>

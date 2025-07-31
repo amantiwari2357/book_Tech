@@ -29,7 +29,6 @@ import {
   MapPinIcon,
   CalendarIcon,
   ClockIcon,
-  LocationMarkerIcon,
   FingerPrintIcon,
   QrCodeIcon,
   CogIcon,
@@ -39,7 +38,7 @@ import {
   UserGroupIcon,
   KeyIcon as KeyIconSolid,
   PlusIcon,
-  DownloadIcon
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 import { authFetch } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
@@ -847,7 +846,7 @@ const Security: React.FC = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button variant="outline" className="justify-start">
-                    <DownloadIcon className="w-4 h-4 mr-2" />
+                    <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
                     Download My Data
                   </Button>
                   <Button variant="outline" className="justify-start">
