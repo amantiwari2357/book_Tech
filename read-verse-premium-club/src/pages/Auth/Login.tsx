@@ -8,6 +8,7 @@ import { BookOpenIcon } from '@heroicons/react/24/outline';
 import { useAppDispatch } from '@/store';
 import { setUser } from '@/store/slices/authSlice';
 import { setToken, authFetch } from '@/lib/api';
+import DebugAPI from '@/components/DebugAPI';
 
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -19,12 +20,23 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
     try {
+      console.log('Attempting login with email:', email);
+      
       const res = await authFetch('/auth/signin', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
+      
       const data = await res.json();
+      console.log('Login response:', data);
+      
       if (res.ok) {
         setToken(data.token);
         dispatch(setUser(data.user));
@@ -45,10 +57,17 @@ const Login: React.FC = () => {
           }
         }
       } else {
-        setError(data.message || 'Login failed');
+        setError(data.message || 'Login failed. Please check your credentials.');
       }
-    } catch (err) {
-      setError('Login failed');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      if (err.message.includes('Failed to fetch')) {
+        setError('Unable to connect to server. Please check your internet connection.');
+      } else if (err.message.includes('CORS')) {
+        setError('Server connection blocked. Please try again later.');
+      } else {
+        setError(err.message || 'Login failed. Please try again.');
+      }
     }
   };
 
@@ -118,6 +137,9 @@ const Login: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Debug component for troubleshooting */}
+        <DebugAPI />
       </div>
     </div>
   );
