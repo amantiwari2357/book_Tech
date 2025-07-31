@@ -436,11 +436,19 @@ const CustomerDashboard: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/library')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/my-library')}>
             <CardContent className="p-6 text-center">
               <BookmarkIcon className="w-12 h-12 mx-auto mb-4 text-green-600" />
               <h3 className="font-semibold text-lg mb-2">My Library</h3>
               <p className="text-sm text-gray-600">Download eBooks, track reading progress</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/wallet')}>
+            <CardContent className="p-6 text-center">
+              <WalletIcon className="w-12 h-12 mx-auto mb-4 text-purple-600" />
+              <h3 className="font-semibold text-lg mb-2">Wallet & Referrals</h3>
+              <p className="text-sm text-gray-600">Manage wallet, earn from referrals</p>
             </CardContent>
           </Card>
 
@@ -452,15 +460,7 @@ const CustomerDashboard: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/coupons')}>
-            <CardContent className="p-6 text-center">
-              <GiftIcon className="w-12 h-12 mx-auto mb-4 text-purple-600" />
-              <h3 className="font-semibold text-lg mb-2">Coupons & Points</h3>
-              <p className="text-sm text-gray-600">Apply coupons, redeem loyalty points</p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/support')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/customer-support')}>
             <CardContent className="p-6 text-center">
               <ChatBubbleLeftIcon className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
               <h3 className="font-semibold text-lg mb-2">Customer Support</h3>

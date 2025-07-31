@@ -32,6 +32,15 @@ const AuthorDashboard = React.lazy(() => import('@/pages/AuthorDashboard'));
 const TestLogin = React.lazy(() => import('@/pages/TestLogin'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
+// Customer Dashboard Pages
+const Wishlist = React.lazy(() => import('@/pages/Wishlist'));
+const MyLibrary = React.lazy(() => import('@/pages/MyLibrary'));
+const Wallet = React.lazy(() => import('@/pages/Wallet'));
+const Reviews = React.lazy(() => import('@/pages/Reviews'));
+const CustomerSupport = React.lazy(() => import('@/pages/CustomerSupport'));
+const Security = React.lazy(() => import('@/pages/Security'));
+const Analytics = React.lazy(() => import('@/pages/Analytics'));
+
 // Error Boundary Component
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -137,6 +146,16 @@ function App() {
                             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
                             <Route path="/author-dashboard" element={<AuthorDashboard />} />
                             <Route path="/test-login" element={<TestLogin />} />
+                            
+                            {/* Customer Dashboard Pages */}
+                            <Route path="/wishlist" element={<Wishlist />} />
+                            <Route path="/my-library" element={<MyLibrary />} />
+                            <Route path="/wallet" element={<Wallet />} />
+                            <Route path="/reviews" element={<Reviews />} />
+                            <Route path="/customer-support" element={<CustomerSupport />} />
+                            <Route path="/security" element={<Security />} />
+                            <Route path="/analytics" element={<Analytics />} />
+                            
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </Suspense>
