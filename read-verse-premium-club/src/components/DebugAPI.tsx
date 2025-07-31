@@ -14,7 +14,7 @@ const DebugAPI: React.FC = () => {
     try {
       const response = await authFetch('/auth/signin', {
         method: 'POST',
-        body: JSON.stringify({ email: 'test@example.com', password: 'test' }),
+        body: JSON.stringify({ email: 'admin@test.com', password: 'admin123' }),
       });
       
       setStatus(`API Response: ${response.status} ${response.statusText}`);
@@ -29,17 +29,49 @@ const DebugAPI: React.FC = () => {
     setError('');
     
     try {
-      const response = await fetch('https://book-tech.onrender.com/api/auth/signin', {
-        method: 'OPTIONS',
+      const response = await fetch('https://book-tech.onrender.com/api/cors-test', {
+        method: 'GET',
         headers: {
           'Origin': window.location.origin,
+          'Accept': 'application/json',
         },
       });
       
-      setStatus(`CORS Response: ${response.status} ${response.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        setStatus(`CORS Response: ${response.status} ${response.statusText} - ${data.message}`);
+      } else {
+        setError(`CORS Error: ${response.status} ${response.statusText}`);
+        setStatus('CORS test failed');
+      }
     } catch (err: any) {
       setError(`CORS Error: ${err.message}`);
       setStatus('CORS test failed');
+    }
+  };
+
+  const testBackendHealth = async () => {
+    setStatus('Testing backend health...');
+    setError('');
+    
+    try {
+      const response = await fetch('https://book-tech.onrender.com/api/test', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setStatus(`Backend Health: ${response.status} - ${data.message}`);
+      } else {
+        setError(`Backend Error: ${response.status} ${response.statusText}`);
+        setStatus('Backend health check failed');
+      }
+    } catch (err: any) {
+      setError(`Backend Error: ${err.message}`);
+      setStatus('Backend health check failed');
     }
   };
 
@@ -50,11 +82,14 @@ const DebugAPI: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Button onClick={testAPI} className="w-full">
-            Test API Connection
+          <Button onClick={testBackendHealth} className="w-full">
+            Test Backend Health
           </Button>
           <Button onClick={testCORS} variant="outline" className="w-full">
             Test CORS
+          </Button>
+          <Button onClick={testAPI} variant="outline" className="w-full">
+            Test API Connection
           </Button>
         </div>
         
@@ -73,6 +108,7 @@ const DebugAPI: React.FC = () => {
         <div className="text-xs text-gray-500">
           <p>API URL: {import.meta.env.VITE_API_URL || 'https://book-tech.onrender.com/api'}</p>
           <p>Current Origin: {window.location.origin}</p>
+          <p>User Agent: {navigator.userAgent.substring(0, 50)}...</p>
         </div>
       </CardContent>
     </Card>
