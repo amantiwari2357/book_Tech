@@ -22,6 +22,9 @@ const BookDetails = React.lazy(() => import('@/pages/BookDetails'));
 const Reader = React.lazy(() => import('@/pages/Reader'));
 const Checkout = React.lazy(() => import('@/pages/Checkout'));
 const Profile = React.lazy(() => import('@/pages/Profile'));
+const AdminDashboard = React.lazy(() => import('@/pages/AdminDashboard'));
+const CustomerDashboard = React.lazy(() => import('@/pages/CustomerDashboard'));
+const AuthorDashboard = React.lazy(() => import('@/pages/AuthorDashboard'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
 // Error Boundary Component
@@ -101,6 +104,9 @@ function App() {
                           <Route path="/reader/:id" element={<Reader />} />
                           <Route path="/checkout" element={<Checkout />} />
                           <Route path="/profile" element={<Profile />} />
+                          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                          <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+                          <Route path="/author-dashboard" element={<AuthorDashboard />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>

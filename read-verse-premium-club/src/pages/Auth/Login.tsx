@@ -8,7 +8,6 @@ import { BookOpenIcon } from '@heroicons/react/24/outline';
 import { useAppDispatch } from '@/store';
 import { setUser } from '@/store/slices/authSlice';
 import { setToken, authFetch } from '@/lib/api';
-import DebugAPI from '@/components/DebugAPI';
 
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -138,8 +137,6 @@ const Login: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Debug component for troubleshooting */}
-        <DebugAPI />
       </div>
     </div>
   );
