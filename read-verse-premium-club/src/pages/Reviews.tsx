@@ -15,8 +15,8 @@ import {
   ChatBubbleLeftIcon,
   FlagIcon,
   ShareIcon,
-  ThumbUpIcon,
-  ThumbDownIcon,
+  HandThumbUpIcon,
+  HandThumbDownIcon,
   EyeIcon,
   BookOpenIcon,
   UserIcon,
@@ -530,7 +530,7 @@ const Reviews: React.FC = () => {
                                 size="sm"
                                 onClick={() => markHelpful(review._id)}
                               >
-                                <ThumbUpIcon className="w-4 h-4 mr-2" />
+                                <HandThumbUpIcon className="w-4 h-4 mr-2" />
                                 Helpful ({review.helpful})
                               </Button>
                               <Button variant="outline" size="sm">
