@@ -14,7 +14,7 @@ import {
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
   ShareIcon,
-  CopyIcon,
+  DocumentDuplicateIcon,
   CheckIcon,
   XMarkIcon,
   ClockIcon,
@@ -543,7 +543,7 @@ const Wallet: React.FC = () => {
                             {copiedCode === code.code ? (
                               <CheckIcon className="w-4 h-4 mr-2" />
                             ) : (
-                              <CopyIcon className="w-4 h-4 mr-2" />
+                              <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
                             )}
                             {copiedCode === code.code ? 'Copied!' : 'Copy'}
                           </Button>
@@ -740,7 +740,7 @@ const Wallet: React.FC = () => {
                   copyReferralCode(code);
                 }
               }}>
-                <CopyIcon className="w-4 h-4 mr-2" />
+                                     <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
                 Copy Code
               </Button>
             </div>
