@@ -95,6 +95,60 @@ router.get('/my/books', auth, async (req, res) => {
   res.json(books);
 });
 
+// Get books by current author (alternative route)
+router.get('/my-books', auth, async (req, res) => {
+  const books = await Book.find({ authorRef: req.user.id });
+  res.json(books);
+});
+
+// Get currently reading books
+router.get('/currently-reading', auth, async (req, res) => {
+  try {
+    // Mock currently reading data for now
+    const currentlyReading = [
+      {
+        _id: 'book1',
+        title: 'The Great Gatsby',
+        author: 'F. Scott Fitzgerald',
+        progress: 65
+      },
+      {
+        _id: 'book2',
+        title: 'To Kill a Mockingbird',
+        author: 'Harper Lee',
+        progress: 30
+      }
+    ];
+    res.json(currentlyReading);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get user favorites
+router.get('/favorites', auth, async (req, res) => {
+  try {
+    // Mock favorites data for now
+    const favorites = [
+      {
+        _id: 'book1',
+        title: 'The Great Gatsby',
+        author: 'F. Scott Fitzgerald',
+        rating: 4.5
+      },
+      {
+        _id: 'book2',
+        title: 'To Kill a Mockingbird',
+        author: 'Harper Lee',
+        rating: 4.8
+      }
+    ];
+    res.json(favorites);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Create book (set authorRef, status pending)
 router.post('/', auth, async (req, res) => {
   const { readingType } = req.body;

@@ -105,4 +105,58 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// Get user reading statistics
+router.get('/reading-stats', auth, async (req, res) => {
+  try {
+    // Mock reading stats for now
+    const readingStats = {
+      booksRead: 12,
+      pagesRead: 2400,
+      readingTime: 45,
+      currentStreak: 7,
+      totalBooks: 25,
+      favoriteGenres: ['Fiction', 'Mystery', 'Science Fiction', 'Romance'],
+      monthlyProgress: [
+        { month: 'Jan', booksRead: 3, pagesRead: 600 },
+        { month: 'Feb', booksRead: 4, pagesRead: 800 },
+        { month: 'Mar', booksRead: 2, pagesRead: 400 },
+        { month: 'Apr', booksRead: 3, pagesRead: 600 }
+      ]
+    };
+    res.json(readingStats);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get user progress
+router.get('/progress', auth, async (req, res) => {
+  try {
+    // Mock progress data for now
+    const progress = {
+      currentBook: {
+        id: 'book1',
+        title: 'Sample Book',
+        progress: 65
+      },
+      readingTime: 45,
+      pagesRead: 2400
+    };
+    res.json(progress);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update user progress
+router.post('/progress', auth, async (req, res) => {
+  try {
+    const { bookId, progress, readingTime } = req.body;
+    // Mock progress update
+    res.json({ message: 'Progress updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router; 
