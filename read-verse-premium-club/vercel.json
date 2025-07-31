@@ -1,6 +1,9 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "env": {
+    "VITE_API_URL": "https://book-tech.onrender.com/api"
+  },
   "rewrites": [
     {
       "source": "/((?!api|_next|assets|.*\\..*).*)",
