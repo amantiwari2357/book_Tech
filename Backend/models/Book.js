@@ -32,6 +32,18 @@ const bookSchema = new mongoose.Schema({
   isFeatured: { type: Boolean, default: false },
   sales: { type: Number, default: 0 },
   earnings: { type: Number, default: 0 },
+  // New fields for approval system
+  isApproved: { type: Boolean, default: false },
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  approvedAt: { type: Date },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// Update the updatedAt field before saving
+bookSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 module.exports = mongoose.model('Book', bookSchema); 

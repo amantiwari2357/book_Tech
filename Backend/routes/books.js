@@ -17,252 +17,278 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Get all approved books (premium first)
-router.get('/', async (req, res) => {
-  const books = await Book.find({ status: 'approved' }).sort({ isPremium: -1 });
-  res.json(books);
-});
-
-// Search books (public endpoint)
-router.get('/search', async (req, res) => {
-  const { q } = req.query;
-  
-  if (!q || typeof q !== 'string') {
-    return res.json([]);
-  }
-
-  const searchQuery = q.trim();
-  if (searchQuery.length < 2) {
-    return res.json([]);
-  }
-
+// Get all books (with privacy controls)
+router.get('/', auth, async (req, res) => {
   try {
-    const books = await Book.find({
-      status: 'approved',
-      $or: [
-        { title: { $regex: searchQuery, $options: 'i' } },
-        { author: { $regex: searchQuery, $options: 'i' } },
-        { category: { $regex: searchQuery, $options: 'i' } },
-        { tags: { $in: [new RegExp(searchQuery, 'i')] } }
-      ]
-    }).limit(10).select('title author category coverImage tags');
-
-    res.json(books);
-  } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ message: 'Search failed' });
-  }
-});
-
-// Get book by ID (public for approved books, auth required for others)
-router.get('/:id', async (req, res) => {
-  const book = await Book.findById(req.params.id);
-  if (!book) return res.status(404).json({ message: 'Book not found' });
-  
-  // If book is approved, allow public access
-  if (book.status === 'approved') {
-    return res.json(book);
-  }
-  
-  // For non-approved books, require authentication
-  if (!req.headers.authorization) {
-    return res.status(401).json({ message: 'Authentication required' });
-  }
-  
-  // Verify token and check permissions
-  try {
-    const token = req.headers.authorization.replace('Bearer ', '');
-    const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    let query = {};
     
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid token' });
+    // If user is not admin, apply privacy controls
+    if (req.user.role !== 'admin') {
+      // Only show approved books to non-admin users
+      query.isApproved = true;
+      
+      // If user is author, also show their own books (even if not approved)
+      if (req.user.role === 'author') {
+        query.$or = [
+          { isApproved: true }, // Show all approved books
+          { authorRef: req.user.id } // Show author's own books
+        ];
+      }
     }
     
-    if (user.role !== 'admin' && (!book.authorRef || book.authorRef.toString() !== user.id)) {
-      return res.status(403).json({ message: 'Not authorized' });
+    const books = await Book.find(query).populate('authorRef', 'name email');
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Search books (with privacy controls)
+router.get('/search', auth, async (req, res) => {
+  try {
+    const { q } = req.query;
+    let query = {};
+    
+    if (q) {
+      query.$or = [
+        { title: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
+        { category: { $regex: q, $options: 'i' } }
+      ];
+    }
+    
+    // Apply privacy controls
+    if (req.user.role !== 'admin') {
+      query.isApproved = true;
+      
+      if (req.user.role === 'author') {
+        query.$or = [
+          { isApproved: true },
+          { authorRef: req.user.id }
+        ];
+      }
+    }
+    
+    const books = await Book.find(query).populate('authorRef', 'name email');
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get book by ID (with privacy controls)
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id).populate('authorRef', 'name email');
+    
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+    
+    // Privacy check: Only show book if:
+    // 1. User is admin, OR
+    // 2. Book is approved, OR
+    // 3. User is the author of the book
+    if (req.user.role !== 'admin' && 
+        !book.isApproved && 
+        book.authorRef.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied. Book not approved yet.' });
     }
     
     res.json(book);
-  } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Get books by current author (all statuses)
-router.get('/my/books', auth, async (req, res) => {
-  const books = await Book.find({ authorRef: req.user.id });
-  res.json(books);
+// Get books by current author (only their own books)
+router.get('/my-books', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'author') {
+      return res.status(403).json({ message: 'Only authors can access their books' });
+    }
+    
+    const books = await Book.find({ authorRef: req.user.id }).populate('authorRef', 'name email');
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Get books by current author (alternative route)
-router.get('/my-books', auth, async (req, res) => {
+router.get('/author-books', auth, async (req, res) => {
   const books = await Book.find({ authorRef: req.user.id });
   res.json(books);
 });
 
-// Get currently reading books
+// Get currently reading books (for customers)
 router.get('/currently-reading', auth, async (req, res) => {
   try {
-    // Get real currently reading books from user's reading sessions
     const user = await User.findById(req.user.id).populate('readBooks');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    // For now, return empty array since we need to implement proper reading session tracking
-    // In a real app, you would track active reading sessions
-    const currentlyReading = [];
+    const currentlyReading = []; // For now, return empty array
     res.json(currentlyReading);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Get user favorites
+// Get favorite books (for customers)
 router.get('/favorites', auth, async (req, res) => {
   try {
-    // Get real favorites from user's data
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    // For now, return empty array since we need to implement favorites functionality
-    // In a real app, you would have a favorites field in the user model
-    const favorites = [];
+    const favorites = []; // For now, return empty array
     res.json(favorites);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Create book (set authorRef, status pending)
+// Create new book (authors only)
 router.post('/', auth, async (req, res) => {
-  const { readingType } = req.body;
-  if (!readingType || !['soft', 'hard'].includes(readingType)) {
-    return res.status(400).json({ message: 'readingType (soft or hard) is required' });
+  try {
+    if (req.user.role !== 'author') {
+      return res.status(403).json({ message: 'Only authors can create books' });
+    }
+    
+    const { title, description, price, category, coverImage, content } = req.body;
+    
+    const book = new Book({
+      title,
+      description,
+      price,
+      category,
+      coverImage,
+      content,
+      authorRef: req.user.id,
+      isApproved: false, // New books need admin approval
+      createdAt: new Date()
+    });
+    
+    await book.save();
+    
+    // Send notification to admin about new book
+    // This would typically be done through a notification system
+    console.log(`New book "${title}" created by ${req.user.name} - awaiting approval`);
+    
+    res.status(201).json(book);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
   }
-  const book = new Book({ ...req.body, authorRef: req.user.id, status: 'pending' });
-  await book.save();
-  res.status(201).json(book);
 });
 
-// Update book (only if current user is author)
+// Update book (authors can only update their own books)
 router.put('/:id', auth, async (req, res) => {
-  const book = await Book.findOneAndUpdate({ _id: req.params.id, authorRef: req.user.id }, req.body, { new: true });
-  if (!book) return res.status(404).json({ message: 'Book not found or not your book' });
-  res.json(book);
+  try {
+    const book = await Book.findById(req.params.id);
+    
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+    
+    // Only author can update their own book, or admin can update any book
+    if (req.user.role !== 'admin' && book.authorRef.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    const updatedBook = await Book.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, isApproved: false }, // Reset approval status when updated
+      { new: true }
+    );
+    
+    res.json(updatedBook);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-// Delete book (only if current user is author)
+// Delete book (authors can only delete their own books)
 router.delete('/:id', auth, async (req, res) => {
-  const book = await Book.findOneAndDelete({ _id: req.params.id, authorRef: req.user.id });
-  if (!book) return res.status(404).json({ message: 'Book not found or not your book' });
-  res.json({ message: 'Book deleted' });
-});
-
-// Admin: List pending books
-router.get('/admin/pending', auth, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
-  const books = await Book.find({ status: 'pending' });
-  res.json(books);
+  try {
+    const book = await Book.findById(req.params.id);
+    
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+    
+    // Only author can delete their own book, or admin can delete any book
+    if (req.user.role !== 'admin' && book.authorRef.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    await Book.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Book deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Admin: Approve book
-router.post('/admin/approve/:id', auth, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
-  const { displayType, distributionType, isRecommended } = req.body;
-  if (!displayType || !['hero', 'view-all'].includes(displayType)) {
-    return res.status(400).json({ message: 'displayType (hero or view-all) is required' });
+router.patch('/:id/approve', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    const book = await Book.findByIdAndUpdate(
+      req.params.id,
+      { isApproved: true },
+      { new: true }
+    );
+    
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+    
+    res.json(book);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
   }
-  if (!distributionType || !['soft', 'hard'].includes(distributionType)) {
-    return res.status(400).json({ message: 'distributionType (soft or hard) is required' });
-  }
-  
-  const updateData = { 
-    status: 'approved', 
-    displayType, 
-    distributionType 
-  };
-  
-  // Add isRecommended if provided
-  if (isRecommended !== undefined) {
-    updateData.isRecommended = isRecommended;
-  }
-  
-  const book = await Book.findByIdAndUpdate(
-    req.params.id,
-    updateData,
-    { new: true }
-  );
-  if (!book) return res.status(404).json({ message: 'Book not found' });
-
-  // Send notification to author
-  let displayText = displayType === 'hero' ? 'Hero Section' : 'View All Section';
-  let distText = distributionType === 'soft'
-    ? 'You selected to offer the book as a Soft Copy only.'
-    : 'You selected to offer the book as a Hard Copy (delivery available).';
-  let recommendedText = isRecommended ? '\nYour book has also been marked as recommended and will appear in the "Recommended for You" section.' : '';
-  const message = `Your book '${book.title}' has been approved and will appear in the ${displayText}.\n${distText}${recommendedText}`;
-  await Notification.create({
-    recipient: book.authorRef,
-    sender: req.user.id,
-    message,
-    type: 'info',
-  });
-
-  res.json(book);
 });
 
 // Admin: Reject book
-router.post('/admin/reject/:id', auth, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
-  const book = await Book.findByIdAndUpdate(req.params.id, { status: 'rejected' }, { new: true });
-  if (!book) return res.status(404).json({ message: 'Book not found' });
-  res.json(book);
+router.patch('/:id/reject', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    const book = await Book.findByIdAndUpdate(
+      req.params.id,
+      { isApproved: false },
+      { new: true }
+    );
+    
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+    
+    res.json(book);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-// Admin: Toggle recommended status
-router.post('/admin/toggle-recommended/:id', auth, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
-  const book = await Book.findById(req.params.id);
-  if (!book) return res.status(404).json({ message: 'Book not found' });
-  
-  book.isRecommended = !book.isRecommended;
-  await book.save();
-  
-  res.json({ 
-    message: `Book ${book.isRecommended ? 'added to' : 'removed from'} recommended section`,
-    isRecommended: book.isRecommended 
-  });
-});
-
-// Admin: Toggle featured status
-router.post('/admin/toggle-featured/:id', auth, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
-  const book = await Book.findById(req.params.id);
-  if (!book) return res.status(404).json({ message: 'Book not found' });
-  
-  book.isFeatured = !book.isFeatured;
-  await book.save();
-  
-  res.json({ 
-    message: `Book ${book.isFeatured ? 'added to' : 'removed from'} featured section`,
-    isFeatured: book.isFeatured 
-  });
-});
-
-// Get recommended books
-router.get('/recommended/list', async (req, res) => {
-  const books = await Book.find({ status: 'approved', isRecommended: true }).sort({ createdAt: -1 });
-  res.json(books);
-});
-
-// Get featured books
-router.get('/featured/list', async (req, res) => {
-  const books = await Book.find({ status: 'approved', isFeatured: true }).sort({ createdAt: -1 });
-  res.json(books);
+// Get pending books for admin approval
+router.get('/admin/pending', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    const pendingBooks = await Book.find({ isApproved: false })
+      .populate('authorRef', 'name email');
+    
+    res.json(pendingBooks);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Add a review to a book
