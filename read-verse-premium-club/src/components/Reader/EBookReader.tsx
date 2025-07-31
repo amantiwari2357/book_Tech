@@ -43,6 +43,7 @@ const EBookReader: React.FC<EBookReaderProps> = ({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(false);
   const [resumeAvailable, setResumeAvailable] = useState(false);
+  const [startTime, setStartTime] = useState<number>(Date.now());
   const totalPages = 248; // Mock total pages
   // Mock chapters if not provided
   const chapterList: Chapter[] = chapters && chapters.length > 0 ? chapters : [
