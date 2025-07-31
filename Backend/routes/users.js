@@ -108,22 +108,68 @@ router.post('/reset-password', async (req, res) => {
 // Get user reading statistics
 router.get('/reading-stats', auth, async (req, res) => {
   try {
-    // Mock reading stats for now
+    // Get real reading stats from user's reading sessions
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Calculate real reading stats based on actual reading sessions
     const readingStats = {
-      booksRead: 12,
-      pagesRead: 2400,
-      readingTime: 45,
-      currentStreak: 7,
-      totalBooks: 25,
-      favoriteGenres: ['Fiction', 'Mystery', 'Science Fiction', 'Romance'],
-      monthlyProgress: [
-        { month: 'Jan', booksRead: 3, pagesRead: 600 },
-        { month: 'Feb', booksRead: 4, pagesRead: 800 },
-        { month: 'Mar', booksRead: 2, pagesRead: 400 },
-        { month: 'Apr', booksRead: 3, pagesRead: 600 }
+      booksRead: user.booksRead || 0,
+      pagesRead: user.pagesRead || 0,
+      readingTime: user.readingTime || 0, // in minutes
+      currentStreak: user.currentStreak || 0,
+      totalBooks: user.totalBooks || 0,
+      favoriteGenres: user.favoriteGenres || ['Fiction', 'Mystery', 'Science Fiction'],
+      monthlyProgress: user.monthlyProgress || [
+        { month: 'Jan', booksRead: 0, pagesRead: 0 },
+        { month: 'Feb', booksRead: 0, pagesRead: 0 },
+        { month: 'Mar', booksRead: 0, pagesRead: 0 },
+        { month: 'Apr', booksRead: 0, pagesRead: 0 }
       ]
     };
     res.json(readingStats);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update reading stats
+router.post('/reading-stats', auth, async (req, res) => {
+  try {
+    const { bookId, readingTime, pagesRead } = req.body;
+    
+    // Update user's reading stats with real data
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update reading time (in minutes)
+    user.readingTime = (user.readingTime || 0) + (readingTime || 0);
+    
+    // Update pages read
+    user.pagesRead = (user.pagesRead || 0) + (pagesRead || 0);
+    
+    // Update books read if this is a new book
+    if (bookId && !user.readBooks?.includes(bookId)) {
+      user.booksRead = (user.booksRead || 0) + 1;
+      user.readBooks = user.readBooks || [];
+      user.readBooks.push(bookId);
+    }
+    
+    // Update current streak (simplified logic)
+    const today = new Date().toDateString();
+    if (user.lastReadDate !== today) {
+      user.currentStreak = (user.currentStreak || 0) + 1;
+      user.lastReadDate = today;
+    }
+    
+    await user.save();
+    
+    console.log('Reading stats updated with real data:', { bookId, readingTime, pagesRead });
+    res.json({ message: 'Reading stats updated successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
