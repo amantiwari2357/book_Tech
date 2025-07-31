@@ -25,7 +25,7 @@ const AdminDashboard: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome back, {user.name}!</p>
-        </div>
+            </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -72,7 +72,7 @@ const AdminDashboard: React.FC = () => {
               <p className="text-xs text-muted-foreground">+5% from last month</p>
             </CardContent>
           </Card>
-        </div>
+                </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -104,7 +104,7 @@ const AdminDashboard: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div>
+              <div>
                     <p className="text-sm font-medium">New book added</p>
                     <p className="text-xs text-gray-500">2 minutes ago</p>
                   </div>
@@ -136,11 +136,11 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Database</span>
                   <span className="text-sm text-green-600">Online</span>
-                </div>
+                  </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">API Server</span>
                   <span className="text-sm text-green-600">Online</span>
-                </div>
+                  </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Email Service</span>
                   <span className="text-sm text-green-600">Online</span>

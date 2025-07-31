@@ -148,17 +148,17 @@ const AuthorDashboard: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const bookData = {
+    const bookData = {
         ...bookForm,
         authorRef: user?.id,
         isApproved: false
       };
       
       const res = await authFetch('/books', { 
-        method: 'POST', 
+          method: 'POST',
         body: JSON.stringify(bookData) 
-      });
-      
+        });
+
       if (res.ok) {
         setBookForm({
           title: '',
@@ -260,7 +260,7 @@ const AuthorDashboard: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Author Dashboard</h1>
           <p className="text-gray-600">Manage your books, track performance, and create new content</p>
-        </div>
+      </div>
 
         {/* Analytics Cards */}
         {analytics && (
@@ -273,10 +273,10 @@ const AuthorDashboard: React.FC = () => {
                     <p className="text-2xl font-bold text-gray-900">{analytics.totalBooks}</p>
                   </div>
                   <BookOpenIcon className="w-8 h-8 text-blue-500" />
-                </div>
+          </div>
               </CardContent>
-            </Card>
-            
+        </Card>
+
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -285,22 +285,22 @@ const AuthorDashboard: React.FC = () => {
                     <p className="text-2xl font-bold text-green-600">{analytics.totalSales}</p>
                   </div>
                   <ShoppingCartIcon className="w-8 h-8 text-green-500" />
-                </div>
+          </div>
               </CardContent>
-            </Card>
-            
+        </Card>
+
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Total Earnings</p>
                     <p className="text-2xl font-bold text-purple-600">{formatPrice(analytics.totalEarnings)}</p>
-                  </div>
+          </div>
                   <CurrencyDollarIcon className="w-8 h-8 text-purple-500" />
-                </div>
+      </div>
               </CardContent>
-            </Card>
-            
+        </Card>
+
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -311,7 +311,7 @@ const AuthorDashboard: React.FC = () => {
                   <StarIcon className="w-8 h-8 text-yellow-500" />
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           </div>
         )}
 
@@ -385,8 +385,8 @@ const AuthorDashboard: React.FC = () => {
                     View Analytics
                   </Button>
                 </CardContent>
-              </Card>
-            </div>
+          </Card>
+      </div>
           </TabsContent>
 
           {/* Books Tab */}
@@ -509,8 +509,8 @@ const AuthorDashboard: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            )}
+        </div>
+      )}
           </TabsContent>
 
           {/* Notifications Tab */}
@@ -549,10 +549,10 @@ const AuthorDashboard: React.FC = () => {
                   <Button variant="ghost" size="sm" onClick={() => setShowUploadModal(false)}>
                     <XCircleIcon className="w-6 h-6" />
                   </Button>
-                </div>
-                
+            </div>
+
                 <form onSubmit={handleBookUpload} className="space-y-4">
-                  <div>
+            <div>
                     <Label htmlFor="title">Book Title</Label>
                     <Input
                       id="title"
@@ -560,9 +560,9 @@ const AuthorDashboard: React.FC = () => {
                       onChange={(e) => setBookForm({...bookForm, title: e.target.value})}
                       required
                     />
-                  </div>
-                  
-                  <div>
+            </div>
+
+            <div>
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
@@ -570,8 +570,8 @@ const AuthorDashboard: React.FC = () => {
                       onChange={(e) => setBookForm({...bookForm, description: e.target.value})}
                       required
                     />
-                  </div>
-                  
+            </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="price">Price</Label>
@@ -580,11 +580,11 @@ const AuthorDashboard: React.FC = () => {
                         type="number"
                         value={bookForm.price}
                         onChange={(e) => setBookForm({...bookForm, price: parseFloat(e.target.value)})}
-                        required
-                      />
-                    </div>
-                    
-                    <div>
+                required
+              />
+            </div>
+
+            <div>
                       <Label htmlFor="category">Category</Label>
                       <Select value={bookForm.category} onValueChange={(value) => setBookForm({...bookForm, category: value})}>
                         <SelectTrigger>
@@ -599,18 +599,18 @@ const AuthorDashboard: React.FC = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                  
-                  <div>
+            </div>
+
+            <div>
                     <Label htmlFor="coverImage">Cover Image URL</Label>
                     <Input
                       id="coverImage"
                       value={bookForm.coverImage}
                       onChange={(e) => setBookForm({...bookForm, coverImage: e.target.value})}
                     />
-                  </div>
-                  
-                  <div>
+            </div>
+
+            <div>
                     <Label htmlFor="content">Book Content</Label>
                     <Textarea
                       id="content"
@@ -619,8 +619,8 @@ const AuthorDashboard: React.FC = () => {
                       rows={6}
                       required
                     />
-                  </div>
-                  
+            </div>
+
                   <div className="flex justify-end space-x-4">
                     <Button type="button" variant="outline" onClick={() => setShowUploadModal(false)}>
                       Cancel
@@ -645,8 +645,8 @@ const AuthorDashboard: React.FC = () => {
                   <Button variant="ghost" size="sm" onClick={() => setShowDesignModal(false)}>
                     <XCircleIcon className="w-6 h-6" />
                   </Button>
-                </div>
-                
+            </div>
+
                 <form onSubmit={handleBookDesignCreate} className="space-y-4">
                   <div>
                     <Label htmlFor="designTitle">Design Title</Label>
@@ -654,8 +654,8 @@ const AuthorDashboard: React.FC = () => {
                       id="designTitle"
                       value={designForm.title}
                       onChange={(e) => setDesignForm({...designForm, title: e.target.value})}
-                      required
-                    />
+                    required
+                  />
                   </div>
                   
                   <div>
@@ -664,8 +664,8 @@ const AuthorDashboard: React.FC = () => {
                       id="designDescription"
                       value={designForm.description}
                       onChange={(e) => setDesignForm({...designForm, description: e.target.value})}
-                      required
-                    />
+                    required
+                  />
                   </div>
                   
                   <div className="grid grid-cols-3 gap-4">
@@ -712,9 +712,9 @@ const AuthorDashboard: React.FC = () => {
                           <SelectItem value="high-contrast">High Contrast</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                  </div>
-                  
+              </div>
+            </div>
+
                   <div>
                     <Label htmlFor="coverDesign">Cover Design Description</Label>
                     <Textarea
@@ -724,8 +724,8 @@ const AuthorDashboard: React.FC = () => {
                       rows={3}
                       required
                     />
-                  </div>
-                  
+            </div>
+
                   <div>
                     <Label htmlFor="contentDesign">Content Design Description</Label>
                     <Textarea
@@ -739,15 +739,15 @@ const AuthorDashboard: React.FC = () => {
                   
                   <div className="flex justify-end space-x-4">
                     <Button type="button" variant="outline" onClick={() => setShowDesignModal(false)}>
-                      Cancel
-                    </Button>
+                  Cancel
+                </Button>
                     <Button type="submit" disabled={loading}>
                       {loading ? 'Creating...' : 'Create Design'}
                     </Button>
-                  </div>
-                </form>
-              </div>
             </div>
+          </form>
+                      </div>
+                        </div>
           </div>
         )}
       </div>
