@@ -16,6 +16,7 @@ import {
   StarIcon, HeartIcon, ShoppingCartIcon, DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { authFetch } from '@/lib/api';
+import { useNavigate } from 'react-router-dom';
 
 interface Book {
   _id: string;
@@ -57,6 +58,7 @@ interface Analytics {
 
 const AuthorDashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
   const [books, setBooks] = useState<Book[]>([]);
   const [bookDesigns, setBookDesigns] = useState<BookDesign[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
@@ -463,6 +465,13 @@ const AuthorDashboard: React.FC = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Analytics Overview</h2>
+              <Button onClick={() => navigate('/author-analytics')} className="flex items-center gap-2">
+                <ChartBarIcon className="w-4 h-4" />
+                View Detailed Analytics
+              </Button>
+            </div>
             {analytics && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Monthly Sales Chart */}

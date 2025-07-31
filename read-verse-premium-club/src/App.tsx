@@ -29,6 +29,7 @@ const Orders = React.lazy(() => import('@/pages/Orders'));
 const AdminDashboard = React.lazy(() => import('@/pages/AdminDashboard'));
 const CustomerDashboard = React.lazy(() => import('@/pages/CustomerDashboard'));
 const AuthorDashboard = React.lazy(() => import('@/pages/AuthorDashboard'));
+const AuthorAnalytics = React.lazy(() => import('@/pages/AuthorAnalytics'));
 const TestLogin = React.lazy(() => import('@/pages/TestLogin'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
@@ -145,6 +146,7 @@ function App() {
                             <Route path="/admin-dashboard" element={<AdminDashboard />} />
                             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
                             <Route path="/author-dashboard" element={<AuthorDashboard />} />
+                            <Route path="/author-analytics" element={<AuthorAnalytics />} />
                             <Route path="/test-login" element={<TestLogin />} />
                             
                             {/* Customer Dashboard Pages */}
