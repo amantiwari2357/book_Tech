@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { Toaster } from "@/components/ui/toaster";
@@ -8,6 +8,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { store, persistor } from "@/store";
+import { useAppDispatch } from "@/store";
+import { setUser } from "@/store/slices/authSlice";
+import { checkAuthStatus } from "@/lib/api";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
 import CartSidebar from "@/components/Cart/CartSidebar";
@@ -73,6 +76,28 @@ const PageLoader = () => (
   </div>
 );
 
+// Auth Initializer Component
+const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        const user = await checkAuthStatus();
+        if (user) {
+          dispatch(setUser(user));
+        }
+      } catch (error) {
+        console.error('Failed to check auth status:', error);
+      }
+    };
+
+    initializeApp();
+  }, [dispatch]);
+
+  return <>{children}</>;
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -91,31 +116,33 @@ function App() {
             <HelmetProvider>
               <TooltipProvider>
                 <Router>
-                  <div className="min-h-screen flex flex-col">
-                    <Header />
-                    <main className="flex-1">
-                      <Suspense fallback={<PageLoader />}>
-                        <Routes>
-                          <Route path="/" element={<Home />} />
-                          <Route path="/login" element={<Login />} />
-                          <Route path="/signup" element={<SignUp />} />
-                          <Route path="/browse" element={<Browse />} />
-                          <Route path="/book/:id" element={<BookDetails />} />
-                          <Route path="/reader/:id" element={<Reader />} />
-                          <Route path="/checkout" element={<Checkout />} />
-                          <Route path="/profile" element={<Profile />} />
-                          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                          <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-                          <Route path="/author-dashboard" element={<AuthorDashboard />} />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </Suspense>
-                    </main>
-                    <Footer />
-                    <CartSidebar />
-                  </div>
-                  <Toaster />
-                  <Sonner />
+                  <AuthInitializer>
+                    <div className="min-h-screen flex flex-col">
+                      <Header />
+                      <main className="flex-1">
+                        <Suspense fallback={<PageLoader />}>
+                          <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<SignUp />} />
+                            <Route path="/browse" element={<Browse />} />
+                            <Route path="/book/:id" element={<BookDetails />} />
+                            <Route path="/reader/:id" element={<Reader />} />
+                            <Route path="/checkout" element={<Checkout />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+                            <Route path="/author-dashboard" element={<AuthorDashboard />} />
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </Suspense>
+                      </main>
+                      <Footer />
+                      <CartSidebar />
+                    </div>
+                    <Toaster />
+                    <Sonner />
+                  </AuthInitializer>
                 </Router>
               </TooltipProvider>
             </HelmetProvider>

@@ -12,6 +12,38 @@ export function removeToken() {
   localStorage.removeItem('token');
 }
 
+// Check if user is authenticated
+export async function checkAuthStatus() {
+  const token = getToken();
+  if (!token) {
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
+      mode: 'cors',
+      credentials: 'include',
+    });
+    
+    if (response.ok) {
+      const user = await response.json();
+      return user;
+    } else {
+      // Token is invalid, remove it
+      removeToken();
+      return null;
+    }
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    removeToken();
+    return null;
+  }
+}
+
 export async function authFetch(endpoint: string, options: RequestInit = {}) {
   const token = getToken();
   const isFormData = options.body instanceof FormData;
@@ -37,6 +69,12 @@ export async function authFetch(endpoint: string, options: RequestInit = {}) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('API Error:', errorData);
+      
+      // If token is invalid, remove it
+      if (response.status === 401) {
+        removeToken();
+      }
+      
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
     

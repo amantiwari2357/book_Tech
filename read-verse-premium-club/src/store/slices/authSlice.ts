@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { removeToken } from '@/lib/api';
 
 export interface Order {
   book: string; // Book ID
@@ -55,6 +56,7 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
+      removeToken(); // Remove token from localStorage
     },
   },
 });
