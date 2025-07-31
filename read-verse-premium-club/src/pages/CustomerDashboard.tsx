@@ -16,7 +16,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   EyeIcon,
-  DownloadIcon,
+  ArrowDownTrayIcon,
   ShareIcon,
   BookmarkIcon,
   ChartBarIcon,
@@ -484,7 +484,7 @@ const CustomerDashboard: React.FC = () => {
                         )}
                         {order.orderStatus === 'delivered' && (
                           <Button variant="outline" size="sm">
-                            <DownloadIcon className="w-4 h-4 mr-1" />
+                            <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
                             Download
                           </Button>
                         )}
