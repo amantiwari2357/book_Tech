@@ -2,7 +2,7 @@ import React from 'react';
 import { useAppSelector } from '@/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpenIcon, PencilIcon, ChartBarIcon, UploadIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon, PencilIcon, ChartBarIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 
 const AuthorDashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -150,7 +150,7 @@ const AuthorDashboard: React.FC = () => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Button variant="outline" className="h-20 flex flex-col">
-                  <UploadIcon className="h-6 w-6 mb-2" />
+                  <ArrowUpTrayIcon className="h-6 w-6 mb-2" />
                   Upload New Book
                 </Button>
                 <Button variant="outline" className="h-20 flex flex-col">
