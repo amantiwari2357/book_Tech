@@ -23,7 +23,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Get user's orders (privacy controlled)
+// Get user's orders (privacy controlled) - MUST come before /:id route
 router.get('/my-orders', auth, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user.id })
@@ -50,9 +50,45 @@ router.get('/user-orders', auth, async (req, res) => {
   }
 });
 
-// Get order by ID (with privacy check)
+// Get returns (must come before /:id route)
+router.get('/returns', auth, async (req, res) => {
+  try {
+    // For now, return empty array - implement returns logic later
+    res.json([]);
+  } catch (error) {
+    console.error('Error fetching returns:', error);
+    res.status(500).json({ message: 'Failed to fetch returns' });
+  }
+});
+
+// Create return request
+router.post('/returns', auth, async (req, res) => {
+  try {
+    const { orderId, reason, description } = req.body;
+    
+    // For now, just return success - implement return logic later
+    res.status(201).json({
+      _id: 'temp-return-id',
+      orderId,
+      reason,
+      description,
+      status: 'pending',
+      createdAt: new Date()
+    });
+  } catch (error) {
+    console.error('Error creating return:', error);
+    res.status(500).json({ message: 'Failed to create return' });
+  }
+});
+
+// Get order by ID (with privacy check) - MUST come after specific routes
 router.get('/:id', auth, async (req, res) => {
   try {
+    // Validate ObjectId format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid order ID format' });
+    }
+
     const order = await Order.findById(req.params.id)
       .populate('userId', 'name email')
       .populate('items.bookId', 'title author coverImage price');
@@ -162,15 +198,41 @@ router.patch('/:id/payment', auth, async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
     
-    // Privacy check: Only allow if user is admin or order owner
-    if (req.user.role !== 'admin' && order.userId.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-    
     res.json(order);
   } catch (error) {
     console.error('Error updating payment status:', error);
     res.status(500).json({ message: 'Failed to update payment status' });
+  }
+});
+
+// Download invoice
+router.get('/:id/invoice', auth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('userId', 'name email')
+      .populate('items.bookId', 'title author price');
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    // Privacy check
+    if (req.user.role !== 'admin' && order.userId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    // For now, return a simple JSON response
+    // In production, generate actual PDF invoice
+    res.json({
+      orderId: order._id,
+      customerName: order.userId.name,
+      items: order.items,
+      totalAmount: order.totalAmount,
+      date: order.createdAt
+    });
+  } catch (error) {
+    console.error('Error generating invoice:', error);
+    res.status(500).json({ message: 'Failed to generate invoice' });
   }
 });
 
