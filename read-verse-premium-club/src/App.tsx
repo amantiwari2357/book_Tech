@@ -34,6 +34,11 @@ const AdminBookManagement = React.lazy(() => import('@/pages/AdminBookManagement
 const AdminBookApprovals = React.lazy(() => import('@/pages/AdminBookApprovals'));
 const CustomerDashboard = React.lazy(() => import('@/pages/CustomerDashboard'));
 const AuthorDashboard = React.lazy(() => import('@/pages/AuthorDashboard'));
+const AuthorEnhancedDashboard = React.lazy(() => import('@/pages/AuthorEnhancedDashboard'));
+const AuthorBookCreation = React.lazy(() => import('@/pages/AuthorBookCreation'));
+const AuthorOrderManagement = React.lazy(() => import('@/pages/AuthorOrderManagement'));
+const EBookReader = React.lazy(() => import('@/pages/EBookReader'));
+const DeliveryBoyDashboard = React.lazy(() => import('@/pages/DeliveryBoyDashboard'));
 const AuthorAnalytics = React.lazy(() => import('@/pages/AuthorAnalytics'));
 const TestLogin = React.lazy(() => import('@/pages/TestLogin'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
@@ -155,7 +160,11 @@ function App() {
                             <Route path="/admin/books" element={<AdminBookManagement />} />
                             <Route path="/admin/book-approvals" element={<AdminBookApprovals />} />
                             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-                            <Route path="/author-dashboard" element={<AuthorDashboard />} />
+                            <Route path="/author-dashboard" element={<AuthorEnhancedDashboard />} />
+                            <Route path="/author/create-book" element={<AuthorBookCreation />} />
+                            <Route path="/author/orders" element={<AuthorOrderManagement />} />
+                            <Route path="/ebook-reader/:id" element={<EBookReader />} />
+                            <Route path="/delivery-boy-dashboard" element={<DeliveryBoyDashboard />} />
                             <Route path="/author-analytics" element={<AuthorAnalytics />} />
                             <Route path="/test-login" element={<TestLogin />} />
                             
