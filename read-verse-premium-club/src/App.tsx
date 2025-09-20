@@ -42,6 +42,8 @@ const DeliveryBoyDashboard = React.lazy(() => import('@/pages/DeliveryBoyDashboa
 const UserEnhancedDashboard = React.lazy(() => import('@/pages/UserEnhancedDashboard'));
 const UserLibraryManagement = React.lazy(() => import('@/pages/UserLibraryManagement'));
 const UserProfileManagement = React.lazy(() => import('@/pages/UserProfileManagement'));
+const ModernHome = React.lazy(() => import('@/pages/ModernHome'));
+const EnhancedLogin = React.lazy(() => import('@/pages/EnhancedLogin'));
 const AuthorAnalytics = React.lazy(() => import('@/pages/AuthorAnalytics'));
 const TestLogin = React.lazy(() => import('@/pages/TestLogin'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
@@ -147,8 +149,9 @@ function App() {
                       <main className="flex-1">
                         <Suspense fallback={<PageLoader />}>
                           <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/login" element={<Login />} />
+                            <Route path="/" element={<ModernHome />} />
+                            <Route path="/home" element={<Home />} />
+                            <Route path="/login" element={<EnhancedLogin />} />
                             <Route path="/signup" element={<SignUp />} />
                             <Route path="/browse" element={<Browse />} />
                             <Route path="/book/:id" element={<BookDetails />} />

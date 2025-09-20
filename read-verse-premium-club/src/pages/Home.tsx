@@ -965,7 +965,7 @@ const Home: React.FC = () => {
                   <XMarkIcon className="h-6 w-6" />
                 </Button>
               </div>
-              
+                
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden">
                   {selectedBookDesign.coverImageUrl ? (

@@ -228,6 +228,12 @@ const Orders: React.FC = () => {
     }
   };
 
+  const viewOrderDetails = (order: Order) => {
+    setSelectedOrder(order);
+    // You can add a modal or navigate to order details page
+    console.log('Viewing order details:', order);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -346,7 +352,7 @@ const Orders: React.FC = () => {
                             )}
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => viewOrderDetails(order)}>
                               <EyeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                               View Details
                             </Button>
