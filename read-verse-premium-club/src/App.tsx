@@ -39,6 +39,9 @@ const AuthorBookCreation = React.lazy(() => import('@/pages/AuthorBookCreation')
 const AuthorOrderManagement = React.lazy(() => import('@/pages/AuthorOrderManagement'));
 const EBookReader = React.lazy(() => import('@/pages/EBookReader'));
 const DeliveryBoyDashboard = React.lazy(() => import('@/pages/DeliveryBoyDashboard'));
+const UserEnhancedDashboard = React.lazy(() => import('@/pages/UserEnhancedDashboard'));
+const UserLibraryManagement = React.lazy(() => import('@/pages/UserLibraryManagement'));
+const UserProfileManagement = React.lazy(() => import('@/pages/UserProfileManagement'));
 const AuthorAnalytics = React.lazy(() => import('@/pages/AuthorAnalytics'));
 const TestLogin = React.lazy(() => import('@/pages/TestLogin'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
@@ -159,7 +162,10 @@ function App() {
                             <Route path="/admin/financials" element={<AdminFinancialManagement />} />
                             <Route path="/admin/books" element={<AdminBookManagement />} />
                             <Route path="/admin/book-approvals" element={<AdminBookApprovals />} />
-                            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+                            <Route path="/customer-dashboard" element={<UserEnhancedDashboard />} />
+                            <Route path="/user-dashboard" element={<UserEnhancedDashboard />} />
+                            <Route path="/user/library" element={<UserLibraryManagement />} />
+                            <Route path="/user/profile" element={<UserProfileManagement />} />
                             <Route path="/author-dashboard" element={<AuthorEnhancedDashboard />} />
                             <Route path="/author/create-book" element={<AuthorBookCreation />} />
                             <Route path="/author/orders" element={<AuthorOrderManagement />} />
