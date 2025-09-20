@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { 
   BookOpenIcon, PencilIcon, ChartBarIcon, ArrowUpTrayIcon, 
   PlusIcon, EyeIcon, ClockIcon, CheckCircleIcon, XCircleIcon, BellIcon,
-  UsersIcon, CurrencyDollarIcon, TrendingUpIcon, CalendarIcon,
+  UsersIcon, CurrencyDollarIcon, ArrowTrendingUpIcon, CalendarIcon,
   StarIcon, HeartIcon, ShoppingCartIcon, DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { authFetch } from '@/lib/api';
